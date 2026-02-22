@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { HeroSection } from "@/components/HeroSection";
 import { HowItWorks } from "@/components/HowItWorks";
-import { MagnetGrid } from "@/components/MagnetGrid";
+import { ProductPreview } from "@/components/ProductPreview";
 import { ReviewMarquee } from "@/components/ReviewMarquee";
 import { Footer } from "@/components/Footer";
 import { ScrollProgress } from "@/components/ScrollProgress";
@@ -26,7 +26,7 @@ const Index = () => {
         <main id="main-content" role="main">
           <HeroSection onUploadClick={() => setUploadOpen(true)} />
           <HowItWorks />
-          <MagnetGrid />
+          <ProductPreview />
           <ReviewMarquee />
         </main>
         <Footer />
