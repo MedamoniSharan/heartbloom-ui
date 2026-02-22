@@ -16,6 +16,9 @@ import Admin from "./pages/Admin";
 import ProductDetail from "./pages/ProductDetail";
 import Contact from "./pages/Contact";
 import Equipment from "./pages/Equipment";
+import Wishlist from "./pages/Wishlist";
+import Events from "./pages/Events";
+import Gallery from "./pages/Gallery";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +41,9 @@ const App = () => (
           <Route path="/admin" element={<Admin />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/equipment" element={<Equipment />} />
+          <Route path="/wishlist" element={<Wishlist />} />
+          <Route path="/events" element={<Events />} />
+          <Route path="/gallery" element={<Gallery />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

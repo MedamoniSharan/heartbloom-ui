@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ShoppingCart, Heart, MessageCircle, Star, ChevronLeft, Check, Minus, Plus } from "lucide-react";
+import { ShoppingCart, Heart, MessageCircle, Star, ChevronLeft, Check, Minus, Plus, Box } from "lucide-react";
 import { useProductStore, Product } from "@/stores/productStore";
 import { useCartStore } from "@/stores/cartStore";
+import { useWishlistStore } from "@/stores/wishlistStore";
 import { useToast } from "@/hooks/use-toast";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Reveal } from "@/components/Reveal";
+import { MagnetMockup3D } from "@/components/MagnetMockup3D";
 
 const WHATSAPP_NUMBER = "1234567890";
 
@@ -15,10 +17,12 @@ const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { products } = useProductStore();
   const { addToCart } = useCartStore();
+  const { toggle, isWishlisted } = useWishlistStore();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [qty, setQty] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [show3D, setShow3D] = useState(false);
 
   const product = products.find((p) => p.id === id);
 
@@ -64,19 +68,39 @@ const ProductDetail = () => {
           {/* Left — Images */}
           <Reveal>
             <div>
-              <div className="aspect-square rounded-2xl overflow-hidden bg-card border border-border mb-3">
-                <img
-                  src={images[selectedImage]}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                />
+              <div className="aspect-square rounded-2xl overflow-hidden bg-card border border-border mb-3 relative">
+                {show3D ? (
+                  <MagnetMockup3D imageUrl={images[selectedImage]} />
+                ) : (
+                  <img
+                    src={images[selectedImage]}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                  />
+                )}
+                <motion.button
+                  onClick={() => setShow3D(!show3D)}
+                  className="absolute bottom-3 left-3 px-3 py-1.5 rounded-lg bg-card/80 backdrop-blur-sm border border-border text-xs font-medium text-foreground flex items-center gap-1.5 hover:bg-card transition-colors"
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Box className="w-3.5 h-3.5" />
+                  {show3D ? "2D View" : "3D Preview"}
+                </motion.button>
+                <motion.button
+                  onClick={() => { toggle(product.id); toast({ title: isWishlisted(product.id) ? "Removed from wishlist" : "Saved to wishlist!" }); }}
+                  className="absolute top-3 right-3 w-10 h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors"
+                  whileTap={{ scale: 0.85 }}
+                  aria-label="Toggle wishlist"
+                >
+                  <Heart className={`w-5 h-5 ${isWishlisted(product.id) ? "fill-primary text-primary" : "text-muted-foreground"}`} />
+                </motion.button>
               </div>
               {images.length > 1 && (
                 <div className="flex gap-2 overflow-x-auto">
                   {images.map((img, i) => (
                     <button
                       key={i}
-                      onClick={() => setSelectedImage(i)}
+                      onClick={() => { setSelectedImage(i); setShow3D(false); }}
                       className={`w-16 h-16 rounded-xl overflow-hidden border-2 flex-shrink-0 transition-all ${
                         selectedImage === i ? "border-primary" : "border-border"
                       }`}
