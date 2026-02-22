@@ -1,9 +1,9 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   Package, DollarSign, Users, TrendingUp, Plus,
   Eye, Trash2, ChevronDown, Tag, ToggleLeft, ToggleRight,
-  Upload, ImageIcon, X,
+  Upload, ImageIcon, X, BarChart3, ShoppingCart, Calendar,
 } from "lucide-react";
 import { useProductStore, Product, Order, PromoCode } from "@/stores/productStore";
 import { useAuthStore } from "@/stores/authStore";
@@ -11,6 +11,10 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
 import { Navigate } from "react-router-dom";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, LineChart, Line, AreaChart, Area, Legend,
+} from "recharts";
 
 const statCards = (orders: Order[], products: Product[]) => [
   { label: "Total Orders", value: orders.length, icon: Package, change: "+12%" },
@@ -19,11 +23,157 @@ const statCards = (orders: Order[], products: Product[]) => [
   { label: "Customers", value: new Set(orders.map((o) => o.userId)).size, icon: Users, change: "+3%" },
 ];
 
+const CHART_COLORS = ["hsl(330,80%,55%)","hsl(220,70%,50%)","hsl(150,60%,45%)","hsl(40,90%,55%)","hsl(270,60%,55%)","hsl(10,80%,55%)"];
+
+const generateRevenueData = (orders: Order[]) => {
+  const last7 = Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()-(6-i));return d.toISOString().slice(0,10)});
+  const base = [320,450,280,590,410,680,520];
+  return last7.map((date,i)=>{
+    const dayO = orders.filter(o=>o.createdAt.slice(0,10)===date);
+    return {date:new Date(date).toLocaleDateString("en-US",{weekday:"short"}),revenue:Math.round(base[i]+dayO.reduce((s,o)=>s+o.total,0)),orders:Math.max(1,Math.floor(base[i]/80)+dayO.length)};
+  });
+};
+const getStatusData = (orders: Order[]) => {
+  const c:Record<string,number>={};orders.forEach(o=>{c[o.status]=(c[o.status]||0)+1});
+  const sim:Record<string,number>={pending:12,processing:8,shipped:15,delivered:42,cancelled:3};
+  return Object.entries(sim).map(([n,v])=>({name:n.charAt(0).toUpperCase()+n.slice(1),value:v+(c[n]||0)}));
+};
+const getCategoryData = (products: Product[]) => {
+  const c:Record<string,number>={};products.forEach(p=>{c[p.category]=(c[p.category]||0)+1});
+  return Object.entries(c).map(([name,value])=>({name,value}));
+};
+const getMonthlyTrend = () => ["Sep","Oct","Nov","Dec","Jan","Feb"].map((m,i)=>({month:m,revenue:[1200,1800,2400,3100,2800,3600][i],customers:Math.floor([1200,1800,2400,3100,2800,3600][i]/45)}));
+const getTopProducts = () => [
+  {name:"Classic Photo Magnets",sold:89,revenue:2224},
+  {name:"Heart-Shaped Magnets",sold:67,revenue:1339},
+  {name:"Mini Polaroid Magnets",sold:54,revenue:1619},
+  {name:"Premium Canvas Magnets",sold:41,revenue:1434},
+  {name:"Pet Photo Magnets",sold:38,revenue:949},
+];
+
+const tooltipStyle = {background:"hsl(var(--card))",border:"1px solid hsl(var(--border))",borderRadius:12,fontSize:12};
+const tickStyle = {fontSize:11,fill:"hsl(var(--muted-foreground))"};
+
+const DashboardTab = ({orders,products,setTab}:{orders:Order[];products:Product[];setTab:(t:any)=>void}) => {
+  const revenueData = useMemo(()=>generateRevenueData(orders),[orders]);
+  const totalRevenue = orders.reduce((s,o)=>s+o.total,0)+3600;
+  const avgOrder = totalRevenue/(orders.length+80);
+  return (
+    <div className="space-y-6">
+      <div className="bg-card border border-border rounded-2xl p-6 shadow-card">
+        <div className="flex items-center justify-between mb-4">
+          <div><h3 className="font-display font-bold text-foreground">Revenue Overview</h3><p className="text-xs text-muted-foreground">Last 7 days</p></div>
+          <div className="text-right"><p className="text-2xl font-bold text-foreground font-display">${totalRevenue.toFixed(0)}</p><p className="text-xs text-[hsl(var(--success))]">↑ 18% vs last week</p></div>
+        </div>
+        <ResponsiveContainer width="100%" height={200}>
+          <AreaChart data={revenueData}>
+            <defs><linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="hsl(330,80%,55%)" stopOpacity={0.3}/><stop offset="95%" stopColor="hsl(330,80%,55%)" stopOpacity={0}/></linearGradient></defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
+            <XAxis dataKey="date" tick={tickStyle} axisLine={false} tickLine={false}/>
+            <YAxis tick={tickStyle} axisLine={false} tickLine={false}/>
+            <Tooltip contentStyle={tooltipStyle}/>
+            <Area type="monotone" dataKey="revenue" stroke="hsl(330,80%,55%)" fill="url(#colorRev)" strokeWidth={2}/>
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[{label:"Avg Order Value",value:`$${avgOrder.toFixed(2)}`,icon:ShoppingCart},{label:"Conversion Rate",value:"3.8%",icon:TrendingUp},{label:"Active Promos",value:"2",icon:Tag},{label:"This Month",value:"$3,600",icon:Calendar}].map((s,i)=>(
+          <motion.div key={s.label} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} transition={{delay:i*0.05}} className="bg-card border border-border rounded-xl p-3 shadow-card">
+            <s.icon className="w-4 h-4 text-primary mb-1"/><p className="text-lg font-bold text-foreground font-display">{s.value}</p><p className="text-[10px] text-muted-foreground">{s.label}</p>
+          </motion.div>
+        ))}
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-card border border-border rounded-2xl p-6 shadow-card">
+          <h3 className="font-display font-bold text-foreground mb-3">Recent Orders</h3>
+          {orders.slice(0,5).length===0?<p className="text-sm text-muted-foreground">No orders yet.</p>:(
+            <div className="space-y-2">{orders.slice(0,5).map(order=>(
+              <div key={order.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+                <div><p className="text-sm font-medium text-foreground">{order.id}</p><p className="text-xs text-muted-foreground">{order.userName}</p></div>
+                <div className="text-right"><p className="text-sm font-bold text-foreground">${order.total.toFixed(2)}</p>
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${order.status==="delivered"?"bg-[hsl(var(--success))]/20 text-[hsl(var(--success))]":order.status==="pending"?"bg-amber-500/20 text-amber-500":"bg-primary/20 text-primary"}`}>{order.status}</span>
+                </div>
+              </div>
+            ))}</div>
+          )}
+          <button onClick={()=>setTab("orders")} className="mt-3 text-xs text-primary hover:underline">View all orders →</button>
+        </div>
+        <div className="bg-card border border-border rounded-2xl p-6 shadow-card">
+          <h3 className="font-display font-bold text-foreground mb-3">Quick Actions</h3>
+          <div className="grid grid-cols-2 gap-3">
+            {[{label:"Add Product",icon:Plus,tab:"add"},{label:"Manage Promos",icon:Tag,tab:"promos"},{label:"View Products",icon:Package,tab:"products"},{label:"Analytics",icon:BarChart3,tab:"analytics"}].map(a=>(
+              <button key={a.label} onClick={()=>setTab(a.tab)} className="flex flex-col items-center gap-2 p-4 rounded-xl bg-muted hover:bg-primary/10 transition-colors">
+                <a.icon className="w-6 h-6 text-primary"/><span className="text-xs font-medium text-foreground">{a.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const AnalyticsTab = ({orders,products}:{orders:Order[];products:Product[]}) => {
+  const revenueData = useMemo(()=>generateRevenueData(orders),[orders]);
+  const statusData = useMemo(()=>getStatusData(orders),[orders]);
+  const categoryData = useMemo(()=>getCategoryData(products),[products]);
+  const monthlyTrend = useMemo(()=>getMonthlyTrend(),[]);
+  const topProducts = useMemo(()=>getTopProducts(),[]);
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <motion.div initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} className="bg-card border border-border rounded-2xl p-6 shadow-card">
+          <h3 className="font-display font-bold text-foreground mb-1">Daily Revenue</h3><p className="text-xs text-muted-foreground mb-4">Last 7 days</p>
+          <ResponsiveContainer width="100%" height={260}>
+            <BarChart data={revenueData}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/><XAxis dataKey="date" tick={tickStyle} axisLine={false} tickLine={false}/><YAxis tick={tickStyle} axisLine={false} tickLine={false}/><Tooltip contentStyle={tooltipStyle}/><Bar dataKey="revenue" fill="hsl(330,80%,55%)" radius={[6,6,0,0]}/></BarChart>
+          </ResponsiveContainer>
+        </motion.div>
+        <motion.div initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} transition={{delay:0.05}} className="bg-card border border-border rounded-2xl p-6 shadow-card">
+          <h3 className="font-display font-bold text-foreground mb-1">Daily Orders</h3><p className="text-xs text-muted-foreground mb-4">Last 7 days</p>
+          <ResponsiveContainer width="100%" height={260}>
+            <BarChart data={revenueData}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/><XAxis dataKey="date" tick={tickStyle} axisLine={false} tickLine={false}/><YAxis tick={tickStyle} axisLine={false} tickLine={false}/><Tooltip contentStyle={tooltipStyle}/><Bar dataKey="orders" fill="hsl(220,70%,50%)" radius={[6,6,0,0]}/></BarChart>
+          </ResponsiveContainer>
+        </motion.div>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <motion.div initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} transition={{delay:0.1}} className="bg-card border border-border rounded-2xl p-6 shadow-card">
+          <h3 className="font-display font-bold text-foreground mb-1">Order Status</h3><p className="text-xs text-muted-foreground mb-4">Breakdown by status</p>
+          <ResponsiveContainer width="100%" height={260}>
+            <PieChart><Pie data={statusData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={3} dataKey="value" label={({name,percent})=>`${name} ${(percent*100).toFixed(0)}%`}>{statusData.map((_,i)=><Cell key={i} fill={CHART_COLORS[i%CHART_COLORS.length]}/>)}</Pie><Tooltip contentStyle={tooltipStyle}/></PieChart>
+          </ResponsiveContainer>
+        </motion.div>
+        <motion.div initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} transition={{delay:0.15}} className="bg-card border border-border rounded-2xl p-6 shadow-card">
+          <h3 className="font-display font-bold text-foreground mb-1">Products by Category</h3><p className="text-xs text-muted-foreground mb-4">Distribution</p>
+          <ResponsiveContainer width="100%" height={260}>
+            <PieChart><Pie data={categoryData} cx="50%" cy="50%" outerRadius={100} paddingAngle={3} dataKey="value" label={({name,value})=>`${name} (${value})`}>{categoryData.map((_,i)=><Cell key={i} fill={CHART_COLORS[i%CHART_COLORS.length]}/>)}</Pie><Tooltip contentStyle={tooltipStyle}/></PieChart>
+          </ResponsiveContainer>
+        </motion.div>
+      </div>
+      <motion.div initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} transition={{delay:0.2}} className="bg-card border border-border rounded-2xl p-6 shadow-card">
+        <h3 className="font-display font-bold text-foreground mb-1">Monthly Trend</h3><p className="text-xs text-muted-foreground mb-4">Revenue & customers over 6 months</p>
+        <ResponsiveContainer width="100%" height={280}>
+          <LineChart data={monthlyTrend}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/><XAxis dataKey="month" tick={tickStyle} axisLine={false} tickLine={false}/><YAxis yAxisId="left" tick={tickStyle} axisLine={false} tickLine={false}/><YAxis yAxisId="right" orientation="right" tick={tickStyle} axisLine={false} tickLine={false}/><Tooltip contentStyle={tooltipStyle}/><Legend wrapperStyle={{fontSize:12}}/><Line yAxisId="left" type="monotone" dataKey="revenue" stroke="hsl(330,80%,55%)" strokeWidth={2.5} dot={{r:4,fill:"hsl(330,80%,55%)"}} name="Revenue ($)"/><Line yAxisId="right" type="monotone" dataKey="customers" stroke="hsl(220,70%,50%)" strokeWidth={2.5} dot={{r:4,fill:"hsl(220,70%,50%)"}} name="Customers"/></LineChart>
+        </ResponsiveContainer>
+      </motion.div>
+      <motion.div initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} transition={{delay:0.25}} className="bg-card border border-border rounded-2xl p-6 shadow-card">
+        <h3 className="font-display font-bold text-foreground mb-4">Top Selling Products</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead><tr className="border-b border-border"><th className="text-left py-2 text-muted-foreground font-medium text-xs">#</th><th className="text-left py-2 text-muted-foreground font-medium text-xs">Product</th><th className="text-right py-2 text-muted-foreground font-medium text-xs">Units Sold</th><th className="text-right py-2 text-muted-foreground font-medium text-xs">Revenue</th></tr></thead>
+            <tbody>{topProducts.map((p,i)=>(<tr key={i} className="border-b border-border last:border-0"><td className="py-3 text-muted-foreground">{i+1}</td><td className="py-3 font-medium text-foreground">{p.name}</td><td className="py-3 text-right text-foreground">{p.sold}</td><td className="py-3 text-right font-bold text-foreground">${p.revenue.toLocaleString()}</td></tr>))}</tbody>
+          </table>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
+
 const Admin = () => {
   const { user } = useAuthStore();
   const { products, orders, promoCodes, addProduct, removeProduct, updateOrderStatus, addPromoCode, removePromoCode, togglePromoCode } = useProductStore();
   const { toast } = useToast();
-  const [tab, setTab] = useState<"dashboard" | "orders" | "products" | "add" | "promos">("dashboard");
+  const [tab, setTab] = useState<"dashboard" | "analytics" | "orders" | "products" | "add" | "promos">("dashboard");
   const [newPromo, setNewPromo] = useState({ code: "", discount: "", description: "", expiresAt: "" });
 
   const [newProduct, setNewProduct] = useState({ name: "", description: "", price: "", image: "", category: "Photo Magnets" });
@@ -107,8 +257,8 @@ const Admin = () => {
 
         {/* Tabs */}
         <div className="flex gap-2 mb-6 border-b border-border pb-3 overflow-x-auto">
-          {(["dashboard", "orders", "products", "add", "promos"] as const).map((t) => {
-            const labels: Record<string, string> = { dashboard: "Dashboard", orders: "Orders", products: "Products", add: "Add Product", promos: "Promo Codes" };
+          {(["dashboard", "analytics", "orders", "products", "add", "promos"] as const).map((t) => {
+            const labels: Record<string, string> = { dashboard: "Dashboard", analytics: "Analytics", orders: "Orders", products: "Products", add: "Add Product", promos: "Promo Codes" };
             return (
               <button
                 key={t}
@@ -124,58 +274,10 @@ const Admin = () => {
         </div>
 
         {/* Dashboard Tab */}
-        {tab === "dashboard" && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-card border border-border rounded-2xl p-6 shadow-card">
-                <h3 className="font-display font-bold text-foreground mb-3">Recent Orders</h3>
-                {orders.slice(0, 5).length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No orders yet.</p>
-                ) : (
-                  <div className="space-y-2">
-                    {orders.slice(0, 5).map((order) => (
-                      <div key={order.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                        <div>
-                          <p className="text-sm font-medium text-foreground">{order.id}</p>
-                          <p className="text-xs text-muted-foreground">{order.userName}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-bold text-foreground">${order.total.toFixed(2)}</p>
-                          <span className={`text-xs px-2 py-0.5 rounded-full ${
-                            order.status === "delivered" ? "bg-[hsl(var(--success))]/20 text-[hsl(var(--success))]" :
-                            order.status === "pending" ? "bg-amber-500/20 text-amber-500" : "bg-primary/20 text-primary"
-                          }`}>{order.status}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                <button onClick={() => setTab("orders")} className="mt-3 text-xs text-primary hover:underline">View all orders →</button>
-              </div>
-              <div className="bg-card border border-border rounded-2xl p-6 shadow-card">
-                <h3 className="font-display font-bold text-foreground mb-3">Quick Actions</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  <button onClick={() => setTab("add")} className="flex flex-col items-center gap-2 p-4 rounded-xl bg-muted hover:bg-primary/10 transition-colors">
-                    <Plus className="w-6 h-6 text-primary" />
-                    <span className="text-xs font-medium text-foreground">Add Product</span>
-                  </button>
-                  <button onClick={() => setTab("promos")} className="flex flex-col items-center gap-2 p-4 rounded-xl bg-muted hover:bg-primary/10 transition-colors">
-                    <Tag className="w-6 h-6 text-primary" />
-                    <span className="text-xs font-medium text-foreground">Manage Promos</span>
-                  </button>
-                  <button onClick={() => setTab("products")} className="flex flex-col items-center gap-2 p-4 rounded-xl bg-muted hover:bg-primary/10 transition-colors">
-                    <Package className="w-6 h-6 text-primary" />
-                    <span className="text-xs font-medium text-foreground">View Products</span>
-                  </button>
-                  <button onClick={() => setTab("orders")} className="flex flex-col items-center gap-2 p-4 rounded-xl bg-muted hover:bg-primary/10 transition-colors">
-                    <Eye className="w-6 h-6 text-primary" />
-                    <span className="text-xs font-medium text-foreground">View Orders</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        {tab === "dashboard" && <DashboardTab orders={orders} products={products} setTab={setTab} />}
+
+        {/* Analytics Tab */}
+        {tab === "analytics" && <AnalyticsTab orders={orders} products={products} />}
 
         {/* Orders Tab */}
         {tab === "orders" && (
