@@ -32,7 +32,7 @@ const MagnetModel = ({ imageUrl }: MagnetProps) => {
       ctx.fillStyle = "#fff";
       ctx.font = "bold 24px sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText("HeartPrinted", 128, 128);
+      ctx.fillText("Magnetic Bliss", 128, 128);
       const tex = new THREE.CanvasTexture(canvas);
       setTexture(tex);
     };

@@ -23,7 +23,7 @@ const Orders = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="pt-24 px-6 pb-16 max-w-4xl mx-auto">
+      <main className="pt-32 px-6 pb-16 max-w-4xl mx-auto">
         <h1 className="text-h1 text-foreground mb-8">My Orders</h1>
 
         {myOrders.length === 0 ? (

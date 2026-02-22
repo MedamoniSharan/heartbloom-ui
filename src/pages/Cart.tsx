@@ -22,7 +22,7 @@ const Cart = () => {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <main className="pt-24 px-6 flex flex-col items-center justify-center min-h-[60vh]">
+        <main className="pt-32 px-6 flex flex-col items-center justify-center min-h-[60vh]">
           <ShoppingBag className="w-16 h-16 text-muted-foreground mb-4" />
           <h1 className="text-h2 text-foreground mb-2">Your Cart is Empty</h1>
           <p className="text-muted-foreground mb-6">Add some products to get started!</p>
@@ -37,7 +37,7 @@ const Cart = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="pt-24 px-6 pb-16 max-w-4xl mx-auto">
+      <main className="pt-32 px-6 pb-16 max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-h1 text-foreground">Your Cart</h1>
           <button onClick={clearCart} className="text-sm text-destructive hover:underline">Clear All</button>

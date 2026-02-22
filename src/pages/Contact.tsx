@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 const BUSINESS_INFO = {
   address: "123 Creative Way, Brooklyn, NY 11201",
   phone: "+1 (555) 123-4567",
-  email: "hello@heartprinted.com",
+  email: "hello@magneticbliss.in",
   hours: "Mon – Fri: 9AM – 6PM EST",
   whatsapp: "1234567890",
 };
@@ -34,7 +34,7 @@ const Contact = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="pt-24 px-6 pb-16 max-w-6xl mx-auto">
+      <main className="pt-32 px-6 pb-16 max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
           <Reveal>
@@ -118,7 +118,7 @@ const Contact = () => {
                 ))}
 
                 <a
-                  href={`https://wa.me/${BUSINESS_INFO.whatsapp}?text=${encodeURIComponent("Hi! I have a question about HeartPrinted products.")}`}
+                  href={`https://wa.me/${BUSINESS_INFO.whatsapp}?text=${encodeURIComponent("Hi! I have a question about Magnetic Bliss India products.")}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-[hsl(142,70%,45%)] text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity mt-2"
@@ -133,7 +133,7 @@ const Contact = () => {
               <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-card">
                 <div className="aspect-video relative">
                   <iframe
-                    title="HeartPrinted Location"
+                    title="Magnetic Bliss India Location"
                     src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${encodeURIComponent(BUSINESS_INFO.address)}`}
                     className="absolute inset-0 w-full h-full border-0"
                     allowFullScreen

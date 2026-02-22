@@ -21,7 +21,7 @@ const Signup = () => {
       return;
     }
     if (signup(name, email, password)) {
-      toast({ title: "Account created!", description: "Welcome to HeartPrinted!" });
+      toast({ title: "Account created!", description: "Welcome to Magnetic Bliss India!" });
       navigate("/products");
     } else {
       toast({ title: "Signup failed", description: "An account with this email already exists.", variant: "destructive" });
@@ -34,10 +34,10 @@ const Signup = () => {
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 mb-6">
             <Heart className="w-8 h-8 text-primary fill-primary" />
-            <span className="font-display text-2xl font-bold text-foreground">HeartPrinted</span>
+            <span className="font-display text-2xl font-bold text-foreground">Magnetic Bliss India</span>
           </Link>
           <h1 className="text-h2 text-foreground">Create Account</h1>
-          <p className="text-muted-foreground mt-2 text-sm">Join HeartPrinted and start creating</p>
+          <p className="text-muted-foreground mt-2 text-sm">Join Magnetic Bliss India and start creating</p>
         </div>
 
         <form onSubmit={handleSubmit} className="bg-card border border-border rounded-2xl p-6 shadow-card space-y-4">

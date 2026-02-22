@@ -40,7 +40,7 @@ const Products = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="pt-24 px-6 pb-16 max-w-6xl mx-auto">
+      <main className="pt-32 px-6 pb-16 max-w-6xl mx-auto">
         <Reveal><h1 className="text-h1 text-foreground mb-2">Our Products</h1></Reveal>
         <Reveal delay={100}><p className="text-muted-foreground mb-6">Premium photo magnets for every occasion</p></Reveal>
 
