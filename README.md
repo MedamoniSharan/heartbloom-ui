@@ -36,9 +36,20 @@ npm run dev
 ```sh
 cd backend
 npm i
-cp .env.example .env   # configure DB and env
+cp .env.example .env   # configure MONGODB_URI, JWT_SECRET, etc.
 npm start
 ```
+
+**Seed mock data (products, promos, admin user)**
+
+With the backend `.env` configured and MongoDB running:
+
+```sh
+cd backend
+npm run seed
+```
+
+This inserts mock products, promo codes (e.g. `WELCOME10`, `MAGNET20`), and an admin user. The API will then serve this data (e.g. `GET /api/products`). Admin login: `admin@magneticbliss.in` / `admin123`.
 
 **Quick start from repo root**
 

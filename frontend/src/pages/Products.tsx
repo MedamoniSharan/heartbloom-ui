@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ShoppingCart, Star, MessageCircle, Search, Heart } from "lucide-react";
+import { ShoppingCart, Star, Search, Heart } from "lucide-react";
+import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { useProductStore, Product } from "@/stores/productStore";
 import { useCartStore } from "@/stores/cartStore";
 import { useWishlistStore } from "@/stores/wishlistStore";
@@ -147,7 +148,7 @@ const Products = () => {
                   aria-label="Chat on WhatsApp"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <MessageCircle className="w-4 h-4" />
+                  <WhatsAppIcon className="w-4 h-4" />
                 </a>
                 <motion.button
                   onClick={(e) => { e.preventDefault(); handleAdd(product); }}

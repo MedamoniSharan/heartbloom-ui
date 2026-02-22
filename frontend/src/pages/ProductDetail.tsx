@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ShoppingCart, Heart, MessageCircle, Star, ChevronLeft, Check, Minus, Plus, Box } from "lucide-react";
+import { ShoppingCart, Heart, Star, ChevronLeft, Check, Minus, Plus, Box } from "lucide-react";
+import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { useProductStore, Product } from "@/stores/productStore";
 import { useCartStore } from "@/stores/cartStore";
 import { useWishlistStore } from "@/stores/wishlistStore";
@@ -198,7 +199,7 @@ const ProductDetail = () => {
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[hsl(142,70%,45%)] text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
               >
-                <MessageCircle className="w-4 h-4" /> Chat on WhatsApp
+                <WhatsAppIcon className="w-4 h-4" /> Chat on WhatsApp
               </a>
             </Reveal>
 

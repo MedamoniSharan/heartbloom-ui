@@ -1,5 +1,6 @@
-import { Heart, MapPin, Phone, Mail, Instagram, MessageCircle, ExternalLink } from "lucide-react";
+import { Heart, MapPin, Phone, Mail, Instagram, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
+import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { siteConfig } from "@/lib/siteConfig";
 
 const quickLinks = [
@@ -101,7 +102,7 @@ export const Footer = () => (
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#25D366] text-white text-sm font-medium hover:opacity-90 transition-opacity mb-4"
           >
-            <MessageCircle className="w-4 h-4" /> Chat on WhatsApp
+            <WhatsAppIcon className="w-4 h-4" /> Chat on WhatsApp
           </a>
           <a
             href={siteConfig.instagram}
@@ -115,13 +116,16 @@ export const Footer = () => (
       </div>
 
       {/* Bottom bar */}
-      <div className="pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3">
         <p className="text-xs text-muted-foreground order-2 sm:order-1">
           © {new Date().getFullYear()} Magnetic Bliss India. All rights reserved.
         </p>
-        <div className="flex items-center gap-1 text-xs text-muted-foreground order-1 sm:order-2">
-          <span>Beeramguda, Hyderabad</span>
-        </div>
+        <p className="text-xs text-muted-foreground order-1 sm:order-2">
+          Developed by <span className="font-medium text-foreground">Optiwebrix Team</span>
+        </p>
+        <p className="text-xs text-muted-foreground order-3">
+          Beeramguda, Hyderabad
+        </p>
       </div>
     </div>
   </footer>
