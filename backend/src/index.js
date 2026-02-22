@@ -12,7 +12,16 @@ import contactRoutes from "./routes/contact.js";
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-app.use(cors({ origin: true, credentials: true }));
+// Allow all origins, methods, and headers (fixes CORS for localhost:8080 -> localhost:4000)
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    optionsSuccessStatus: 200,
+  })
+);
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
