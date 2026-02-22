@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ShoppingCart, Star, MessageCircle, Search } from "lucide-react";
+import { ShoppingCart, Star, MessageCircle, Search, Heart } from "lucide-react";
 import { useProductStore, Product } from "@/stores/productStore";
 import { useCartStore } from "@/stores/cartStore";
+import { useWishlistStore } from "@/stores/wishlistStore";
 import { useToast } from "@/hooks/use-toast";
 import { Navbar } from "@/components/Navbar";
 import { Link } from "react-router-dom";
@@ -19,6 +20,7 @@ const getWhatsAppLink = (product: Product) => {
 const Products = () => {
   const { products } = useProductStore();
   const { addToCart } = useCartStore();
+  const { toggle, isWishlisted } = useWishlistStore();
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
@@ -106,6 +108,18 @@ const Products = () => {
               <Link to={`/products/${product.id}`} className="block">
                 <div className="relative aspect-square overflow-hidden">
                   <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <motion.button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      toggle(product.id);
+                      toast({ title: isWishlisted(product.id) ? "Removed from wishlist" : "Added to wishlist!" });
+                    }}
+                    className="absolute top-3 right-3 w-8 h-8 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors"
+                    whileTap={{ scale: 0.85 }}
+                    aria-label="Toggle wishlist"
+                  >
+                    <Heart className={`w-4 h-4 ${isWishlisted(product.id) ? "fill-primary text-primary" : "text-muted-foreground"}`} />
+                  </motion.button>
                   {!product.inStock && (
                     <div className="absolute inset-0 bg-foreground/60 flex items-center justify-center">
                       <span className="bg-card text-foreground px-3 py-1 rounded-lg text-sm font-medium">Out of Stock</span>
