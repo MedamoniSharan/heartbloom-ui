@@ -1,5 +1,6 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Heart } from "lucide-react";
+import { ThemeToggle } from "./ThemeToggle";
 
 export const Navbar = () => {
   const { scrollY } = useScroll();
@@ -32,13 +33,16 @@ export const Navbar = () => {
           <a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a>
         </div>
 
-        <motion.button
-          className="px-5 py-2.5 rounded-xl bg-gradient-pink text-primary-foreground text-sm font-medium glow-pink-sm"
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.97 }}
-        >
-          Get Started
-        </motion.button>
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
+          <motion.button
+            className="px-5 py-2.5 rounded-xl bg-gradient-pink text-primary-foreground text-sm font-medium glow-pink-sm"
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+          >
+            Get Started
+          </motion.button>
+        </div>
       </nav>
     </motion.header>
   );

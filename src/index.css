@@ -97,6 +97,24 @@
   }
 }
 
+/* View Transition API for dark mode */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.4s;
+  animation-timing-function: ease-in-out;
+}
+
+.dark img {
+  filter: brightness(0.92);
+}
+
+.dark .shadow-elevated {
+  box-shadow: 0 0 40px hsl(var(--pink-glow) / 0.12);
+}
+
+.dark .shadow-card {
+  box-shadow: 0 0 24px hsl(var(--navy) / 0.3);
+}
 @layer base {
   * {
     @apply border-border;
