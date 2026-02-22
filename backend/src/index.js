@@ -1,6 +1,5 @@
 import "dotenv/config";
 import express from "express";
-import cors from "cors";
 import { connectDB } from "./config/db.js";
 import authRoutes from "./routes/auth.js";
 import productRoutes from "./routes/products.js";
@@ -12,16 +11,31 @@ import contactRoutes from "./routes/contact.js";
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// Allow all origins, methods, and headers (fixes CORS for localhost:8080 -> localhost:4000)
-app.use(
-  cors({
-    origin: true,
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    optionsSuccessStatus: 200,
-  })
-);
+const allowedOrigins = [
+  "http://localhost:8080",
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "http://127.0.0.1:8080",
+  "http://127.0.0.1:5173",
+  "http://127.0.0.1:3000",
+];
+
+function corsMiddleware(req, res, next) {
+  const origin = req.headers.origin;
+  const allowOrigin = !origin || allowedOrigins.includes(origin) ? (origin || allowedOrigins[0]) : null;
+  if (allowOrigin) {
+    res.setHeader("Access-Control-Allow-Origin", allowOrigin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.setHeader("Access-Control-Max-Age", "86400");
+  }
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+  next();
+}
+app.use(corsMiddleware);
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
