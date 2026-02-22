@@ -23,7 +23,7 @@ const Admin = () => {
   const { user } = useAuthStore();
   const { products, orders, promoCodes, addProduct, removeProduct, updateOrderStatus, addPromoCode, removePromoCode, togglePromoCode } = useProductStore();
   const { toast } = useToast();
-  const [tab, setTab] = useState<"orders" | "products" | "add" | "promos">("orders");
+  const [tab, setTab] = useState<"dashboard" | "orders" | "products" | "add" | "promos">("dashboard");
   const [newPromo, setNewPromo] = useState({ code: "", discount: "", description: "", expiresAt: "" });
 
   const [newProduct, setNewProduct] = useState({ name: "", description: "", price: "", image: "", category: "Photo Magnets" });
@@ -107,8 +107,8 @@ const Admin = () => {
 
         {/* Tabs */}
         <div className="flex gap-2 mb-6 border-b border-border pb-3 overflow-x-auto">
-          {(["orders", "products", "add", "promos"] as const).map((t) => {
-            const labels: Record<string, string> = { orders: "Orders", products: "Products", add: "Add Product", promos: "Promo Codes" };
+          {(["dashboard", "orders", "products", "add", "promos"] as const).map((t) => {
+            const labels: Record<string, string> = { dashboard: "Dashboard", orders: "Orders", products: "Products", add: "Add Product", promos: "Promo Codes" };
             return (
               <button
                 key={t}
@@ -122,6 +122,60 @@ const Admin = () => {
             );
           })}
         </div>
+
+        {/* Dashboard Tab */}
+        {tab === "dashboard" && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-card border border-border rounded-2xl p-6 shadow-card">
+                <h3 className="font-display font-bold text-foreground mb-3">Recent Orders</h3>
+                {orders.slice(0, 5).length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No orders yet.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {orders.slice(0, 5).map((order) => (
+                      <div key={order.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+                        <div>
+                          <p className="text-sm font-medium text-foreground">{order.id}</p>
+                          <p className="text-xs text-muted-foreground">{order.userName}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-bold text-foreground">${order.total.toFixed(2)}</p>
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${
+                            order.status === "delivered" ? "bg-[hsl(var(--success))]/20 text-[hsl(var(--success))]" :
+                            order.status === "pending" ? "bg-amber-500/20 text-amber-500" : "bg-primary/20 text-primary"
+                          }`}>{order.status}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <button onClick={() => setTab("orders")} className="mt-3 text-xs text-primary hover:underline">View all orders →</button>
+              </div>
+              <div className="bg-card border border-border rounded-2xl p-6 shadow-card">
+                <h3 className="font-display font-bold text-foreground mb-3">Quick Actions</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <button onClick={() => setTab("add")} className="flex flex-col items-center gap-2 p-4 rounded-xl bg-muted hover:bg-primary/10 transition-colors">
+                    <Plus className="w-6 h-6 text-primary" />
+                    <span className="text-xs font-medium text-foreground">Add Product</span>
+                  </button>
+                  <button onClick={() => setTab("promos")} className="flex flex-col items-center gap-2 p-4 rounded-xl bg-muted hover:bg-primary/10 transition-colors">
+                    <Tag className="w-6 h-6 text-primary" />
+                    <span className="text-xs font-medium text-foreground">Manage Promos</span>
+                  </button>
+                  <button onClick={() => setTab("products")} className="flex flex-col items-center gap-2 p-4 rounded-xl bg-muted hover:bg-primary/10 transition-colors">
+                    <Package className="w-6 h-6 text-primary" />
+                    <span className="text-xs font-medium text-foreground">View Products</span>
+                  </button>
+                  <button onClick={() => setTab("orders")} className="flex flex-col items-center gap-2 p-4 rounded-xl bg-muted hover:bg-primary/10 transition-colors">
+                    <Eye className="w-6 h-6 text-primary" />
+                    <span className="text-xs font-medium text-foreground">View Orders</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Orders Tab */}
         {tab === "orders" && (
