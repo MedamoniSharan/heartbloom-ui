@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   Package, DollarSign, Users, TrendingUp, Plus,
   Eye, Trash2, ChevronDown, Tag, ToggleLeft, ToggleRight,
+  Upload, ImageIcon, X,
 } from "lucide-react";
 import { useProductStore, Product, Order, PromoCode } from "@/stores/productStore";
 import { useAuthStore } from "@/stores/authStore";
@@ -26,6 +27,34 @@ const Admin = () => {
   const [newPromo, setNewPromo] = useState({ code: "", discount: "", description: "", expiresAt: "" });
 
   const [newProduct, setNewProduct] = useState({ name: "", description: "", price: "", image: "", category: "Photo Magnets" });
+  const [dragOver, setDragOver] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  const handleImageDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith("image/")) {
+      const url = URL.createObjectURL(file);
+      setImagePreview(url);
+      setNewProduct((p) => ({ ...p, image: url }));
+    }
+  }, []);
+
+  const handleImageSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith("image/")) {
+      const url = URL.createObjectURL(file);
+      setImagePreview(url);
+      setNewProduct((p) => ({ ...p, image: url }));
+    }
+  }, []);
+
+  const clearImage = () => {
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImagePreview(null);
+    setNewProduct((p) => ({ ...p, image: "" }));
+  };
 
   if (!user || user.role !== "admin") return <Navigate to="/login" replace />;
 
@@ -43,6 +72,7 @@ const Admin = () => {
     });
     toast({ title: "Product added!" });
     setNewProduct({ name: "", description: "", price: "", image: "", category: "Photo Magnets" });
+    clearImage();
     setTab("products");
   };
 
@@ -162,9 +192,57 @@ const Admin = () => {
               <input type="number" step="0.01" placeholder=" " value={newProduct.price} onChange={(e) => setNewProduct((p) => ({ ...p, price: e.target.value }))} required />
               <label>Price ($)</label>
             </div>
-            <div className="floating-label-group">
-              <input type="url" placeholder=" " value={newProduct.image} onChange={(e) => setNewProduct((p) => ({ ...p, image: e.target.value }))} />
-              <label>Image URL (optional)</label>
+            {/* Drag & Drop Image Upload */}
+            <div
+              className={`relative border-2 border-dashed rounded-2xl transition-all cursor-pointer ${
+                dragOver
+                  ? "border-primary bg-primary/5 scale-[1.01]"
+                  : imagePreview
+                    ? "border-primary/30 bg-primary/5"
+                    : "border-border hover:border-primary/40 hover:bg-muted/30"
+              }`}
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleImageDrop}
+              onClick={() => document.getElementById("admin-image-input")?.click()}
+            >
+              <input
+                id="admin-image-input"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleImageSelect}
+              />
+              {imagePreview ? (
+                <div className="relative p-3">
+                  <img src={imagePreview} alt="Preview" className="w-full aspect-video object-cover rounded-xl" />
+                  <motion.button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); clearImage(); }}
+                    className="absolute top-5 right-5 w-8 h-8 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-md"
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    <X className="w-4 h-4" />
+                  </motion.button>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-10 gap-2">
+                  <motion.div
+                    className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center"
+                    animate={dragOver ? { scale: 1.1 } : { scale: 1 }}
+                  >
+                    {dragOver ? (
+                      <Upload className="w-6 h-6 text-primary" />
+                    ) : (
+                      <ImageIcon className="w-6 h-6 text-primary" />
+                    )}
+                  </motion.div>
+                  <p className="text-sm font-medium text-foreground">
+                    {dragOver ? "Drop image here" : "Drag & drop product image"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">or click to browse · PNG, JPG, WebP</p>
+                </div>
+              )}
             </div>
             <div className="floating-label-group">
               <input type="text" placeholder=" " value={newProduct.category} onChange={(e) => setNewProduct((p) => ({ ...p, category: e.target.value }))} />
