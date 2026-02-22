@@ -9,6 +9,8 @@ import { ScrollProgress } from "@/components/ScrollProgress";
 import { PageTransition } from "@/components/PageTransition";
 import { MagneticCursor } from "@/components/MagneticCursor";
 import { UploadModal } from "@/components/UploadModal";
+import { MobileBottomNav } from "@/components/MobileBottomNav";
+import { SkipToContent, SRAnnouncer } from "@/components/Accessibility";
 
 const Index = () => {
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -16,16 +18,19 @@ const Index = () => {
   return (
     <PageTransition>
       <div className="min-h-screen bg-background">
+        <SkipToContent />
+        <SRAnnouncer />
         <MagneticCursor />
         <ScrollProgress />
         <Navbar />
-        <main>
+        <main id="main-content" role="main">
           <HeroSection onUploadClick={() => setUploadOpen(true)} />
           <HowItWorks />
           <MagnetGrid />
           <ReviewMarquee />
         </main>
         <Footer />
+        <MobileBottomNav onUploadClick={() => setUploadOpen(true)} />
         <UploadModal open={uploadOpen} onClose={() => setUploadOpen(false)} />
       </div>
     </PageTransition>
