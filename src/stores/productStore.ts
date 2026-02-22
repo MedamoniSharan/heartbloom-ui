@@ -4,12 +4,15 @@ export interface Product {
   id: string;
   name: string;
   description: string;
+  longDescription?: string;
   price: number;
   image: string;
+  images?: string[];
   category: string;
   rating: number;
   reviews: number;
   inStock: boolean;
+  customizable?: boolean; // true = user can upload/edit photos for this product
   whatsappMessage?: string;
 }
 
@@ -37,13 +40,13 @@ export interface Address {
 }
 
 const MOCK_PRODUCTS: Product[] = [
-  { id: "p1", name: "Classic Photo Magnets (9-Pack)", description: "Turn your favorite memories into beautiful fridge magnets. Premium quality, vibrant colors.", price: 24.99, image: "https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?w=400&h=400&fit=crop", category: "Photo Magnets", rating: 4.8, reviews: 234, inStock: true },
-  { id: "p2", name: "Heart-Shaped Magnets (6-Pack)", description: "Express your love with heart-shaped photo magnets. Perfect for gifts and special occasions.", price: 19.99, image: "https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=400&h=400&fit=crop", category: "Photo Magnets", rating: 4.9, reviews: 189, inStock: true },
-  { id: "p3", name: "Mini Polaroid Magnets (12-Pack)", description: "Retro-style polaroid magnets with your photos. Nostalgic and charming.", price: 29.99, image: "https://images.unsplash.com/photo-1531265726475-52ad60219627?w=400&h=400&fit=crop", category: "Photo Magnets", rating: 4.7, reviews: 156, inStock: true },
+  { id: "p1", name: "Classic Photo Magnets (9-Pack)", description: "Turn your favorite memories into beautiful fridge magnets. Premium quality, vibrant colors.", longDescription: "Upload 9 of your favorite photos and we'll print them as premium fridge magnets. Each magnet features vivid colors on a durable magnetic backing.", price: 24.99, image: "https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?w=400&h=400&fit=crop", category: "Photo Magnets", rating: 4.8, reviews: 234, inStock: true, customizable: true },
+  { id: "p2", name: "Heart-Shaped Magnets (6-Pack)", description: "Express your love with heart-shaped photo magnets. Perfect for gifts and special occasions.", price: 19.99, image: "https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=400&h=400&fit=crop", category: "Photo Magnets", rating: 4.9, reviews: 189, inStock: true, customizable: true },
+  { id: "p3", name: "Mini Polaroid Magnets (12-Pack)", description: "Retro-style polaroid magnets with your photos. Nostalgic and charming.", price: 29.99, image: "https://images.unsplash.com/photo-1531265726475-52ad60219627?w=400&h=400&fit=crop", category: "Photo Magnets", rating: 4.7, reviews: 156, inStock: true, customizable: true },
   { id: "p4", name: "Custom Text Magnets (4-Pack)", description: "Add custom text and quotes to your photo magnets. Great for motivational fridge décor.", price: 14.99, image: "https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?w=400&h=400&fit=crop", category: "Custom", rating: 4.6, reviews: 98, inStock: true },
   { id: "p5", name: "Premium Canvas Magnets (6-Pack)", description: "Thick premium canvas-style photo magnets with a textured finish.", price: 34.99, image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=400&h=400&fit=crop", category: "Premium", rating: 4.9, reviews: 312, inStock: true },
-  { id: "p6", name: "Family Portrait Magnets (3-Pack)", description: "Large format magnets perfect for family portraits and group photos.", price: 22.99, image: "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=400&h=400&fit=crop", category: "Photo Magnets", rating: 4.5, reviews: 67, inStock: false },
-  { id: "p7", name: "Pet Photo Magnets (9-Pack)", description: "Showcase your furry friends with adorable pet photo magnets.", price: 24.99, image: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&h=400&fit=crop", category: "Photo Magnets", rating: 4.8, reviews: 445, inStock: true },
+  { id: "p6", name: "Family Portrait Magnets (3-Pack)", description: "Large format magnets perfect for family portraits and group photos.", price: 22.99, image: "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=400&h=400&fit=crop", category: "Photo Magnets", rating: 4.5, reviews: 67, inStock: false, customizable: true },
+  { id: "p7", name: "Pet Photo Magnets (9-Pack)", description: "Showcase your furry friends with adorable pet photo magnets.", price: 24.99, image: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&h=400&fit=crop", category: "Photo Magnets", rating: 4.8, reviews: 445, inStock: true, customizable: true },
   { id: "p8", name: "Travel Memory Magnets (6-Pack)", description: "Capture your travel adventures as stunning fridge magnets.", price: 27.99, image: "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400&h=400&fit=crop", category: "Custom", rating: 4.7, reviews: 201, inStock: true },
 ];
 

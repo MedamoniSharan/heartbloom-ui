@@ -1,12 +1,22 @@
-import { motion } from "framer-motion";
-import { Minus, Plus, Trash2, ShoppingBag, ArrowRight } from "lucide-react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Upload, X } from "lucide-react";
 import { useCartStore } from "@/stores/cartStore";
+import { usePhotoStore, MAX_PHOTOS, buildFilterString } from "@/stores/photoStore";
 import { Navbar } from "@/components/Navbar";
 import { Link } from "react-router-dom";
 import { Footer } from "@/components/Footer";
+import { UploadModal } from "@/components/UploadModal";
+import { ImageEditor } from "@/components/ImageEditor";
 
 const Cart = () => {
   const { items, removeFromCart, updateQuantity, total, clearCart } = useCartStore();
+  const { photos, removePhoto, updatePhoto } = usePhotoStore();
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [editingPhotoId, setEditingPhotoId] = useState<string | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
+
+  const editingPhoto = photos.find((p) => p.id === editingPhotoId);
 
   if (items.length === 0) {
     return (
@@ -48,6 +58,18 @@ const Cart = () => {
                 <div className="flex-1 min-w-0">
                   <h3 className="font-display font-semibold text-foreground text-sm truncate">{item.product.name}</h3>
                   <p className="text-muted-foreground text-xs mt-1">${item.product.price} each</p>
+
+                  {/* Edit pictures button for customizable products */}
+                  {item.product.customizable && (
+                    <motion.button
+                      onClick={() => setUploadOpen(true)}
+                      className="mt-2 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-medium hover:opacity-90 transition-opacity"
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Upload className="w-3.5 h-3.5" /> Edit pictures
+                    </motion.button>
+                  )}
+
                   <div className="flex items-center gap-3 mt-3">
                     <div className="flex items-center gap-1 bg-muted rounded-lg">
                       <button onClick={() => updateQuantity(item.product.id, item.quantity - 1)} className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
@@ -68,6 +90,45 @@ const Cart = () => {
                 </div>
               </motion.div>
             ))}
+
+            {/* Photo preview strip if photos uploaded */}
+            {photos.length > 0 && (
+              <div className="bg-card border border-border rounded-2xl p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-medium text-foreground">Your Photos ({photos.length}/{MAX_PHOTOS})</h3>
+                  <button onClick={() => setPreviewOpen(true)} className="text-xs text-primary hover:underline">
+                    Preview Grid
+                  </button>
+                </div>
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {photos.map((photo) => (
+                    <div key={photo.id} className="relative flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden group">
+                      <img
+                        src={photo.preview}
+                        alt={photo.name}
+                        className="w-full h-full object-cover cursor-pointer"
+                        style={{ filter: buildFilterString(photo.adjustments, photo.filter) }}
+                        onClick={() => setEditingPhotoId(photo.id)}
+                      />
+                      <button
+                        onClick={() => removePhoto(photo.id)}
+                        className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-2.5 h-2.5" />
+                      </button>
+                    </div>
+                  ))}
+                  {photos.length < MAX_PHOTOS && (
+                    <button
+                      onClick={() => setUploadOpen(true)}
+                      className="flex-shrink-0 w-16 h-16 rounded-lg border-2 border-dashed border-border flex items-center justify-center hover:border-primary/50 transition-colors"
+                    >
+                      <Plus className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Summary */}
@@ -97,6 +158,83 @@ const Cart = () => {
         </div>
       </main>
       <Footer />
+
+      {/* Upload modal */}
+      <UploadModal open={uploadOpen} onClose={() => setUploadOpen(false)} />
+
+      {/* Image editor */}
+      <AnimatePresence>
+        {editingPhoto && (
+          <ImageEditor
+            photo={editingPhoto}
+            onSave={(updates) => updatePhoto(editingPhoto.id, updates)}
+            onClose={() => setEditingPhotoId(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Full preview modal */}
+      <AnimatePresence>
+        {previewOpen && (
+          <motion.div
+            className="fixed inset-0 z-50 bg-foreground/60 backdrop-blur-sm flex items-center justify-center p-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setPreviewOpen(false)}
+          >
+            <motion.div
+              className="bg-card rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-auto"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-display font-bold text-foreground">Product Preview</h2>
+                <button onClick={() => setPreviewOpen(false)} className="text-muted-foreground hover:text-foreground">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                {Array.from({ length: MAX_PHOTOS }, (_, i) => photos[i] || null).map((photo, i) => (
+                  <div key={photo?.id || `empty-${i}`} className="aspect-square rounded-lg overflow-hidden border border-dashed border-primary/30">
+                    {photo ? (
+                      <img
+                        src={photo.preview}
+                        alt={photo.name}
+                        className="w-full h-full object-cover cursor-pointer"
+                        style={{ filter: buildFilterString(photo.adjustments, photo.filter) }}
+                        onClick={() => { setPreviewOpen(false); setEditingPhotoId(photo.id); }}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-muted">
+                        <Plus className="w-5 h-5 text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-2 mt-4 text-xs text-muted-foreground">
+                <span className="inline-block w-3 h-3 border border-dashed border-primary/40 rounded" />
+                Area beyond the dotted lines will wrap around the edges of your magnets
+              </div>
+
+              <p className="text-sm text-foreground font-medium mt-3">Selected {photos.length}/{MAX_PHOTOS}</p>
+
+              <motion.button
+                onClick={() => setPreviewOpen(false)}
+                className="w-full mt-4 py-3 rounded-xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm"
+                whileTap={{ scale: 0.97 }}
+              >
+                SAVE
+              </motion.button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

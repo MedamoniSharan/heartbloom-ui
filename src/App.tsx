@@ -13,6 +13,7 @@ import Cart from "./pages/Cart";
 import Address from "./pages/Address";
 import Orders from "./pages/Orders";
 import Admin from "./pages/Admin";
+import ProductDetail from "./pages/ProductDetail";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/products" element={<Products />} />
+          <Route path="/products/:id" element={<ProductDetail />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/address" element={<Address />} />
           <Route path="/orders" element={<Orders />} />
