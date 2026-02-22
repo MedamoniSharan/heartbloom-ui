@@ -1,6 +1,6 @@
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
-const getToken = (): string | null =>
+export const getToken = (): string | null =>
   typeof window !== "undefined" ? localStorage.getItem("magnetic_bliss_token") : null;
 
 export const setToken = (token: string | null) => {

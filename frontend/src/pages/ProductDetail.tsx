@@ -10,8 +10,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Reveal } from "@/components/Reveal";
 import { MagnetMockup3D } from "@/components/MagnetMockup3D";
-
-const WHATSAPP_NUMBER = "1234567890";
+import { siteConfig } from "@/lib/siteConfig";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -39,7 +38,7 @@ const ProductDetail = () => {
   }
 
   const images = product.images?.length ? product.images : [product.image];
-  const whatsappLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Hi! I'm interested in "${product.name}" ($${product.price}). Can you tell me more?`)}`;
+  const whatsappLink = `https://wa.me/${siteConfig.whatsappDigits}?text=${encodeURIComponent(`Hi! I'm interested in "${product.name}" (₹${product.price}). Can you tell me more?`)}`;
 
   const related = products.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4);
 

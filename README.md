@@ -20,20 +20,38 @@ If you want to work locally using your own IDE, you can clone this repo and push
 
 The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
-Follow these steps:
+This repo has **frontend** and **backend** in separate folders.
+
+**Frontend (Vite + React)**
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+cd frontend
+npm i
+cp .env.example .env   # optional: set VITE_API_URL for backend
+npm run dev
+```
 
-# Step 2: Navigate to the project directory.
+**Backend**
+
+```sh
+cd backend
+npm i
+cp .env.example .env   # configure DB and env
+npm start
+```
+
+**Quick start from repo root**
+
+```sh
+# Clone the repository
+git clone <YOUR_GIT_URL>
 cd <YOUR_PROJECT_NAME>
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Frontend
+cd frontend && npm i && npm run dev
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+# In another terminal: Backend
+cd backend && npm i && npm start
 ```
 
 **Edit a file directly in GitHub**

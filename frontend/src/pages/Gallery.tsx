@@ -4,6 +4,7 @@ import { Heart, Star, X, Camera, Quote } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Reveal } from "@/components/Reveal";
+import { siteConfig } from "@/lib/siteConfig";
 
 interface GalleryItem {
   id: string;
@@ -117,7 +118,7 @@ const Gallery = () => {
               Got your Magnetic Bliss India magnets? Share a photo and join our Wall of Love. Tag us on social media!
             </p>
             <a
-              href="https://instagram.com"
+              href={siteConfig.instagram}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex px-8 py-3.5 rounded-2xl bg-gradient-pink text-primary-foreground font-medium glow-pink-sm"

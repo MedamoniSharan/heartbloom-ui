@@ -1,19 +1,12 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { MapPin, Phone, Mail, Clock, Send, MessageCircle } from "lucide-react";
+import { MapPin, Phone, Mail, Send, MessageCircle } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Reveal } from "@/components/Reveal";
 import { useToast } from "@/hooks/use-toast";
 import { contactApi } from "@/lib/api";
-
-const BUSINESS_INFO = {
-  address: "123 Creative Way, Brooklyn, NY 11201",
-  phone: "+1 (555) 123-4567",
-  email: "hello@magneticbliss.in",
-  hours: "Mon – Fri: 9AM – 6PM EST",
-  whatsapp: "1234567890",
-};
+import { siteConfig } from "@/lib/siteConfig";
 
 const Contact = () => {
   const { toast } = useToast();
@@ -106,10 +99,9 @@ const Contact = () => {
               <div className="bg-card border border-border rounded-2xl p-5 shadow-card space-y-4">
                 <h3 className="font-display font-semibold text-foreground text-sm">Business Info</h3>
                 {[
-                  { icon: MapPin, label: "Address", value: BUSINESS_INFO.address },
-                  { icon: Phone, label: "Phone", value: BUSINESS_INFO.phone },
-                  { icon: Mail, label: "Email", value: BUSINESS_INFO.email },
-                  { icon: Clock, label: "Hours", value: BUSINESS_INFO.hours },
+                  { icon: MapPin, label: "Location", value: siteConfig.location },
+                  { icon: Phone, label: "Contact", value: siteConfig.phone },
+                  { icon: Mail, label: "Email", value: siteConfig.email },
                 ].map(({ icon: Icon, label, value }) => (
                   <div key={label} className="flex items-start gap-3">
                     <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -123,7 +115,7 @@ const Contact = () => {
                 ))}
 
                 <a
-                  href={`https://wa.me/${BUSINESS_INFO.whatsapp}?text=${encodeURIComponent("Hi! I have a question about Magnetic Bliss India products.")}`}
+                  href={`https://wa.me/${siteConfig.whatsappDigits}?text=${encodeURIComponent("Hi! I have a question about Magnetic Bliss India products.")}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-[hsl(142,70%,45%)] text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity mt-2"
@@ -139,7 +131,7 @@ const Contact = () => {
                 <div className="aspect-video relative">
                   <iframe
                     title="Magnetic Bliss India Location"
-                    src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${encodeURIComponent(BUSINESS_INFO.address)}`}
+                    src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${encodeURIComponent(siteConfig.mapQuery)}`}
                     className="absolute inset-0 w-full h-full border-0"
                     allowFullScreen
                     loading="lazy"
@@ -147,7 +139,7 @@ const Contact = () => {
                 </div>
                 <div className="p-3 flex items-center gap-2 text-xs text-muted-foreground">
                   <MapPin className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-                  <span className="truncate">{BUSINESS_INFO.address}</span>
+                  <span className="truncate">{siteConfig.location}</span>
                 </div>
               </div>
             </Reveal>

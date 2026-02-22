@@ -6,6 +6,7 @@ import { useCartStore } from "@/stores/cartStore";
 import { useWishlistStore } from "@/stores/wishlistStore";
 import { useProductStore } from "@/stores/productStore";
 import { Link, useNavigate } from "react-router-dom";
+import { siteConfig } from "@/lib/siteConfig";
 
 export const Navbar = () => {
   const { scrollY } = useScroll();
@@ -32,7 +33,11 @@ export const Navbar = () => {
       />
       <nav className="max-w-6xl mx-auto flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2 group">
-          <Heart className="w-6 h-6 text-primary fill-primary group-hover:scale-110 transition-transform" />
+          {siteConfig.logoUrl ? (
+            <img src={siteConfig.logoUrl} alt="Magnetic Bliss India" className="h-8 w-auto object-contain group-hover:scale-110 transition-transform" />
+          ) : (
+            <Heart className="w-6 h-6 text-primary fill-primary group-hover:scale-110 transition-transform" />
+          )}
           <span className="font-display text-xl font-bold text-foreground">Magnetic Bliss India</span>
         </Link>
 

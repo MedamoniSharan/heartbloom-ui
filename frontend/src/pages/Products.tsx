@@ -9,12 +9,11 @@ import { Navbar } from "@/components/Navbar";
 import { Link } from "react-router-dom";
 import { Reveal } from "@/components/Reveal";
 import { Footer } from "@/components/Footer";
-
-const WHATSAPP_NUMBER = "1234567890";
+import { siteConfig } from "@/lib/siteConfig";
 
 const getWhatsAppLink = (product: Product) => {
-  const message = encodeURIComponent(`Hi! I'm interested in "${product.name}" ($${product.price}). Can you tell me more?`);
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
+  const message = encodeURIComponent(`Hi! I'm interested in "${product.name}" (₹${product.price}). Can you tell me more?`);
+  return `https://wa.me/${siteConfig.whatsappDigits}?text=${message}`;
 };
 
 const Products = () => {
