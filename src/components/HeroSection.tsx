@@ -20,7 +20,11 @@ const fadeUp = {
   },
 };
 
-export const HeroSection = () => {
+interface HeroSectionProps {
+  onUploadClick?: () => void;
+}
+
+export const HeroSection = ({ onUploadClick }: HeroSectionProps) => {
   const { scrollY } = useScroll();
   const heroY = useTransform(scrollY, [0, 600], [0, -60]);
   const imageY = useTransform(scrollY, [0, 600], [0, -36]);
@@ -91,6 +95,8 @@ export const HeroSection = () => {
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.97 }}
                 transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                onClick={onUploadClick}
+                data-magnetic
               >
                 Create Your Magnets
                 <ArrowRight className="w-4 h-4" />
