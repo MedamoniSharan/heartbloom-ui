@@ -36,6 +36,7 @@ export const Navbar = () => {
 
         <div className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
           <Link to="/products" className="hover:text-foreground transition-colors">Products</Link>
+          <Link to="/equipment" className="hover:text-foreground transition-colors">Machines</Link>
           <Link to="/contact" className="hover:text-foreground transition-colors">Contact</Link>
           <Link to="/cart" className="hover:text-foreground transition-colors">Cart</Link>
           {isAuthenticated && <Link to="/orders" className="hover:text-foreground transition-colors">Orders</Link>}
