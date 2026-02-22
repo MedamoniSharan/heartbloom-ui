@@ -38,14 +38,9 @@ const Contact = () => {
         {/* Header */}
         <div className="text-center mb-12">
           <Reveal>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold mb-4">
-              <Heart className="w-3 h-3 fill-primary" /> Get In Touch
-            </span>
-          </Reveal>
-          <Reveal delay={100}>
             <h1 className="text-h1 text-foreground mb-3">Contact Us</h1>
           </Reveal>
-          <Reveal delay={180}>
+          <Reveal delay={100}>
             <p className="text-muted-foreground max-w-md mx-auto">
               Have a question about your order or need help with a custom design? We'd love to hear from you.
             </p>
