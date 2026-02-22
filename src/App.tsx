@@ -19,7 +19,9 @@ import Equipment from "./pages/Equipment";
 import Wishlist from "./pages/Wishlist";
 import Events from "./pages/Events";
 import Gallery from "./pages/Gallery";
-
+import About from "./pages/About";
+import FAQ from "./pages/FAQ";
+import Privacy from "./pages/Privacy";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -44,6 +46,9 @@ const App = () => (
           <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/events" element={<Events />} />
           <Route path="/gallery" element={<Gallery />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/faq" element={<FAQ />} />
+          <Route path="/privacy" element={<Privacy />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

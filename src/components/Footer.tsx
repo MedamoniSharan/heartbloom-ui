@@ -1,4 +1,5 @@
 import { Heart } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export const Footer = () => (
   <footer className="py-12 px-6 bg-card border-t border-border">
@@ -8,10 +9,10 @@ export const Footer = () => (
         <span className="font-display text-lg font-bold text-foreground">HeartPrinted</span>
       </div>
       <div className="flex gap-8 text-sm text-muted-foreground">
-        <a href="#" className="hover:text-foreground transition-colors">About</a>
-        <a href="#" className="hover:text-foreground transition-colors">FAQ</a>
-        <a href="#" className="hover:text-foreground transition-colors">Contact</a>
-        <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
+        <Link to="/about" className="hover:text-foreground transition-colors">About</Link>
+        <Link to="/faq" className="hover:text-foreground transition-colors">FAQ</Link>
+        <Link to="/contact" className="hover:text-foreground transition-colors">Contact</Link>
+        <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
       </div>
       <p className="text-xs text-muted-foreground">© 2026 HeartPrinted. All rights reserved.</p>
     </div>
