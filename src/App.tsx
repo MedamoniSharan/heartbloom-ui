@@ -1,9 +1,13 @@
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { PromoTicker } from "./components/PromoTicker";
+import { useAuthStore } from "./stores/authStore";
+import { useProductStore } from "./stores/productStore";
+import { useWishlistStore } from "./stores/wishlistStore";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
@@ -24,7 +28,20 @@ import FAQ from "./pages/FAQ";
 import Privacy from "./pages/Privacy";
 const queryClient = new QueryClient();
 
-const App = () => (
+const App = () => {
+  const fetchMe = useAuthStore((s) => s.fetchMe);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const fetchProducts = useProductStore((s) => s.fetchProducts);
+  const syncFromApi = useWishlistStore((s) => s.syncFromApi);
+  useEffect(() => {
+    fetchMe();
+    fetchProducts();
+  }, [fetchMe, fetchProducts]);
+  useEffect(() => {
+    if (isAuthenticated) syncFromApi();
+  }, [isAuthenticated, syncFromApi]);
+
+  return (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -54,6 +71,7 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;

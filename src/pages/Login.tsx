@@ -13,9 +13,10 @@ const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (login(email, password)) {
+    const ok = await login(email, password);
+    if (ok) {
       toast({ title: "Welcome back!", description: "You've been logged in successfully." });
       navigate("/products");
     } else {

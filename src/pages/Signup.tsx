@@ -14,13 +14,14 @@ const Signup = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password.length < 6) {
       toast({ title: "Weak password", description: "Password must be at least 6 characters.", variant: "destructive" });
       return;
     }
-    if (signup(name, email, password)) {
+    const ok = await signup(name, email, password);
+    if (ok) {
       toast({ title: "Account created!", description: "Welcome to Magnetic Bliss India!" });
       navigate("/products");
     } else {

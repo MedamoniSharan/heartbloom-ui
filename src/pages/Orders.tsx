@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { Package, Clock, Truck, CheckCircle2, XCircle } from "lucide-react";
 import { useProductStore } from "@/stores/productStore";
@@ -15,8 +16,12 @@ const statusConfig = {
 };
 
 const Orders = () => {
-  const { orders } = useProductStore();
+  const { orders, fetchOrders, ordersLoading } = useProductStore();
   const { user } = useAuthStore();
+
+  useEffect(() => {
+    if (user) fetchOrders();
+  }, [user, fetchOrders]);
 
   const myOrders = user?.role === "admin" ? orders : orders.filter((o) => o.userId === user?.id);
 
@@ -26,7 +31,11 @@ const Orders = () => {
       <main className="pt-32 px-6 pb-16 max-w-4xl mx-auto">
         <h1 className="text-h1 text-foreground mb-8">My Orders</h1>
 
-        {myOrders.length === 0 ? (
+        {ordersLoading ? (
+          <div className="text-center py-16">
+            <p className="text-muted-foreground">Loading orders...</p>
+          </div>
+        ) : myOrders.length === 0 ? (
           <div className="text-center py-16">
             <Package className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
             <h2 className="text-h3 text-foreground mb-2">No orders yet</h2>

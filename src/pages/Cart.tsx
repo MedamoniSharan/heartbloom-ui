@@ -155,20 +155,23 @@ const Cart = () => {
                     />
                   </div>
                   <motion.button
-                    onClick={() => {
+                    onClick={async () => {
                       if (!promoInput.trim()) return;
                       setPromoLoading(true);
                       setPromoError("");
-                      setTimeout(() => {
-                        const promo = validatePromo(promoInput.trim());
+                      try {
+                        const promo = await validatePromo(promoInput.trim());
                         if (promo) {
                           applyPromo(promo.code, promo.discount);
                           setPromoInput("");
                         } else {
                           setPromoError("Invalid or expired code");
                         }
+                      } catch {
+                        setPromoError("Invalid or expired code");
+                      } finally {
                         setPromoLoading(false);
-                      }, 600);
+                      }
                     }}
                     disabled={promoLoading || !promoInput.trim()}
                     className="px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-xs font-medium disabled:opacity-50 whitespace-nowrap"

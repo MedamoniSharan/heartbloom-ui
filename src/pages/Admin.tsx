@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Package, DollarSign, Users, TrendingUp, Plus,
@@ -171,10 +171,17 @@ const AnalyticsTab = ({orders,products}:{orders:Order[];products:Product[]}) => 
 
 const Admin = () => {
   const { user } = useAuthStore();
-  const { products, orders, promoCodes, addProduct, removeProduct, updateOrderStatus, addPromoCode, removePromoCode, togglePromoCode } = useProductStore();
+  const { products, orders, promoCodes, fetchOrders, fetchPromos, addProduct, removeProduct, updateOrderStatus, addPromoCode, removePromoCode, togglePromoCode } = useProductStore();
   const { toast } = useToast();
   const [tab, setTab] = useState<"dashboard" | "analytics" | "orders" | "products" | "add" | "promos">("dashboard");
   const [newPromo, setNewPromo] = useState({ code: "", discount: "", description: "", expiresAt: "" });
+
+  useEffect(() => {
+    if (user?.role === "admin") {
+      fetchOrders();
+      fetchPromos();
+    }
+  }, [user?.role, fetchOrders, fetchPromos]);
 
   const [newProduct, setNewProduct] = useState({ name: "", description: "", price: "", image: "", category: "Photo Magnets" });
   const [dragOver, setDragOver] = useState(false);
@@ -208,9 +215,9 @@ const Admin = () => {
 
   if (!user || user.role !== "admin") return <Navigate to="/login" replace />;
 
-  const handleAddProduct = (e: React.FormEvent) => {
+  const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    addProduct({
+    const ok = await addProduct({
       name: newProduct.name,
       description: newProduct.description,
       price: parseFloat(newProduct.price),
@@ -220,10 +227,14 @@ const Admin = () => {
       reviews: 0,
       inStock: true,
     });
-    toast({ title: "Product added!" });
-    setNewProduct({ name: "", description: "", price: "", image: "", category: "Photo Magnets" });
-    clearImage();
-    setTab("products");
+    if (ok) {
+      toast({ title: "Product added!" });
+      setNewProduct({ name: "", description: "", price: "", image: "", category: "Photo Magnets" });
+      clearImage();
+      setTab("products");
+    } else {
+      toast({ title: "Failed to add product", variant: "destructive" });
+    }
   };
 
   const stats = statCards(orders, products);
@@ -295,7 +306,10 @@ const Admin = () => {
                     <div className="relative">
                       <select
                         value={order.status}
-                        onChange={(e) => updateOrderStatus(order.id, e.target.value as Order["status"])}
+                        onChange={async (e) => {
+                          const ok = await updateOrderStatus(order.id, e.target.value as Order["status"]);
+                          if (!ok) toast({ title: "Failed to update status", variant: "destructive" });
+                        }}
                         className="appearance-none bg-muted border border-border rounded-lg px-3 py-1.5 pr-7 text-xs font-medium text-foreground cursor-pointer"
                       >
                         <option value="pending">Pending</option>
@@ -323,7 +337,11 @@ const Admin = () => {
                   <h3 className="font-display font-semibold text-foreground text-sm">{p.name}</h3>
                   <p className="text-xs text-muted-foreground mt-1">${p.price} · {p.category}</p>
                   <div className="flex gap-2 mt-3">
-                    <button onClick={() => { removeProduct(p.id); toast({ title: "Product removed" }); }} className="px-3 py-1.5 rounded-lg bg-destructive/10 text-destructive text-xs font-medium hover:bg-destructive/20 transition-colors flex items-center gap-1">
+                    <button onClick={async () => {
+                      const ok = await removeProduct(p.id);
+                      if (ok) toast({ title: "Product removed" });
+                      else toast({ title: "Failed to remove", variant: "destructive" });
+                    }} className="px-3 py-1.5 rounded-lg bg-destructive/10 text-destructive text-xs font-medium hover:bg-destructive/20 transition-colors flex items-center gap-1">
                       <Trash2 className="w-3 h-3" /> Remove
                     </button>
                   </div>
@@ -415,18 +433,22 @@ const Admin = () => {
           <div className="space-y-6">
             {/* Add promo form */}
             <form
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault();
                 if (!newPromo.code || !newPromo.discount) return;
-                addPromoCode({
+                const ok = await addPromoCode({
                   code: newPromo.code.toUpperCase(),
                   discount: parseFloat(newPromo.discount),
                   description: newPromo.description,
                   active: true,
                   expiresAt: newPromo.expiresAt || undefined,
                 });
-                toast({ title: "Promo code created!", description: `Code "${newPromo.code.toUpperCase()}" is now live.` });
-                setNewPromo({ code: "", discount: "", description: "", expiresAt: "" });
+                if (ok) {
+                  toast({ title: "Promo code created!", description: `Code "${newPromo.code.toUpperCase()}" is now live.` });
+                  setNewPromo({ code: "", discount: "", description: "", expiresAt: "" });
+                } else {
+                  toast({ title: "Failed to create promo", variant: "destructive" });
+                }
               }}
               className="bg-card border border-border rounded-2xl p-6 shadow-card space-y-4 max-w-lg"
             >
@@ -473,10 +495,17 @@ const Admin = () => {
                       {promo.expiresAt && <p className="text-xs text-muted-foreground">Expires: {new Date(promo.expiresAt).toLocaleDateString()}</p>}
                     </div>
                     <div className="flex items-center gap-2">
-                      <button onClick={() => togglePromoCode(promo.id)} className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Toggle promo">
+                      <button onClick={async () => {
+                        const ok = await togglePromoCode(promo.id);
+                        if (!ok) toast({ title: "Failed to update promo", variant: "destructive" });
+                      }} className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Toggle promo">
                         {promo.active ? <ToggleRight className="w-6 h-6 text-primary" /> : <ToggleLeft className="w-6 h-6" />}
                       </button>
-                      <button onClick={() => { removePromoCode(promo.id); toast({ title: "Promo removed" }); }} className="text-destructive hover:bg-destructive/10 rounded-lg p-1.5 transition-colors">
+                      <button onClick={async () => {
+                        const ok = await removePromoCode(promo.id);
+                        if (ok) toast({ title: "Promo removed" });
+                        else toast({ title: "Failed to remove", variant: "destructive" });
+                      }} className="text-destructive hover:bg-destructive/10 rounded-lg p-1.5 transition-colors">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>

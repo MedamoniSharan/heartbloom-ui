@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { MapPin, Phone, Mail, Clock, Send, Heart, MessageCircle } from "lucide-react";
+import { MapPin, Phone, Mail, Clock, Send, MessageCircle } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Reveal } from "@/components/Reveal";
 import { useToast } from "@/hooks/use-toast";
+import { contactApi } from "@/lib/api";
 
 const BUSINESS_INFO = {
   address: "123 Creative Way, Brooklyn, NY 11201",
@@ -21,14 +22,18 @@ const Contact = () => {
 
   const update = (key: string, val: string) => setForm((f) => ({ ...f, [key]: val }));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSending(true);
-    setTimeout(() => {
-      setSending(false);
+    try {
+      await contactApi.send(form);
       toast({ title: "Message sent! ✉️", description: "We'll get back to you within 24 hours." });
       setForm({ name: "", email: "", subject: "", message: "" });
-    }, 1200);
+    } catch {
+      toast({ title: "Failed to send", description: "Please try again later.", variant: "destructive" });
+    } finally {
+      setSending(false);
+    }
   };
 
   return (

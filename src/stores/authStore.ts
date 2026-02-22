@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { authApi, setToken, type ApiUser } from "@/lib/api";
 
 export interface User {
   id: string;
@@ -11,35 +12,77 @@ export interface User {
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => boolean;
-  signup: (name: string, email: string, password: string) => boolean;
+  isLoading: boolean;
+  hydrated: boolean;
+  login: (email: string, password: string) => Promise<boolean>;
+  signup: (name: string, email: string, password: string) => Promise<boolean>;
   logout: () => void;
+  fetchMe: () => Promise<void>;
+  setUser: (user: User | null) => void;
 }
 
-const MOCK_USERS: (User & { password: string })[] = [
-  { id: "admin-1", name: "Admin User", email: "admin@heartprinted.com", password: "admin123", role: "admin" },
-  { id: "user-1", name: "Jane Doe", email: "jane@example.com", password: "password", role: "customer" },
-];
+const mapUser = (u: ApiUser): User => ({
+  id: u.id,
+  name: u.name,
+  email: u.email,
+  role: u.role,
+  avatar: u.avatar,
+});
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isAuthenticated: false,
-  login: (email, password) => {
-    const found = MOCK_USERS.find((u) => u.email === email && u.password === password);
-    if (found) {
-      const { password: _, ...user } = found;
-      set({ user, isAuthenticated: true });
+  isLoading: false,
+  hydrated: false,
+  setUser: (user) => set({ user, isAuthenticated: !!user }),
+
+  login: async (email, password) => {
+    set({ isLoading: true });
+    try {
+      const { user, token } = await authApi.login(email, password);
+      setToken(token);
+      set({ user: mapUser(user), isAuthenticated: true, isLoading: false });
       return true;
+    } catch {
+      set({ isLoading: false });
+      return false;
     }
-    return false;
   },
-  signup: (name, email, password) => {
-    const exists = MOCK_USERS.find((u) => u.email === email);
-    if (exists) return false;
-    const newUser: User = { id: `user-${Date.now()}`, name, email, role: "customer" };
-    MOCK_USERS.push({ ...newUser, password });
-    set({ user: newUser, isAuthenticated: true });
-    return true;
+
+  signup: async (name, email, password) => {
+    set({ isLoading: true });
+    try {
+      const { user, token } = await authApi.signup(name, email, password);
+      setToken(token);
+      set({ user: mapUser(user), isAuthenticated: true, isLoading: false });
+      return true;
+    } catch {
+      set({ isLoading: false });
+      return false;
+    }
   },
-  logout: () => set({ user: null, isAuthenticated: false }),
+
+  logout: () => {
+    setToken(null);
+    set({ user: null, isAuthenticated: false });
+  },
+
+  fetchMe: async () => {
+    if (!import.meta.env.VITE_API_URL && !localStorage.getItem("magnetic_bliss_token")) {
+      set({ hydrated: true });
+      return;
+    }
+    const token = localStorage.getItem("magnetic_bliss_token");
+    if (!token) {
+      set({ hydrated: true });
+      return;
+    }
+    try {
+      const { user } = await authApi.me();
+      set({ user: mapUser(user), isAuthenticated: true, hydrated: true });
+    } catch {
+      setToken(null);
+      set({ user: null, isAuthenticated: false, hydrated: true });
+    }
+  },
 }));

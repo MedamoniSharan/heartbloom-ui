@@ -28,19 +28,26 @@ const Address = () => {
 
   const update = (key: keyof AddressType, val: string) => setForm((f) => ({ ...f, [key]: val }));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (items.length === 0) { toast({ title: "Cart is empty", variant: "destructive" }); return; }
-
-    addOrder({
-      userId: user?.id || "guest",
-      userName: user?.name || form.fullName,
+    if (!user) {
+      toast({ title: "Please sign in", description: "You need to be logged in to place an order.", variant: "destructive" });
+      navigate("/login");
+      return;
+    }
+    const ok = await addOrder({
+      userId: user.id,
+      userName: user.name,
       items,
       total: total(),
       status: "pending",
       address: form,
     });
-
+    if (!ok) {
+      toast({ title: "Order failed", description: "Could not place order. Please try again.", variant: "destructive" });
+      return;
+    }
     clearCart();
     toast({ title: "Order placed! 🎉", description: "Your magnets are on the way!" });
     navigate("/orders");
