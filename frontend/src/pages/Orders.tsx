@@ -38,7 +38,7 @@ const Orders = () => {
           </div>
         ) : myOrders.length === 0 ? (
           <div className="text-center py-16">
-            <div className="w-32 h-32 mx-auto mb-4 flex items-center justify-center">
+            <div className="w-56 h-56 mx-auto mb-4 flex items-center justify-center">
               <LottieFromPath path="/Order%20now.json" className="w-full h-full object-contain" />
             </div>
             <h2 className="text-h3 text-foreground mb-2">No orders yet</h2>

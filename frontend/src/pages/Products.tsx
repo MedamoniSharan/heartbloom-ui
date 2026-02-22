@@ -67,11 +67,10 @@ const Products = () => {
                 <motion.button
                   key={cat}
                   onClick={() => setCategory(cat)}
-                  className={`relative px-4 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-200 ${
-                    category === cat
+                  className={`relative px-4 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-200 ${category === cat
                       ? "text-primary-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  }`}
+                    }`}
                   whileTap={{ scale: 0.95 }}
                 >
                   {category === cat && (
@@ -99,8 +98,8 @@ const Products = () => {
         {/* Product Grid */}
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 bg-card border border-border rounded-2xl">
-            <div className="w-48 h-48 mb-4 flex items-center justify-center">
-              <LottieFromPath path="/Shopping%20Cart%20Loader.json" className="w-full h-full" />
+            <div className="w-64 h-64 mb-4 flex items-center justify-center">
+              <LottieFromPath path="/Online%20Shopping.json" className="w-full h-full" />
             </div>
             <h2 className="text-h3 text-foreground mb-2">No products found</h2>
             <p className="text-muted-foreground mb-6">Try a different search or category</p>
@@ -113,73 +112,73 @@ const Products = () => {
             </button>
           </div>
         ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          {filtered.map((product, i) => (
-            <motion.div
-              key={product.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              className="bg-card border border-border rounded-2xl overflow-hidden shadow-card group hover:shadow-elevated transition-shadow duration-300"
-            >
-              <Link to={`/products/${product.id}`} className="block">
-                <div className="relative aspect-square overflow-hidden">
-                  <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  <motion.button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      toggle(product.id);
-                      toast({ title: isWishlisted(product.id) ? "Removed from wishlist" : "Added to wishlist!" });
-                    }}
-                    className="absolute top-3 right-3 w-8 h-8 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors"
-                    whileTap={{ scale: 0.85 }}
-                    aria-label="Toggle wishlist"
-                  >
-                    <Heart className={`w-4 h-4 ${isWishlisted(product.id) ? "fill-primary text-primary" : "text-muted-foreground"}`} />
-                  </motion.button>
-                  {!product.inStock && (
-                    <div className="absolute inset-0 bg-foreground/60 flex items-center justify-center">
-                      <span className="bg-card text-foreground px-3 py-1 rounded-lg text-sm font-medium">Out of Stock</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            {filtered.map((product, i) => (
+              <motion.div
+                key={product.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+                className="bg-card border border-border rounded-2xl overflow-hidden shadow-card group hover:shadow-elevated transition-shadow duration-300"
+              >
+                <Link to={`/products/${product.id}`} className="block">
+                  <div className="relative aspect-square overflow-hidden">
+                    <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <motion.button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        toggle(product.id);
+                        toast({ title: isWishlisted(product.id) ? "Removed from wishlist" : "Added to wishlist!" });
+                      }}
+                      className="absolute top-3 right-3 w-8 h-8 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors"
+                      whileTap={{ scale: 0.85 }}
+                      aria-label="Toggle wishlist"
+                    >
+                      <Heart className={`w-4 h-4 ${isWishlisted(product.id) ? "fill-primary text-primary" : "text-muted-foreground"}`} />
+                    </motion.button>
+                    {!product.inStock && (
+                      <div className="absolute inset-0 bg-foreground/60 flex items-center justify-center">
+                        <span className="bg-card text-foreground px-3 py-1 rounded-lg text-sm font-medium">Out of Stock</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-4 space-y-3">
+                    <h3 className="font-display font-semibold text-foreground text-sm line-clamp-2">{product.name}</h3>
+                    <p className="text-xs text-muted-foreground line-clamp-2">{product.description}</p>
+                    <div className="flex items-center gap-1">
+                      <Star className="w-3.5 h-3.5 fill-warning text-warning" />
+                      <span className="text-xs font-medium text-foreground">{product.rating}</span>
+                      <span className="text-xs text-muted-foreground">({product.reviews})</span>
                     </div>
-                  )}
-                </div>
-                <div className="p-4 space-y-3">
-                  <h3 className="font-display font-semibold text-foreground text-sm line-clamp-2">{product.name}</h3>
-                  <p className="text-xs text-muted-foreground line-clamp-2">{product.description}</p>
-                  <div className="flex items-center gap-1">
-                    <Star className="w-3.5 h-3.5 fill-warning text-warning" />
-                    <span className="text-xs font-medium text-foreground">{product.rating}</span>
-                    <span className="text-xs text-muted-foreground">({product.reviews})</span>
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="text-lg font-bold text-foreground font-display">${product.price}</span>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between pt-1">
-                    <span className="text-lg font-bold text-foreground font-display">${product.price}</span>
-                  </div>
+                </Link>
+                <div className="px-4 pb-4 flex gap-1.5 justify-end -mt-2">
+                  <a
+                    href={getWhatsAppLink(product)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-9 h-9 rounded-xl bg-[hsl(142,70%,45%)] text-primary-foreground flex items-center justify-center hover:opacity-90 transition-opacity"
+                    aria-label="Chat on WhatsApp"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <WhatsAppIcon className="w-4 h-4" />
+                  </a>
+                  <motion.button
+                    onClick={(e) => { e.preventDefault(); handleAdd(product); }}
+                    disabled={!product.inStock}
+                    className="w-9 h-9 rounded-xl bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-50"
+                    whileTap={{ scale: 0.9 }}
+                    aria-label="Add to cart"
+                  >
+                    <ShoppingCart className="w-4 h-4" />
+                  </motion.button>
                 </div>
-              </Link>
-              <div className="px-4 pb-4 flex gap-1.5 justify-end -mt-2">
-                <a
-                  href={getWhatsAppLink(product)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-xl bg-[hsl(142,70%,45%)] text-primary-foreground flex items-center justify-center hover:opacity-90 transition-opacity"
-                  aria-label="Chat on WhatsApp"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <WhatsAppIcon className="w-4 h-4" />
-                </a>
-                <motion.button
-                  onClick={(e) => { e.preventDefault(); handleAdd(product); }}
-                  disabled={!product.inStock}
-                  className="w-9 h-9 rounded-xl bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-50"
-                  whileTap={{ scale: 0.9 }}
-                  aria-label="Add to cart"
-                >
-                  <ShoppingCart className="w-4 h-4" />
-                </motion.button>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+              </motion.div>
+            ))}
+          </div>
         )}
       </main>
       <Footer />

@@ -4,13 +4,14 @@ import { Heart, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 import { useNavigate, Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { LottieFromPath } from "@/components/LottieFromPath";
 
 const Signup = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const { signup } = useAuthStore();
+  const { signup, isLoading } = useAuthStore();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -58,8 +59,8 @@ const Signup = () => {
             </button>
           </div>
 
-          <motion.button type="submit" className="w-full py-3 rounded-xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm flex items-center justify-center gap-2" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.97 }}>
-            Create Account <ArrowRight className="w-4 h-4" />
+          <motion.button type="submit" disabled={isLoading} className="w-full py-3 rounded-xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm flex items-center justify-center gap-2" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.97 }}>
+            {isLoading ? <LottieFromPath path="/tri-cube-loader-2.json" className="w-10 h-10" /> : <>Create Account <ArrowRight className="w-4 h-4" /></>}
           </motion.button>
 
           <p className="text-center text-sm text-muted-foreground">

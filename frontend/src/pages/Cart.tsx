@@ -29,7 +29,7 @@ const Cart = () => {
       <div className="min-h-screen bg-background">
         <Navbar />
         <main className="pt-32 px-6 flex flex-col items-center justify-center min-h-[60vh]">
-          <div className="w-40 h-40 mb-4 flex items-center justify-center">
+          <div className="w-64 h-64 mb-4 flex items-center justify-center">
             <LottieFromPath path="/Shopping%20Cart%20Loader.json" className="w-full h-full" />
           </div>
           <h1 className="text-h2 text-foreground mb-2">Your Cart is Empty</h1>

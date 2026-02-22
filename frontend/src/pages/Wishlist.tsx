@@ -37,7 +37,7 @@ const Wishlist = () => {
         {wishlisted.length === 0 ? (
           <Reveal delay={120}>
             <div className="text-center py-20 bg-card border border-border rounded-2xl">
-              <div className="w-32 h-32 mx-auto mb-4 flex items-center justify-center">
+              <div className="w-56 h-56 mx-auto mb-4 flex items-center justify-center">
                 <LottieFromPath path="/Empty%20Heart.json" className="w-full h-full" />
               </div>
               <h2 className="text-h3 text-foreground mb-2">Your wishlist is empty</h2>
