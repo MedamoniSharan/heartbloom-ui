@@ -1,8 +1,10 @@
 import { motion, useScroll, useTransform } from "framer-motion";
-import { Heart, LogOut, Shield } from "lucide-react";
+import { Heart, LogOut, Shield, ShoppingCart } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { useAuthStore } from "@/stores/authStore";
 import { useProductStore } from "@/stores/productStore";
+import { useCartStore } from "@/stores/cartStore";
+import { useWishlistStore } from "@/stores/wishlistStore";
 import { Link, useNavigate } from "react-router-dom";
 import { siteConfig } from "@/lib/siteConfig";
 
@@ -11,6 +13,8 @@ export const Navbar = () => {
   const bgOpacity = useTransform(scrollY, [0, 80], [0, 1]);
   const borderOpacity = useTransform(scrollY, [0, 80], [0, 1]);
   const { user, isAuthenticated, logout } = useAuthStore();
+  const cartItemsCount = useCartStore((s) => s.items.reduce((acc, i) => acc + i.quantity, 0));
+  const wishlistItemsCount = useWishlistStore((s) => s.items.length);
   const navigate = useNavigate();
   const hasPromos = useProductStore((s) => s.promoCodes.some((p) => p.active));
 
@@ -48,6 +52,25 @@ export const Navbar = () => {
         </div>
 
         <div className="flex items-center gap-2">
+
+          <Link to="/wishlist" className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all relative">
+            <Heart className="w-5 h-5" />
+            {wishlistItemsCount > 0 && (
+              <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center rounded-full">
+                {wishlistItemsCount}
+              </span>
+            )}
+          </Link>
+
+          <Link to="/cart" className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all relative">
+            <ShoppingCart className="w-5 h-5" />
+            {cartItemsCount > 0 && (
+              <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center rounded-full">
+                {cartItemsCount}
+              </span>
+            )}
+          </Link>
+
           <ThemeToggle />
 
           {isAuthenticated ? (

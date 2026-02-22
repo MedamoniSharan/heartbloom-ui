@@ -6,6 +6,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Link } from "react-router-dom";
+import { LottieFromPath } from "@/components/LottieFromPath";
 
 const statusConfig = {
   pending: { icon: Clock, color: "text-warning", bg: "bg-warning/10", label: "Pending" },
@@ -37,7 +38,9 @@ const Orders = () => {
           </div>
         ) : myOrders.length === 0 ? (
           <div className="text-center py-16">
-            <Package className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <div className="w-32 h-32 mx-auto mb-4 flex items-center justify-center">
+              <LottieFromPath path="/Order%20now.json" className="w-full h-full object-contain" />
+            </div>
             <h2 className="text-h3 text-foreground mb-2">No orders yet</h2>
             <p className="text-muted-foreground mb-6">Start shopping to see your orders here!</p>
             <Link to="/products" className="px-6 py-3 rounded-xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm inline-block">Browse Products</Link>
