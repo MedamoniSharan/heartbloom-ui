@@ -9,6 +9,7 @@ import { Link } from "react-router-dom";
 import { Footer } from "@/components/Footer";
 import { UploadModal } from "@/components/UploadModal";
 import { ImageEditor } from "@/components/ImageEditor";
+import { LottieFromPath } from "@/components/LottieFromPath";
 
 const Cart = () => {
   const { items, removeFromCart, updateQuantity, subtotal, discountAmount, total, clearCart, appliedPromo, applyPromo, removePromo } = useCartStore();
@@ -28,7 +29,9 @@ const Cart = () => {
       <div className="min-h-screen bg-background">
         <Navbar />
         <main className="pt-32 px-6 flex flex-col items-center justify-center min-h-[60vh]">
-          <ShoppingBag className="w-16 h-16 text-muted-foreground mb-4" />
+          <div className="w-40 h-40 mb-4 flex items-center justify-center">
+            <LottieFromPath path="/Shopping%20Cart%20Loader.json" className="w-full h-full" />
+          </div>
           <h1 className="text-h2 text-foreground mb-2">Your Cart is Empty</h1>
           <p className="text-muted-foreground mb-6">Add some products to get started!</p>
           <Link to="/products" className="px-6 py-3 rounded-xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm">

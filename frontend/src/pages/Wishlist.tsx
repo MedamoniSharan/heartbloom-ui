@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Reveal } from "@/components/Reveal";
+import { LottieFromPath } from "@/components/LottieFromPath";
 import { Link } from "react-router-dom";
 
 const Wishlist = () => {
@@ -36,7 +37,9 @@ const Wishlist = () => {
         {wishlisted.length === 0 ? (
           <Reveal delay={120}>
             <div className="text-center py-20 bg-card border border-border rounded-2xl">
-              <Heart className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
+              <div className="w-32 h-32 mx-auto mb-4 flex items-center justify-center">
+                <LottieFromPath path="/Empty%20Heart.json" className="w-full h-full" />
+              </div>
               <h2 className="text-h3 text-foreground mb-2">Your wishlist is empty</h2>
               <p className="text-muted-foreground mb-6">Save products you love and come back to them later</p>
               <Link

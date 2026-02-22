@@ -9,6 +9,7 @@ const productSchema = new mongoose.Schema(
     image: { type: String, required: true },
     images: [{ type: String }],
     category: { type: String, required: true, trim: true },
+    slug: { type: String, trim: true, sparse: true },
     rating: { type: Number, default: 4.5, min: 0, max: 5 },
     reviews: { type: Number, default: 0, min: 0 },
     inStock: { type: Boolean, default: true },

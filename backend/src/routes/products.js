@@ -15,6 +15,7 @@ function toProductResponse(doc) {
     image: o.image,
     images: o.images,
     category: o.category,
+    slug: o.slug,
     rating: o.rating ?? 4.5,
     reviews: o.reviews ?? 0,
     inStock: o.inStock ?? true,

@@ -10,6 +10,7 @@ import { Navbar } from "@/components/Navbar";
 import { Link } from "react-router-dom";
 import { Reveal } from "@/components/Reveal";
 import { Footer } from "@/components/Footer";
+import { LottieFromPath } from "@/components/LottieFromPath";
 import { siteConfig } from "@/lib/siteConfig";
 
 const getWhatsAppLink = (product: Product) => {
@@ -96,6 +97,22 @@ const Products = () => {
         </div>
 
         {/* Product Grid */}
+        {filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 bg-card border border-border rounded-2xl">
+            <div className="w-48 h-48 mb-4 flex items-center justify-center">
+              <LottieFromPath path="/Shopping%20Cart%20Loader.json" className="w-full h-full" />
+            </div>
+            <h2 className="text-h3 text-foreground mb-2">No products found</h2>
+            <p className="text-muted-foreground mb-6">Try a different search or category</p>
+            <button
+              type="button"
+              onClick={() => { setSearch(""); setCategory("All"); }}
+              className="px-6 py-3 rounded-xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm"
+            >
+              Clear filters
+            </button>
+          </div>
+        ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {filtered.map((product, i) => (
             <motion.div
@@ -163,6 +180,7 @@ const Products = () => {
             </motion.div>
           ))}
         </div>
+        )}
       </main>
       <Footer />
     </div>

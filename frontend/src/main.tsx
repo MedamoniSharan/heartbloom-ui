@@ -1,22 +1,14 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createRoot } from "react-dom/client";
-import Lottie from "lottie-react";
+import { LottieFromPath } from "@/components/LottieFromPath";
 import App from "./App.tsx";
 import "./index.css";
 
-const LOTTIE_LOADER_PATH = "/lottie/loader.json";
+const LOTTIE_LOADER_PATH = "/tri-cube-loader-2.json";
 
 const MagnetLoader = () => {
   const [visible, setVisible] = useState(true);
-  const [animationData, setAnimationData] = useState<object | null>(null);
-
-  useEffect(() => {
-    fetch(LOTTIE_LOADER_PATH)
-      .then((res) => (res.ok ? res.json() : Promise.reject(new Error("Not found"))))
-      .then(setAnimationData)
-      .catch(() => setAnimationData(null));
-  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => setVisible(false), 2200);
@@ -28,15 +20,18 @@ const MagnetLoader = () => {
       {visible && (
         <motion.div
           className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[hsl(var(--background))]"
+          initial={{ opacity: 1 }}
           exit={{ opacity: 0, scale: 1.05 }}
           transition={{ duration: 0.5, ease: "easeInOut" }}
         >
-          <div className="w-40 h-40 mb-4 flex items-center justify-center">
-            {animationData ? (
-              <Lottie animationData={animationData} loop className="w-full h-full" />
-            ) : (
-              <div className="w-12 h-12 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-            )}
+          <div className="w-48 h-48 mb-4 flex items-center justify-center relative">
+            {/* Fallback spinner when Lottie is still loading */}
+            <span className="absolute inset-0 flex items-center justify-center" aria-hidden>
+              <span className="w-12 h-12 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            </span>
+            <div className="relative z-10 w-full h-full flex items-center justify-center">
+              <LottieFromPath path={LOTTIE_LOADER_PATH} className="w-full h-full" />
+            </div>
           </div>
           <motion.div
             className="text-center"

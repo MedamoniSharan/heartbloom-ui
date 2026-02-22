@@ -54,7 +54,9 @@ const Equipment = () => {
         </div>
 
         <div className="grid md:grid-cols-2 gap-8">
-          {equipmentProducts.map((item, i) => (
+          {equipmentProducts.map((item, i) => {
+            const eqKey = item.slug || item.id;
+            return (
             <Reveal key={item.id} delay={i * 120}>
               <motion.div
                 className="bg-card border border-border rounded-2xl overflow-hidden shadow-card group"
@@ -62,9 +64,9 @@ const Equipment = () => {
                 transition={{ type: "spring", stiffness: 300, damping: 25 }}
               >
                 {/* Brand Logo */}
-                {logos[item.id] && (
+                {logos[eqKey] && (
                   <div className="flex items-center justify-center py-5 border-b border-border bg-muted/30">
-                    <img src={logos[item.id]} alt={item.name + " logo"} className="h-8 object-contain" />
+                    <img src={logos[eqKey]} alt={item.name + " logo"} className="h-8 object-contain" />
                   </div>
                 )}
 
@@ -92,9 +94,9 @@ const Equipment = () => {
                   <p className="text-2xl font-bold text-primary text-center mb-4 font-display">${item.price.toLocaleString()}</p>
 
                   {/* Specs Table */}
-                  {specData[item.id] && (
+                  {specData[eqKey] && (
                     <div className="space-y-0 mb-6">
-                      {specData[item.id].map((spec) => (
+                      {specData[eqKey].map((spec) => (
                         <div key={spec.label} className="flex items-center justify-between py-2.5 border-b border-border last:border-b-0">
                           <span className="text-sm font-semibold text-foreground">{spec.label}</span>
                           <span className="text-sm text-muted-foreground text-right">{spec.value}</span>
@@ -125,7 +127,8 @@ const Equipment = () => {
                 </div>
               </motion.div>
             </Reveal>
-          ))}
+          );
+          })}
         </div>
       </main>
       <Footer />

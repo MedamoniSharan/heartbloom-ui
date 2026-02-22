@@ -123,6 +123,39 @@ const MOCK_PRODUCTS = [
   },
 ];
 
+const MOCK_EQUIPMENT = [
+  {
+    name: "Mpro Magnet Press",
+    description: "Professional-grade magnet press for high-quality photo magnets. USA-made, lifetime warranty.",
+    longDescription: "Industry-leading magnet press for custom photo magnets. Handles up to 32 lb paper, built to last with lifetime warranty. Ideal for small businesses and serious hobbyists.",
+    price: 24999,
+    image: "https://images.unsplash.com/photo-1565688534245-05d6b5be184a?w=600&h=600&fit=crop",
+    images: [],
+    category: "Equipment",
+    slug: "eq1",
+    rating: 4.9,
+    reviews: 42,
+    inStock: true,
+    customizable: false,
+    whatsappMessage: "Hi! I'm interested in the Mpro Magnet Press.",
+  },
+  {
+    name: "Titan Pro Laminator",
+    description: "Heavy-duty laminator for magnets and prints. Designed in USA, in stock.",
+    longDescription: "Robust laminator for professional magnet and print finishing. Max paper thickness 42 lb. Lifetime warranty with service and support in the USA.",
+    price: 18999,
+    image: "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=600&h=600&fit=crop",
+    images: [],
+    category: "Equipment",
+    slug: "eq2",
+    rating: 4.8,
+    reviews: 28,
+    inStock: true,
+    customizable: false,
+    whatsappMessage: "Hi! I'd like to know more about the Titan Pro Laminator.",
+  },
+];
+
 const MOCK_PROMOS = [
   { code: "WELCOME10", discount: 10, description: "10% off your first order", active: true, expiresAt: null },
   { code: "MAGNET20", discount: 20, description: "20% off on custom magnet sets", active: true, expiresAt: null },
@@ -155,6 +188,15 @@ async function seed() {
     console.log("Inserted", MOCK_PRODUCTS.length, "mock products.");
   } else {
     console.log("Products already exist (" + productCount + "). Skipping product seed.");
+  }
+
+  // Equipment (machines): insert if none exist
+  const equipmentCount = await Product.countDocuments({ category: "Equipment" });
+  if (equipmentCount === 0) {
+    await Product.insertMany(MOCK_EQUIPMENT);
+    console.log("Inserted", MOCK_EQUIPMENT.length, "equipment/machine products.");
+  } else {
+    console.log("Equipment already exists (" + equipmentCount + "). Skipping equipment seed.");
   }
 
   // Promos: insert if none exist

@@ -10,6 +10,7 @@ export interface Product {
   image: string;
   images?: string[];
   category: string;
+  slug?: string;
   rating: number;
   reviews: number;
   inStock: boolean;
@@ -58,6 +59,7 @@ const mapProduct = (p: ApiProduct): Product => ({
   image: p.image,
   images: p.images,
   category: p.category,
+  slug: p.slug,
   rating: p.rating,
   reviews: p.reviews,
   inStock: p.inStock,

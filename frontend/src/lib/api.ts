@@ -62,6 +62,7 @@ export interface ApiProduct {
   image: string;
   images?: string[];
   category: string;
+  slug?: string;
   rating: number;
   reviews: number;
   inStock: boolean;
