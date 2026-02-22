@@ -53,20 +53,49 @@ const MOCK_ORDERS: Order[] = [
   { id: "ORD-003", userId: "user-2", userName: "John Smith", items: [{ product: MOCK_PRODUCTS[6], quantity: 3 }], total: 74.97, status: "processing", address: { fullName: "John Smith", phone: "+1987654321", street: "456 Oak Ave", city: "Los Angeles", state: "CA", zipCode: "90001", country: "US" }, createdAt: "2026-02-22T09:00:00Z" },
 ];
 
+export interface PromoCode {
+  id: string;
+  code: string;
+  discount: number; // percentage
+  description: string;
+  active: boolean;
+  expiresAt?: string;
+}
+
+const MOCK_PROMOS: PromoCode[] = [
+  { id: "promo-1", code: "WELCOME20", discount: 20, description: "20% off your first order!", active: true, expiresAt: "2026-03-31" },
+  { id: "promo-2", code: "SPRING15", discount: 15, description: "Spring sale — 15% off everything", active: true, expiresAt: "2026-04-15" },
+];
+
 interface ProductState {
   products: Product[];
   orders: Order[];
+  promoCodes: PromoCode[];
   addProduct: (product: Omit<Product, "id">) => void;
   removeProduct: (id: string) => void;
   addOrder: (order: Omit<Order, "id" | "createdAt">) => void;
   updateOrderStatus: (id: string, status: Order["status"]) => void;
+  addPromoCode: (promo: Omit<PromoCode, "id">) => void;
+  removePromoCode: (id: string) => void;
+  togglePromoCode: (id: string) => void;
+  validatePromo: (code: string) => PromoCode | null;
 }
 
-export const useProductStore = create<ProductState>((set) => ({
+export const useProductStore = create<ProductState>((set, get) => ({
   products: MOCK_PRODUCTS,
   orders: MOCK_ORDERS,
+  promoCodes: MOCK_PROMOS,
   addProduct: (product) => set((s) => ({ products: [...s.products, { ...product, id: `p${Date.now()}` }] })),
   removeProduct: (id) => set((s) => ({ products: s.products.filter((p) => p.id !== id) })),
   addOrder: (order) => set((s) => ({ orders: [...s.orders, { ...order, id: `ORD-${String(s.orders.length + 1).padStart(3, "0")}`, createdAt: new Date().toISOString() }] })),
   updateOrderStatus: (id, status) => set((s) => ({ orders: s.orders.map((o) => o.id === id ? { ...o, status } : o) })),
+  addPromoCode: (promo) => set((s) => ({ promoCodes: [...s.promoCodes, { ...promo, id: `promo-${Date.now()}` }] })),
+  removePromoCode: (id) => set((s) => ({ promoCodes: s.promoCodes.filter((p) => p.id !== id) })),
+  togglePromoCode: (id) => set((s) => ({ promoCodes: s.promoCodes.map((p) => p.id === id ? { ...p, active: !p.active } : p) })),
+  validatePromo: (code) => {
+    const promo = get().promoCodes.find((p) => p.code.toUpperCase() === code.toUpperCase() && p.active);
+    if (!promo) return null;
+    if (promo.expiresAt && new Date(promo.expiresAt) < new Date()) return null;
+    return promo;
+  },
 }));

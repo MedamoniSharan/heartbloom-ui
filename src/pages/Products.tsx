@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ShoppingCart, Star, MessageCircle, Search, Filter } from "lucide-react";
+import { ShoppingCart, Star, MessageCircle, Search, Tag, X } from "lucide-react";
 import { useProductStore, Product } from "@/stores/productStore";
 import { useCartStore } from "@/stores/cartStore";
 import { useToast } from "@/hooks/use-toast";
@@ -17,11 +17,14 @@ const getWhatsAppLink = (product: Product) => {
 };
 
 const Products = () => {
-  const { products } = useProductStore();
+  const { products, promoCodes } = useProductStore();
   const { addToCart } = useCartStore();
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
+  const [dismissedPromos, setDismissedPromos] = useState<string[]>([]);
+
+  const activePromos = promoCodes.filter((p) => p.active && !dismissedPromos.includes(p.id));
 
   const categories = ["All", ...new Set(products.map((p) => p.category))];
   const filtered = products.filter((p) => {
@@ -40,7 +43,34 @@ const Products = () => {
       <Navbar />
       <main className="pt-24 px-6 pb-16 max-w-6xl mx-auto">
         <Reveal><h1 className="text-h1 text-foreground mb-2">Our Products</h1></Reveal>
-        <Reveal delay={100}><p className="text-muted-foreground mb-8">Premium photo magnets for every occasion</p></Reveal>
+        <Reveal delay={100}><p className="text-muted-foreground mb-6">Premium photo magnets for every occasion</p></Reveal>
+
+        {/* Promo Announcements */}
+        {activePromos.length > 0 && (
+          <div className="space-y-2 mb-6">
+            {activePromos.map((promo) => (
+              <motion.div
+                key={promo.id}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="flex items-center justify-between bg-primary/10 border border-primary/20 rounded-xl px-4 py-3"
+              >
+                <div className="flex items-center gap-3">
+                  <Tag className="w-4 h-4 text-primary flex-shrink-0" />
+                  <div>
+                    <span className="text-sm font-semibold text-foreground">{promo.description}</span>
+                    <span className="ml-2 text-xs font-mono bg-primary/20 text-primary px-2 py-0.5 rounded-md">{promo.code}</span>
+                    <span className="ml-2 text-xs text-muted-foreground">({promo.discount}% off)</span>
+                  </div>
+                </div>
+                <button onClick={() => setDismissedPromos((d) => [...d, promo.id])} className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0">
+                  <X className="w-4 h-4" />
+                </button>
+              </motion.div>
+            ))}
+          </div>
+        )}
 
         {/* Search & Filters */}
         <div className="flex flex-col sm:flex-row gap-3 mb-8">

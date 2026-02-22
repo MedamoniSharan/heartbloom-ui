@@ -2,9 +2,9 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   Package, DollarSign, Users, TrendingUp, Plus,
-  Eye, Trash2, ChevronDown,
+  Eye, Trash2, ChevronDown, Tag, ToggleLeft, ToggleRight,
 } from "lucide-react";
-import { useProductStore, Product, Order } from "@/stores/productStore";
+import { useProductStore, Product, Order, PromoCode } from "@/stores/productStore";
 import { useAuthStore } from "@/stores/authStore";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -20,9 +20,10 @@ const statCards = (orders: Order[], products: Product[]) => [
 
 const Admin = () => {
   const { user } = useAuthStore();
-  const { products, orders, addProduct, removeProduct, updateOrderStatus } = useProductStore();
+  const { products, orders, promoCodes, addProduct, removeProduct, updateOrderStatus, addPromoCode, removePromoCode, togglePromoCode } = useProductStore();
   const { toast } = useToast();
-  const [tab, setTab] = useState<"orders" | "products" | "add">("orders");
+  const [tab, setTab] = useState<"orders" | "products" | "add" | "promos">("orders");
+  const [newPromo, setNewPromo] = useState({ code: "", discount: "", description: "", expiresAt: "" });
 
   const [newProduct, setNewProduct] = useState({ name: "", description: "", price: "", image: "", category: "Photo Magnets" });
 
@@ -75,18 +76,21 @@ const Admin = () => {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6 border-b border-border pb-3">
-          {(["orders", "products", "add"] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                tab === t ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-              }`}
-            >
-              {t === "add" ? "Add Product" : t.charAt(0).toUpperCase() + t.slice(1)}
-            </button>
-          ))}
+        <div className="flex gap-2 mb-6 border-b border-border pb-3 overflow-x-auto">
+          {(["orders", "products", "add", "promos"] as const).map((t) => {
+            const labels: Record<string, string> = { orders: "Orders", products: "Products", add: "Add Product", promos: "Promo Codes" };
+            return (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
+                  tab === t ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`}
+              >
+                {labels[t]}
+              </button>
+            );
+          })}
         </div>
 
         {/* Orders Tab */}
@@ -170,6 +174,83 @@ const Admin = () => {
               <Plus className="w-4 h-4" /> Add Product
             </motion.button>
           </form>
+        )}
+
+        {/* Promo Codes Tab */}
+        {tab === "promos" && (
+          <div className="space-y-6">
+            {/* Add promo form */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!newPromo.code || !newPromo.discount) return;
+                addPromoCode({
+                  code: newPromo.code.toUpperCase(),
+                  discount: parseFloat(newPromo.discount),
+                  description: newPromo.description,
+                  active: true,
+                  expiresAt: newPromo.expiresAt || undefined,
+                });
+                toast({ title: "Promo code created!", description: `Code "${newPromo.code.toUpperCase()}" is now live.` });
+                setNewPromo({ code: "", discount: "", description: "", expiresAt: "" });
+              }}
+              className="bg-card border border-border rounded-2xl p-6 shadow-card space-y-4 max-w-lg"
+            >
+              <h3 className="font-display font-semibold text-foreground flex items-center gap-2"><Tag className="w-4 h-4 text-primary" /> Create Promo Code</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="floating-label-group">
+                  <input type="text" placeholder=" " value={newPromo.code} onChange={(e) => setNewPromo((p) => ({ ...p, code: e.target.value }))} required />
+                  <label>Code (e.g. SAVE20)</label>
+                </div>
+                <div className="floating-label-group">
+                  <input type="number" min="1" max="100" placeholder=" " value={newPromo.discount} onChange={(e) => setNewPromo((p) => ({ ...p, discount: e.target.value }))} required />
+                  <label>Discount %</label>
+                </div>
+              </div>
+              <div className="floating-label-group">
+                <input type="text" placeholder=" " value={newPromo.description} onChange={(e) => setNewPromo((p) => ({ ...p, description: e.target.value }))} required />
+                <label>Description (shown to customers)</label>
+              </div>
+              <div className="floating-label-group">
+                <input type="date" placeholder=" " value={newPromo.expiresAt} onChange={(e) => setNewPromo((p) => ({ ...p, expiresAt: e.target.value }))} />
+                <label>Expires (optional)</label>
+              </div>
+              <motion.button type="submit" className="w-full py-3 rounded-xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm flex items-center justify-center gap-2" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.97 }}>
+                <Plus className="w-4 h-4" /> Create Promo Code
+              </motion.button>
+            </form>
+
+            {/* Existing promos list */}
+            <div className="space-y-3">
+              <h3 className="font-display font-semibold text-foreground text-sm">Active Promo Codes</h3>
+              {promoCodes.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No promo codes yet.</p>
+              ) : (
+                promoCodes.map((promo) => (
+                  <div key={promo.id} className="flex items-center justify-between bg-card border border-border rounded-2xl p-4 shadow-card">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-display font-bold text-foreground">{promo.code}</span>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${promo.active ? "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))]" : "bg-muted text-muted-foreground"}`}>
+                          {promo.active ? "Active" : "Inactive"}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">{promo.description} — {promo.discount}% off</p>
+                      {promo.expiresAt && <p className="text-xs text-muted-foreground">Expires: {new Date(promo.expiresAt).toLocaleDateString()}</p>}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => togglePromoCode(promo.id)} className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Toggle promo">
+                        {promo.active ? <ToggleRight className="w-6 h-6 text-primary" /> : <ToggleLeft className="w-6 h-6" />}
+                      </button>
+                      <button onClick={() => { removePromoCode(promo.id); toast({ title: "Promo removed" }); }} className="text-destructive hover:bg-destructive/10 rounded-lg p-1.5 transition-colors">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         )}
       </main>
       <Footer />
