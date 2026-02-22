@@ -1,112 +1,127 @@
 import { motion } from "framer-motion";
-import { ExternalLink } from "lucide-react";
+import { ShoppingCart, Eye } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Reveal } from "@/components/Reveal";
-import equipmentMpro from "@/assets/equipment-mpro.png";
-import equipmentTitan from "@/assets/equipment-titan.jpg";
+import { useProductStore } from "@/stores/productStore";
+import { useCartStore } from "@/stores/cartStore";
+import { useToast } from "@/hooks/use-toast";
 import logoMpro from "@/assets/logo-mpro.png";
 import logoTitan from "@/assets/logo-titan.png";
 
-const equipment = [
-  {
-    name: "MPRO Square Kit 2 x 2\"",
-    logo: logoMpro,
-    image: equipmentMpro,
-    buyLink: "https://mprousa.com/products/starter-kit-magnet-maker-square-2x2?utm_source=heartprinted&utm_medium=referral&utm_campaign=hp-crossshop",
-    specs: [
-      { label: "Price", value: "From $2,225" },
-      { label: "Origin", value: "USA" },
-      { label: "Lead Time", value: "In Stock" },
-      { label: "Warranty", value: "Lifetime" },
-      { label: "Max Paper Thickness", value: "32 lb" },
-      { label: "Service", value: "Service & Support in the USA" },
-    ],
-  },
-  {
-    name: "Titan Press Square Kit 2 x 2\"",
-    logo: logoTitan,
-    image: equipmentTitan,
-    buyLink: "https://titanpress.co/products/2-x-2-square-button-making-bundle?utm_source=heartprinted&utm_medium=referral&utm_campaign=hp-crossshop",
-    specs: [
-      { label: "Price", value: "From $1,650" },
-      { label: "Origin", value: "China, Designed in USA" },
-      { label: "Lead Time", value: "In Stock" },
-      { label: "Warranty", value: "Lifetime" },
-      { label: "Max Paper Thickness", value: "42 lb" },
-      { label: "Service", value: "Service & Support in the USA" },
-    ],
-  },
-];
+const logos: Record<string, string> = {
+  eq1: logoMpro,
+  eq2: logoTitan,
+};
+
+const specData: Record<string, { label: string; value: string }[]> = {
+  eq1: [
+    { label: "Origin", value: "USA" },
+    { label: "Lead Time", value: "In Stock" },
+    { label: "Warranty", value: "Lifetime" },
+    { label: "Max Paper Thickness", value: "32 lb" },
+    { label: "Service", value: "Service & Support in the USA" },
+  ],
+  eq2: [
+    { label: "Origin", value: "China, Designed in USA" },
+    { label: "Lead Time", value: "In Stock" },
+    { label: "Warranty", value: "Lifetime" },
+    { label: "Max Paper Thickness", value: "42 lb" },
+    { label: "Service", value: "Service & Support in the USA" },
+  ],
+};
 
 const Equipment = () => {
+  const { products } = useProductStore();
+  const { addToCart } = useCartStore();
+  const { toast } = useToast();
+
+  const equipmentProducts = products.filter((p) => p.category === "Equipment");
+
+  const handleAdd = (product: typeof equipmentProducts[0]) => {
+    addToCart(product);
+    toast({ title: "Added to cart!", description: `${product.name} added.` });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       <main className="pt-24 px-6 pb-16 max-w-5xl mx-auto">
-        {/* Header */}
         <div className="text-center mb-12">
-          <Reveal>
-            <h1 className="text-h1 text-foreground mb-3">Want to do the same?</h1>
-          </Reveal>
-          <Reveal delay={100}>
-            <p className="text-muted-foreground max-w-md mx-auto">
-              Here are some equipment options for you.
-            </p>
-          </Reveal>
+          <Reveal><h1 className="text-h1 text-foreground mb-3">Want to do the same?</h1></Reveal>
+          <Reveal delay={100}><p className="text-muted-foreground max-w-md mx-auto">Here are some equipment options for you.</p></Reveal>
         </div>
 
-        {/* Equipment Grid */}
         <div className="grid md:grid-cols-2 gap-8">
-          {equipment.map((item, i) => (
-            <Reveal key={item.name} delay={i * 120}>
+          {equipmentProducts.map((item, i) => (
+            <Reveal key={item.id} delay={i * 120}>
               <motion.div
                 className="bg-card border border-border rounded-2xl overflow-hidden shadow-card group"
                 whileHover={{ y: -4 }}
                 transition={{ type: "spring", stiffness: 300, damping: 25 }}
               >
                 {/* Brand Logo */}
-                <div className="flex items-center justify-center py-5 border-b border-border bg-muted/30">
-                  <img src={item.logo} alt={item.name + " logo"} className="h-8 object-contain" />
-                </div>
+                {logos[item.id] && (
+                  <div className="flex items-center justify-center py-5 border-b border-border bg-muted/30">
+                    <img src={logos[item.id]} alt={item.name + " logo"} className="h-8 object-contain" />
+                  </div>
+                )}
 
-                {/* Product Image */}
-                <div className="aspect-[5/4] overflow-hidden bg-muted">
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                </div>
+                {/* Product Image — links to detail */}
+                <Link to={`/products/${item.id}`} className="block">
+                  <div className="aspect-[5/4] overflow-hidden bg-muted relative">
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/10 transition-colors flex items-center justify-center">
+                      <span className="opacity-0 group-hover:opacity-100 transition-opacity bg-card/90 backdrop-blur-sm text-foreground text-xs font-medium px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                        <Eye className="w-3.5 h-3.5" /> View Details
+                      </span>
+                    </div>
+                  </div>
+                </Link>
 
                 {/* Info */}
                 <div className="p-6">
-                  <h3 className="font-display font-bold text-foreground text-lg mb-4 text-center">{item.name}</h3>
+                  <Link to={`/products/${item.id}`}>
+                    <h3 className="font-display font-bold text-foreground text-lg mb-1 text-center hover:text-primary transition-colors">{item.name}</h3>
+                  </Link>
+                  <p className="text-2xl font-bold text-primary text-center mb-4 font-display">${item.price.toLocaleString()}</p>
 
                   {/* Specs Table */}
-                  <div className="space-y-0 mb-6">
-                    {item.specs.map((spec) => (
-                      <div
-                        key={spec.label}
-                        className="flex items-center justify-between py-2.5 border-b border-border last:border-b-0"
-                      >
-                        <span className="text-sm font-semibold text-foreground">{spec.label}</span>
-                        <span className="text-sm text-muted-foreground text-right">{spec.value}</span>
-                      </div>
-                    ))}
-                  </div>
+                  {specData[item.id] && (
+                    <div className="space-y-0 mb-6">
+                      {specData[item.id].map((spec) => (
+                        <div key={spec.label} className="flex items-center justify-between py-2.5 border-b border-border last:border-b-0">
+                          <span className="text-sm font-semibold text-foreground">{spec.label}</span>
+                          <span className="text-sm text-muted-foreground text-right">{spec.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
-                  {/* CTA */}
-                  <motion.a
-                    href={item.buyLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full py-3 rounded-xl bg-gradient-pink text-primary-foreground font-semibold text-sm glow-pink-sm flex items-center justify-center gap-2"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.97 }}
-                  >
-                    BUY EQUIPMENT <ExternalLink className="w-4 h-4" />
-                  </motion.a>
+                  {/* CTAs */}
+                  <div className="flex gap-3">
+                    <Link to={`/products/${item.id}`} className="flex-1">
+                      <motion.button
+                        className="w-full py-3 rounded-xl border border-border text-foreground font-semibold text-sm flex items-center justify-center gap-2 hover:bg-muted transition-colors"
+                        whileTap={{ scale: 0.97 }}
+                      >
+                        <Eye className="w-4 h-4" /> Preview
+                      </motion.button>
+                    </Link>
+                    <motion.button
+                      onClick={() => handleAdd(item)}
+                      className="flex-1 py-3 rounded-xl bg-gradient-pink text-primary-foreground font-semibold text-sm glow-pink-sm flex items-center justify-center gap-2"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.97 }}
+                    >
+                      <ShoppingCart className="w-4 h-4" /> Add to Cart
+                    </motion.button>
+                  </div>
                 </div>
               </motion.div>
             </Reveal>
