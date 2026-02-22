@@ -1,9 +1,7 @@
 import { motion, useScroll, useTransform } from "framer-motion";
-import { Heart, ShoppingCart, User, LogOut, Shield } from "lucide-react";
+import { Heart, LogOut, Shield } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { useAuthStore } from "@/stores/authStore";
-import { useCartStore } from "@/stores/cartStore";
-import { useWishlistStore } from "@/stores/wishlistStore";
 import { useProductStore } from "@/stores/productStore";
 import { Link, useNavigate } from "react-router-dom";
 import { siteConfig } from "@/lib/siteConfig";
@@ -13,8 +11,6 @@ export const Navbar = () => {
   const bgOpacity = useTransform(scrollY, [0, 80], [0, 1]);
   const borderOpacity = useTransform(scrollY, [0, 80], [0, 1]);
   const { user, isAuthenticated, logout } = useAuthStore();
-  const cartCount = useCartStore((s) => s.itemCount());
-  const wishlistCount = useWishlistStore((s) => s.items.length);
   const navigate = useNavigate();
   const hasPromos = useProductStore((s) => s.promoCodes.some((p) => p.active));
 
@@ -53,34 +49,6 @@ export const Navbar = () => {
 
         <div className="flex items-center gap-2">
           <ThemeToggle />
-
-          {/* Wishlist icon */}
-          <Link to="/wishlist" className="relative w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all">
-            <Heart className="w-5 h-5" />
-            {wishlistCount > 0 && (
-              <motion.span
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center"
-              >
-                {wishlistCount}
-              </motion.span>
-            )}
-          </Link>
-
-          {/* Cart icon */}
-          <Link to="/cart" className="relative w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all">
-            <ShoppingCart className="w-5 h-5" />
-            {cartCount > 0 && (
-              <motion.span
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center"
-              >
-                {cartCount}
-              </motion.span>
-            )}
-          </Link>
 
           {isAuthenticated ? (
             <div className="flex items-center gap-2">
