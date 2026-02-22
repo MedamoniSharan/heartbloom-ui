@@ -84,45 +84,48 @@ const Products = () => {
               transition={{ delay: i * 0.05 }}
               className="bg-card border border-border rounded-2xl overflow-hidden shadow-card group hover:shadow-elevated transition-shadow duration-300"
             >
-              <div className="relative aspect-square overflow-hidden">
-                <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                {!product.inStock && (
-                  <div className="absolute inset-0 bg-foreground/60 flex items-center justify-center">
-                    <span className="bg-card text-foreground px-3 py-1 rounded-lg text-sm font-medium">Out of Stock</span>
-                  </div>
-                )}
-              </div>
-              <div className="p-4 space-y-3">
-                <h3 className="font-display font-semibold text-foreground text-sm line-clamp-2">{product.name}</h3>
-                <p className="text-xs text-muted-foreground line-clamp-2">{product.description}</p>
-                <div className="flex items-center gap-1">
-                  <Star className="w-3.5 h-3.5 fill-warning text-warning" />
-                  <span className="text-xs font-medium text-foreground">{product.rating}</span>
-                  <span className="text-xs text-muted-foreground">({product.reviews})</span>
+              <Link to={`/products/${product.id}`} className="block">
+                <div className="relative aspect-square overflow-hidden">
+                  <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  {!product.inStock && (
+                    <div className="absolute inset-0 bg-foreground/60 flex items-center justify-center">
+                      <span className="bg-card text-foreground px-3 py-1 rounded-lg text-sm font-medium">Out of Stock</span>
+                    </div>
+                  )}
                 </div>
-                <div className="flex items-center justify-between pt-1">
-                  <span className="text-lg font-bold text-foreground font-display">${product.price}</span>
-                  <div className="flex gap-1.5">
-                    <a
-                      href={getWhatsAppLink(product)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-9 h-9 rounded-xl bg-[hsl(142,70%,45%)] text-primary-foreground flex items-center justify-center hover:opacity-90 transition-opacity"
-                      aria-label="Chat on WhatsApp"
-                    >
-                      <MessageCircle className="w-4 h-4" />
-                    </a>
-                    <motion.button
-                      onClick={() => handleAdd(product)}
-                      disabled={!product.inStock}
-                      className="w-9 h-9 rounded-xl bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-50"
-                      whileTap={{ scale: 0.9 }}
-                      aria-label="Add to cart"
-                    >
-                      <ShoppingCart className="w-4 h-4" />
-                    </motion.button>
+                <div className="p-4 space-y-3">
+                  <h3 className="font-display font-semibold text-foreground text-sm line-clamp-2">{product.name}</h3>
+                  <p className="text-xs text-muted-foreground line-clamp-2">{product.description}</p>
+                  <div className="flex items-center gap-1">
+                    <Star className="w-3.5 h-3.5 fill-warning text-warning" />
+                    <span className="text-xs font-medium text-foreground">{product.rating}</span>
+                    <span className="text-xs text-muted-foreground">({product.reviews})</span>
+                  </div>
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-lg font-bold text-foreground font-display">${product.price}</span>
                   </div>
                 </div>
+              </Link>
+              <div className="px-4 pb-4 flex gap-1.5 justify-end -mt-2">
+                <a
+                  href={getWhatsAppLink(product)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-9 h-9 rounded-xl bg-[hsl(142,70%,45%)] text-primary-foreground flex items-center justify-center hover:opacity-90 transition-opacity"
+                  aria-label="Chat on WhatsApp"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <MessageCircle className="w-4 h-4" />
+                </a>
+                <motion.button
+                  onClick={(e) => { e.preventDefault(); handleAdd(product); }}
+                  disabled={!product.inStock}
+                  className="w-9 h-9 rounded-xl bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-50"
+                  whileTap={{ scale: 0.9 }}
+                  aria-label="Add to cart"
+                >
+                  <ShoppingCart className="w-4 h-4" />
+                </motion.button>
               </div>
             </motion.div>
           ))}
