@@ -3,7 +3,7 @@ import { Navbar } from "@/components/Navbar";
 import { HeroSection } from "@/components/HeroSection";
 import { HowItWorks } from "@/components/HowItWorks";
 import { ProductPreview } from "@/components/ProductPreview";
-import { ReviewMarquee } from "@/components/ReviewMarquee";
+import { TestimonialsSection } from "@/components/TestimonialsSection";
 import { Footer } from "@/components/Footer";
 import { ScrollProgress } from "@/components/ScrollProgress";
 import { PageTransition } from "@/components/PageTransition";
@@ -27,7 +27,7 @@ const Index = () => {
           <HeroSection onUploadClick={() => setUploadOpen(true)} />
           <HowItWorks />
           <ProductPreview />
-          <ReviewMarquee />
+          <TestimonialsSection />
         </main>
         <Footer />
         <MobileBottomNav onUploadClick={() => setUploadOpen(true)} />
