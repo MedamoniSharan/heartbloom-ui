@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Upload, X } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Upload, X, Tag, Check } from "lucide-react";
 import { useCartStore } from "@/stores/cartStore";
+import { useProductStore } from "@/stores/productStore";
 import { usePhotoStore, MAX_PHOTOS, buildFilterString } from "@/stores/photoStore";
 import { Navbar } from "@/components/Navbar";
 import { Link } from "react-router-dom";
@@ -10,11 +11,15 @@ import { UploadModal } from "@/components/UploadModal";
 import { ImageEditor } from "@/components/ImageEditor";
 
 const Cart = () => {
-  const { items, removeFromCart, updateQuantity, total, clearCart } = useCartStore();
+  const { items, removeFromCart, updateQuantity, subtotal, discountAmount, total, clearCart, appliedPromo, applyPromo, removePromo } = useCartStore();
+  const { validatePromo } = useProductStore();
   const { photos, removePhoto, updatePhoto } = usePhotoStore();
   const [uploadOpen, setUploadOpen] = useState(false);
   const [editingPhotoId, setEditingPhotoId] = useState<string | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [promoInput, setPromoInput] = useState("");
+  const [promoError, setPromoError] = useState("");
+  const [promoLoading, setPromoLoading] = useState(false);
 
   const editingPhoto = photos.find((p) => p.id === editingPhotoId);
 
@@ -134,10 +139,91 @@ const Cart = () => {
           {/* Summary */}
           <div className="bg-card border border-border rounded-2xl p-5 h-fit space-y-4 shadow-card">
             <h3 className="font-display font-semibold text-foreground">Order Summary</h3>
+
+            {/* Promo Code Input */}
+            {!appliedPromo ? (
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                    <input
+                      type="text"
+                      placeholder="Promo code"
+                      value={promoInput}
+                      onChange={(e) => { setPromoInput(e.target.value.toUpperCase()); setPromoError(""); }}
+                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                    />
+                  </div>
+                  <motion.button
+                    onClick={() => {
+                      if (!promoInput.trim()) return;
+                      setPromoLoading(true);
+                      setPromoError("");
+                      setTimeout(() => {
+                        const promo = validatePromo(promoInput.trim());
+                        if (promo) {
+                          applyPromo(promo.code, promo.discount);
+                          setPromoInput("");
+                        } else {
+                          setPromoError("Invalid or expired code");
+                        }
+                        setPromoLoading(false);
+                      }, 600);
+                    }}
+                    disabled={promoLoading || !promoInput.trim()}
+                    className="px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-xs font-medium disabled:opacity-50 whitespace-nowrap"
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {promoLoading ? "..." : "Apply"}
+                  </motion.button>
+                </div>
+                <AnimatePresence>
+                  {promoError && (
+                    <motion.p
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="text-xs text-destructive"
+                    >
+                      {promoError}
+                    </motion.p>
+                  )}
+                </AnimatePresence>
+                <p className="text-[10px] text-muted-foreground">Try: WELCOME20, SPRING15</p>
+              </div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex items-center justify-between bg-primary/10 rounded-xl px-3 py-2.5"
+              >
+                <div className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-primary" />
+                  <div>
+                    <span className="text-xs font-bold text-primary">{appliedPromo.code}</span>
+                    <span className="text-xs text-muted-foreground ml-1.5">−{appliedPromo.discount}% off</span>
+                  </div>
+                </div>
+                <button onClick={removePromo} className="text-muted-foreground hover:text-destructive transition-colors">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </motion.div>
+            )}
+
             <div className="space-y-2 text-sm">
               <div className="flex justify-between text-muted-foreground">
-                <span>Subtotal</span><span>${total().toFixed(2)}</span>
+                <span>Subtotal</span><span>${subtotal().toFixed(2)}</span>
               </div>
+              {appliedPromo && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  className="flex justify-between text-primary text-sm"
+                >
+                  <span>Discount ({appliedPromo.discount}%)</span>
+                  <span>−${discountAmount().toFixed(2)}</span>
+                </motion.div>
+              )}
               <div className="flex justify-between text-muted-foreground">
                 <span>Shipping</span><span className="text-primary">Free</span>
               </div>
