@@ -3,6 +3,7 @@ import { Heart, ShoppingCart, User, LogOut, Shield } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { useAuthStore } from "@/stores/authStore";
 import { useCartStore } from "@/stores/cartStore";
+import { useProductStore } from "@/stores/productStore";
 import { Link, useNavigate } from "react-router-dom";
 
 export const Navbar = () => {
@@ -12,10 +13,11 @@ export const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuthStore();
   const cartCount = useCartStore((s) => s.itemCount());
   const navigate = useNavigate();
+  const hasPromos = useProductStore((s) => s.promoCodes.some((p) => p.active));
 
   return (
     <motion.header
-      className="fixed top-0 left-0 right-0 z-50 px-6 py-4"
+      className={`fixed left-0 right-0 z-50 px-6 py-4 ${hasPromos ? "top-8" : "top-0"}`}
       style={{
         backgroundColor: `hsl(var(--background) / ${bgOpacity})`,
         backdropFilter: "blur(20px)",
