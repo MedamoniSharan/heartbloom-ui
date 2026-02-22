@@ -5,7 +5,7 @@ import { Reveal } from "@/components/Reveal";
 const SECTIONS = [
   {
     title: "Information We Collect",
-    content: `When you use HeartPrinted, we collect information you provide directly, including your name, email address, shipping address, and payment information. We also collect photos you upload for printing. We use cookies and similar technologies to improve your experience and analyze site traffic.`,
+    content: `When you use Magnetic Bliss India, we collect information you provide directly, including your name, email address, shipping address, and payment information. We also collect photos you upload for printing. We use cookies and similar technologies to improve your experience and analyze site traffic.`,
   },
   {
     title: "How We Use Your Information",
@@ -25,7 +25,7 @@ const SECTIONS = [
   },
   {
     title: "Your Rights",
-    content: `You have the right to access, correct, or delete your personal information at any time. You can also opt out of promotional emails, request a copy of your data, or ask us to stop processing your information. Contact us at privacy@heartprinted.com to exercise these rights.`,
+    content: `You have the right to access, correct, or delete your personal information at any time. You can also opt out of promotional emails, request a copy of your data, or ask us to stop processing your information. Contact us at privacy@magneticbliss.in to exercise these rights.`,
   },
   {
     title: "Data Security",
@@ -33,14 +33,14 @@ const SECTIONS = [
   },
   {
     title: "Changes to This Policy",
-    content: `We may update this privacy policy from time to time. We'll notify you of significant changes via email or a notice on our website. Your continued use of HeartPrinted after changes constitutes acceptance of the updated policy.`,
+    content: `We may update this privacy policy from time to time. We'll notify you of significant changes via email or a notice on our website. Your continued use of Magnetic Bliss India after changes constitutes acceptance of the updated policy.`,
   },
 ];
 
 const Privacy = () => (
   <div className="min-h-screen bg-background">
     <Navbar />
-    <main className="pt-24 px-6 pb-16 max-w-3xl mx-auto">
+    <main className="pt-32 px-6 pb-16 max-w-3xl mx-auto">
       <div className="text-center mb-12">
         <Reveal>
           <h1 className="text-h1 text-foreground mb-3">Privacy Policy</h1>
@@ -52,7 +52,7 @@ const Privacy = () => (
 
       <Reveal delay={150}>
         <p className="text-muted-foreground mb-10 leading-relaxed">
-          At HeartPrinted, we take your privacy seriously. This policy explains how we collect, use, and protect your personal information when you use our website and services.
+          At Magnetic Bliss India, we take your privacy seriously. This policy explains how we collect, use, and protect your personal information when you use our website and services.
         </p>
       </Reveal>
 
@@ -71,8 +71,8 @@ const Privacy = () => (
         <div className="mt-12 p-5 bg-card border border-border rounded-2xl">
           <p className="text-sm text-muted-foreground">
             <strong className="text-foreground">Questions?</strong> Contact our privacy team at{" "}
-            <a href="mailto:privacy@heartprinted.com" className="text-primary hover:underline">
-              privacy@heartprinted.com
+            <a href="mailto:privacy@magneticbliss.in" className="text-primary hover:underline">
+              privacy@magneticbliss.in
             </a>
           </p>
         </div>

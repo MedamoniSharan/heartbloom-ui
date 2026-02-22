@@ -33,7 +33,7 @@ export const Navbar = () => {
       <nav className="max-w-6xl mx-auto flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2 group">
           <Heart className="w-6 h-6 text-primary fill-primary group-hover:scale-110 transition-transform" />
-          <span className="font-display text-xl font-bold text-foreground">HeartPrinted</span>
+          <span className="font-display text-xl font-bold text-foreground">Magnetic Bliss India</span>
         </Link>
 
         <div className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">

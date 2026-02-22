@@ -20,7 +20,7 @@ const Wishlist = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="pt-24 px-6 pb-16 max-w-6xl mx-auto">
+      <main className="pt-32 px-6 pb-16 max-w-6xl mx-auto">
         <Reveal>
           <div className="flex items-center gap-3 mb-2">
             <Heart className="w-7 h-7 text-primary fill-primary" />

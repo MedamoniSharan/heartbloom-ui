@@ -47,7 +47,7 @@ const Equipment = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="pt-24 px-6 pb-16 max-w-5xl mx-auto">
+      <main className="pt-32 px-6 pb-16 max-w-5xl mx-auto">
         <div className="text-center mb-12">
           <Reveal><h1 className="text-h1 text-foreground mb-3">Want to do the same?</h1></Reveal>
           <Reveal delay={100}><p className="text-muted-foreground max-w-md mx-auto">Here are some equipment options for you.</p></Reveal>

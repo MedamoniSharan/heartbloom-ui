@@ -30,7 +30,7 @@ const ProductDetail = () => {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <main className="pt-24 px-6 text-center">
+        <main className="pt-32 px-6 text-center">
           <h1 className="text-h2 text-foreground mb-4">Product Not Found</h1>
           <Link to="/products" className="text-primary hover:underline">← Back to Products</Link>
         </main>
@@ -56,7 +56,7 @@ const ProductDetail = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="pt-24 px-6 pb-16 max-w-6xl mx-auto">
+      <main className="pt-32 px-6 pb-16 max-w-6xl mx-auto">
         {/* Breadcrumb */}
         <Reveal>
           <Link to="/products" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6">

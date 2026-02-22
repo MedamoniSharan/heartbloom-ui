@@ -36,7 +36,7 @@ const FAQS = [
     category: "Account & Support",
     items: [
       { q: "How do I create an account?", a: "Click 'Sign In' in the top right corner and select 'Create Account'. You can sign up with your email address." },
-      { q: "How do I contact support?", a: "You can reach us through our Contact page, email us at hello@heartprinted.com, or chat with us on WhatsApp during business hours." },
+      { q: "How do I contact support?", a: "You can reach us through our Contact page, email us at hello@magneticbliss.in, or chat with us on WhatsApp during business hours." },
       { q: "Can I edit my photos after uploading?", a: "Yes! Our built-in image editor lets you crop, rotate, adjust brightness/contrast, and apply filters before ordering." },
     ],
   },
@@ -75,14 +75,14 @@ const FAQItem = ({ q, a }: { q: string; a: string }) => {
 const FAQ = () => (
   <div className="min-h-screen bg-background">
     <Navbar />
-    <main className="pt-24 px-6 pb-16 max-w-3xl mx-auto">
+    <main className="pt-32 px-6 pb-16 max-w-3xl mx-auto">
       <div className="text-center mb-12">
         <Reveal>
           <h1 className="text-h1 text-foreground mb-3">Frequently Asked Questions</h1>
         </Reveal>
         <Reveal delay={100}>
           <p className="text-muted-foreground max-w-md mx-auto">
-            Everything you need to know about HeartPrinted. Can't find what you're looking for? Contact us!
+            Everything you need to know about Magnetic Bliss India. Can't find what you're looking for? Contact us!
           </p>
         </Reveal>
       </div>

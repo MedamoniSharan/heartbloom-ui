@@ -12,7 +12,7 @@ const VALUES = [
 ];
 
 const TIMELINE = [
-  { year: "2021", title: "The Spark", desc: "HeartPrinted started in a Brooklyn apartment with a single magnet printer and a big dream." },
+  { year: "2021", title: "The Spark", desc: "Magnetic Bliss India started in a small studio with a single magnet printer and a big dream." },
   { year: "2022", title: "Growing Fast", desc: "10,000 orders shipped. We moved to a proper studio and expanded our product line." },
   { year: "2023", title: "Going Viral", desc: "Featured on social media, our customer gallery exploded. 50K+ magnets delivered worldwide." },
   { year: "2024", title: "Premium Launch", desc: "Introduced pro-grade equipment, event packs, and subscription plans." },
@@ -22,15 +22,15 @@ const TIMELINE = [
 const About = () => (
   <div className="min-h-screen bg-background">
     <Navbar />
-    <main className="pt-24 px-6 pb-16 max-w-5xl mx-auto">
+    <main className="pt-32 px-6 pb-16 max-w-5xl mx-auto">
       {/* Hero */}
       <div className="text-center mb-16">
         <Reveal>
-          <h1 className="text-h1 text-foreground mb-4">About HeartPrinted</h1>
+          <h1 className="text-h1 text-foreground mb-4">About Magnetic Bliss India</h1>
         </Reveal>
         <Reveal delay={100}>
           <p className="text-muted-foreground max-w-lg mx-auto text-body">
-            We believe every photo tells a story — and the best stories deserve to live beyond your phone screen. HeartPrinted turns your favorite moments into beautiful, tangible magnets.
+            We believe every photo tells a story — and the best stories deserve to live beyond your phone screen. Magnetic Bliss India turns your favorite moments into beautiful, tangible magnets.
           </p>
         </Reveal>
       </div>

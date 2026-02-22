@@ -6,7 +6,7 @@ export const Footer = () => (
     <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
       <div className="flex items-center gap-2">
         <Heart className="w-5 h-5 text-primary fill-primary" />
-        <span className="font-display text-lg font-bold text-foreground">HeartPrinted</span>
+        <span className="font-display text-lg font-bold text-foreground">Magnetic Bliss India</span>
       </div>
       <div className="flex gap-8 text-sm text-muted-foreground">
         <Link to="/about" className="hover:text-foreground transition-colors">About</Link>
@@ -14,7 +14,7 @@ export const Footer = () => (
         <Link to="/contact" className="hover:text-foreground transition-colors">Contact</Link>
         <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
       </div>
-      <p className="text-xs text-muted-foreground">© 2026 HeartPrinted. All rights reserved.</p>
+      <p className="text-xs text-muted-foreground">© 2026 Magnetic Bliss India. All rights reserved.</p>
     </div>
   </footer>
 );
