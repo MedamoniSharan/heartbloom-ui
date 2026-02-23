@@ -18,7 +18,7 @@ import {
 
 const statCards = (orders: Order[], products: Product[]) => [
   { label: "Total Orders", value: orders.length, icon: Package, change: "" },
-  { label: "Revenue", value: `$${orders.reduce((s, o) => s + o.total, 0).toFixed(0)}`, icon: DollarSign, change: "" },
+  { label: "Revenue", value: `₹${orders.reduce((s, o) => s + o.total, 0).toFixed(0)}`, icon: DollarSign, change: "" },
   { label: "Products", value: products.length, icon: TrendingUp, change: "" },
   { label: "Customers", value: new Set(orders.map((o) => o.userId)).size, icon: Users, change: "" },
 ];
@@ -90,7 +90,7 @@ const DashboardTab = ({ orders, products, setTab }: { orders: Order[]; products:
         </ResponsiveContainer>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {[{ label: "Avg Order Value", value: `$${avgOrder.toFixed(2)}`, icon: ShoppingCart }, { label: "Conversion Rate", value: "--", icon: TrendingUp }, { label: "Active Promos", value: "--", icon: Tag }, { label: "This Month", value: `$${totalRevenue.toFixed(0)}`, icon: Calendar }].map((s, i) => (
+        {[{ label: "Avg Order Value", value: `₹${avgOrder.toFixed(2)}`, icon: ShoppingCart }, { label: "Conversion Rate", value: "--", icon: TrendingUp }, { label: "Active Promos", value: "--", icon: Tag }, { label: "This Month", value: `₹${totalRevenue.toFixed(0)}`, icon: Calendar }].map((s, i) => (
           <motion.div key={s.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="bg-card border border-border rounded-xl p-3 shadow-card">
             <s.icon className="w-4 h-4 text-primary mb-1" /><p className="text-lg font-bold text-foreground font-display">{s.value}</p><p className="text-[10px] text-muted-foreground">{s.label}</p>
           </motion.div>
@@ -103,7 +103,7 @@ const DashboardTab = ({ orders, products, setTab }: { orders: Order[]; products:
             <div className="space-y-2">{orders.slice(0, 5).map(order => (
               <div key={order.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
                 <div><p className="text-sm font-medium text-foreground">{order.id}</p><p className="text-xs text-muted-foreground">{order.userName}</p></div>
-                <div className="text-right"><p className="text-sm font-bold text-foreground">${order.total.toFixed(2)}</p>
+                <div className="text-right"><p className="text-sm font-bold text-foreground">₹{order.total.toFixed(2)}</p>
                   <span className={`text-xs px-2 py-0.5 rounded-full ${order.status === "delivered" ? "bg-[hsl(var(--success))]/20 text-[hsl(var(--success))]" : order.status === "pending" ? "bg-amber-500/20 text-amber-500" : "bg-primary/20 text-primary"}`}>{order.status}</span>
                 </div>
               </div>
@@ -165,7 +165,7 @@ const AnalyticsTab = ({ orders, products }: { orders: Order[]; products: Product
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-card border border-border rounded-2xl p-6 shadow-card">
         <h3 className="font-display font-bold text-foreground mb-1">Monthly Trend</h3><p className="text-xs text-muted-foreground mb-4">Revenue & customers over 6 months</p>
         <ResponsiveContainer width="100%" height={280}>
-          <LineChart data={monthlyTrend}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis dataKey="month" tick={tickStyle} axisLine={false} tickLine={false} /><YAxis yAxisId="left" tick={tickStyle} axisLine={false} tickLine={false} /><YAxis yAxisId="right" orientation="right" tick={tickStyle} axisLine={false} tickLine={false} /><Tooltip contentStyle={tooltipStyle} /><Legend wrapperStyle={{ fontSize: 12 }} /><Line yAxisId="left" type="monotone" dataKey="revenue" stroke="hsl(330,80%,55%)" strokeWidth={2.5} dot={{ r: 4, fill: "hsl(330,80%,55%)" }} name="Revenue ($)" /><Line yAxisId="right" type="monotone" dataKey="customers" stroke="hsl(220,70%,50%)" strokeWidth={2.5} dot={{ r: 4, fill: "hsl(220,70%,50%)" }} name="Customers" /></LineChart>
+          <LineChart data={monthlyTrend}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis dataKey="month" tick={tickStyle} axisLine={false} tickLine={false} /><YAxis yAxisId="left" tick={tickStyle} axisLine={false} tickLine={false} /><YAxis yAxisId="right" orientation="right" tick={tickStyle} axisLine={false} tickLine={false} /><Tooltip contentStyle={tooltipStyle} /><Legend wrapperStyle={{ fontSize: 12 }} /><Line yAxisId="left" type="monotone" dataKey="revenue" stroke="hsl(330,80%,55%)" strokeWidth={2.5} dot={{ r: 4, fill: "hsl(330,80%,55%)" }} name="Revenue (₹)" /><Line yAxisId="right" type="monotone" dataKey="customers" stroke="hsl(220,70%,50%)" strokeWidth={2.5} dot={{ r: 4, fill: "hsl(220,70%,50%)" }} name="Customers" /></LineChart>
         </ResponsiveContainer>
       </motion.div>
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="bg-card border border-border rounded-2xl p-6 shadow-card">
@@ -173,7 +173,7 @@ const AnalyticsTab = ({ orders, products }: { orders: Order[]; products: Product
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead><tr className="border-b border-border"><th className="text-left py-2 text-muted-foreground font-medium text-xs">#</th><th className="text-left py-2 text-muted-foreground font-medium text-xs">Product</th><th className="text-right py-2 text-muted-foreground font-medium text-xs">Units Sold</th><th className="text-right py-2 text-muted-foreground font-medium text-xs">Revenue</th></tr></thead>
-            <tbody>{topProducts.map((p, i) => (<tr key={i} className="border-b border-border last:border-0"><td className="py-3 text-muted-foreground">{i + 1}</td><td className="py-3 font-medium text-foreground">{p.name}</td><td className="py-3 text-right text-foreground">{p.sold}</td><td className="py-3 text-right font-bold text-foreground">${p.revenue.toLocaleString()}</td></tr>))}</tbody>
+            <tbody>{topProducts.map((p, i) => (<tr key={i} className="border-b border-border last:border-0"><td className="py-3 text-muted-foreground">{i + 1}</td><td className="py-3 font-medium text-foreground">{p.name}</td><td className="py-3 text-right text-foreground">{p.sold}</td><td className="py-3 text-right font-bold text-foreground">₹{p.revenue.toLocaleString()}</td></tr>))}</tbody>
           </table>
         </div>
       </motion.div>
@@ -184,7 +184,7 @@ const AnalyticsTab = ({ orders, products }: { orders: Order[]; products: Product
 
 const Admin = () => {
   const { user } = useAuthStore();
-  const { products, orders, promoCodes, fetchOrders, fetchPromos, addProduct, removeProduct, updateOrderStatus, addPromoCode, removePromoCode, togglePromoCode } = useProductStore();
+  const { products, orders, promoCodes, fetchOrders, fetchPromos, addProduct, removeProduct, updateOrderStatus, addPromoCode, removePromoCode, togglePromoCode, updatePromoCode } = useProductStore();
   const { toast } = useToast();
   const [tab, setTab] = useState<"dashboard" | "analytics" | "orders" | "products" | "add" | "promos">("dashboard");
   const [newPromo, setNewPromo] = useState({ code: "", discount: "", description: "", expiresAt: "" });
@@ -315,7 +315,7 @@ const Admin = () => {
                     <p className="text-xs text-muted-foreground mt-1">{order.address.street}, {order.address.city}</p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="font-display font-bold text-foreground">${order.total.toFixed(2)}</span>
+                    <span className="font-display font-bold text-foreground">₹{order.total.toFixed(2)}</span>
                     <div className="relative">
                       <select
                         value={order.status}
@@ -348,7 +348,7 @@ const Admin = () => {
                 <img src={p.image} alt={p.name} className="w-full aspect-video object-cover" />
                 <div className="p-4">
                   <h3 className="font-display font-semibold text-foreground text-sm">{p.name}</h3>
-                  <p className="text-xs text-muted-foreground mt-1">${p.price} · {p.category}</p>
+                  <p className="text-xs text-muted-foreground mt-1">₹{p.price} · {p.category}</p>
                   <div className="flex gap-2 mt-3">
                     <button onClick={async () => {
                       const ok = await removeProduct(p.id);
@@ -377,7 +377,7 @@ const Admin = () => {
             </div>
             <div className="floating-label-group">
               <input type="number" step="0.01" placeholder=" " value={newProduct.price} onChange={(e) => setNewProduct((p) => ({ ...p, price: e.target.value }))} required />
-              <label>Price ($)</label>
+              <label>Price (₹)</label>
             </div>
             {/* Drag & Drop Image Upload */}
             <div

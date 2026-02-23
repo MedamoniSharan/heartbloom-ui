@@ -114,7 +114,7 @@ const Events = () => {
             </span>
           </Reveal>
           <Reveal delay={80}>
-            <h1 className="text-hero text-foreground mb-3">Magnets for Every<br/><span className="text-gradient-pink">Special Occasion</span></h1>
+            <h1 className="text-hero text-foreground mb-3">Magnets for Every<br /><span className="text-gradient-pink">Special Occasion</span></h1>
           </Reveal>
           <Reveal delay={140}>
             <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
@@ -146,7 +146,7 @@ const Events = () => {
                       </div>
                     </div>
                     <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-success text-success-foreground text-xs font-bold">
-                      Save ${pack.savings}
+                      Save ₹{pack.savings}
                     </div>
                   </div>
 
@@ -164,8 +164,8 @@ const Events = () => {
 
                     <div className="flex items-end justify-between pt-2 border-t border-border">
                       <div>
-                        <p className="text-2xl font-bold text-foreground font-display">${pack.totalPrice.toFixed(2)}</p>
-                        <p className="text-xs text-muted-foreground">${pack.pricePerUnit}/magnet · {pack.qty} magnets</p>
+                        <p className="text-2xl font-bold text-foreground font-display">₹{pack.totalPrice.toFixed(2)}</p>
+                        <p className="text-xs text-muted-foreground">₹{pack.pricePerUnit}/magnet · {pack.qty} magnets</p>
                       </div>
                       <motion.button
                         onClick={() => handleAddPack(pack)}

@@ -68,8 +68,8 @@ const Products = () => {
                   key={cat}
                   onClick={() => setCategory(cat)}
                   className={`relative px-4 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-200 ${category === cat
-                      ? "text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    ? "text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
                     }`}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -151,7 +151,7 @@ const Products = () => {
                       <span className="text-xs text-muted-foreground">({product.reviews})</span>
                     </div>
                     <div className="flex items-center justify-between pt-1">
-                      <span className="text-lg font-bold text-foreground font-display">${product.price}</span>
+                      <span className="text-lg font-bold text-foreground font-display">₹{product.price}</span>
                     </div>
                   </div>
                 </Link>

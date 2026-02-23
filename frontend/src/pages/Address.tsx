@@ -53,7 +53,7 @@ const Address = () => {
     // Generate WhatsApp Message
     const itemsList = items.map(item => `${item.quantity}x ${item.product.name}`).join("\n");
     const addressStr = `${form.fullName}\n${form.street}, ${form.city}, ${form.state} ${form.zipCode}\n${form.country}\nPhone: ${form.phone}`;
-    const message = `*New Order Placed!*\n\n*Items:*\n${itemsList}\n\n*Total:* $${total().toFixed(2)}\n\n*Shipping Address:*\n${addressStr}`;
+    const message = `*New Order Placed!*\n\n*Items:*\n${itemsList}\n\n*Total:* ₹${total().toFixed(2)}\n\n*Shipping Address:*\n${addressStr}`;
     const whatsappUrl = `https://wa.me/${siteConfig.whatsappDigits}?text=${encodeURIComponent(message)}`;
 
     clearCart();
@@ -110,7 +110,7 @@ const Address = () => {
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.97 }}
             >
-              Place Order — ${total().toFixed(2)} <ArrowRight className="w-4 h-4" />
+              Place Order — ₹{total().toFixed(2)} <ArrowRight className="w-4 h-4" />
             </motion.button>
           </form>
 

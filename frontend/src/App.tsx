@@ -32,45 +32,47 @@ const App = () => {
   const fetchMe = useAuthStore((s) => s.fetchMe);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const fetchProducts = useProductStore((s) => s.fetchProducts);
+  const fetchActivePromos = useProductStore((s) => s.fetchActivePromos);
   const syncFromApi = useWishlistStore((s) => s.syncFromApi);
   useEffect(() => {
     fetchMe();
     fetchProducts();
-  }, [fetchMe, fetchProducts]);
+    fetchActivePromos();
+  }, [fetchMe, fetchProducts, fetchActivePromos]);
   useEffect(() => {
     if (isAuthenticated) syncFromApi();
   }, [isAuthenticated, syncFromApi]);
 
   return (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <PromoTicker />
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/products" element={<Products />} />
-          <Route path="/products/:id" element={<ProductDetail />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/address" element={<Address />} />
-          <Route path="/orders" element={<Orders />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/equipment" element={<Equipment />} />
-          <Route path="/wishlist" element={<Wishlist />} />
-          <Route path="/events" element={<Events />} />
-          <Route path="/gallery" element={<Gallery />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/faq" element={<FAQ />} />
-          <Route path="/privacy" element={<Privacy />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <PromoTicker />
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/products" element={<Products />} />
+            <Route path="/products/:id" element={<ProductDetail />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/address" element={<Address />} />
+            <Route path="/orders" element={<Orders />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/equipment" element={<Equipment />} />
+            <Route path="/wishlist" element={<Wishlist />} />
+            <Route path="/events" element={<Events />} />
+            <Route path="/gallery" element={<Gallery />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
   );
 };
 

@@ -57,77 +57,77 @@ const Equipment = () => {
           {equipmentProducts.map((item, i) => {
             const eqKey = item.slug || item.id;
             return (
-            <Reveal key={item.id} delay={i * 120}>
-              <motion.div
-                className="bg-card border border-border rounded-2xl overflow-hidden shadow-card group"
-                whileHover={{ y: -4 }}
-                transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              >
-                {/* Brand Logo */}
-                {logos[eqKey] && (
-                  <div className="flex items-center justify-center py-5 border-b border-border bg-muted/30">
-                    <img src={logos[eqKey]} alt={item.name + " logo"} className="h-8 object-contain" />
-                  </div>
-                )}
-
-                {/* Product Image — links to detail */}
-                <Link to={`/products/${item.id}`} className="block">
-                  <div className="aspect-[5/4] overflow-hidden bg-muted relative">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/10 transition-colors flex items-center justify-center">
-                      <span className="opacity-0 group-hover:opacity-100 transition-opacity bg-card/90 backdrop-blur-sm text-foreground text-xs font-medium px-3 py-1.5 rounded-lg flex items-center gap-1.5">
-                        <Eye className="w-3.5 h-3.5" /> View Details
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-
-                {/* Info */}
-                <div className="p-6">
-                  <Link to={`/products/${item.id}`}>
-                    <h3 className="font-display font-bold text-foreground text-lg mb-1 text-center hover:text-primary transition-colors">{item.name}</h3>
-                  </Link>
-                  <p className="text-2xl font-bold text-primary text-center mb-4 font-display">${item.price.toLocaleString()}</p>
-
-                  {/* Specs Table */}
-                  {specData[eqKey] && (
-                    <div className="space-y-0 mb-6">
-                      {specData[eqKey].map((spec) => (
-                        <div key={spec.label} className="flex items-center justify-between py-2.5 border-b border-border last:border-b-0">
-                          <span className="text-sm font-semibold text-foreground">{spec.label}</span>
-                          <span className="text-sm text-muted-foreground text-right">{spec.value}</span>
-                        </div>
-                      ))}
+              <Reveal key={item.id} delay={i * 120}>
+                <motion.div
+                  className="bg-card border border-border rounded-2xl overflow-hidden shadow-card group"
+                  whileHover={{ y: -4 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                >
+                  {/* Brand Logo */}
+                  {logos[eqKey] && (
+                    <div className="flex items-center justify-center py-5 border-b border-border bg-muted/30">
+                      <img src={logos[eqKey]} alt={item.name + " logo"} className="h-8 object-contain" />
                     </div>
                   )}
 
-                  {/* CTAs */}
-                  <div className="flex gap-3">
-                    <Link to={`/products/${item.id}`} className="flex-1">
+                  {/* Product Image — links to detail */}
+                  <Link to={`/products/${item.id}`} className="block">
+                    <div className="aspect-[5/4] overflow-hidden bg-muted relative">
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/10 transition-colors flex items-center justify-center">
+                        <span className="opacity-0 group-hover:opacity-100 transition-opacity bg-card/90 backdrop-blur-sm text-foreground text-xs font-medium px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                          <Eye className="w-3.5 h-3.5" /> View Details
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+
+                  {/* Info */}
+                  <div className="p-6">
+                    <Link to={`/products/${item.id}`}>
+                      <h3 className="font-display font-bold text-foreground text-lg mb-1 text-center hover:text-primary transition-colors">{item.name}</h3>
+                    </Link>
+                    <p className="text-2xl font-bold text-primary text-center mb-4 font-display">₹{item.price.toLocaleString()}</p>
+
+                    {/* Specs Table */}
+                    {specData[eqKey] && (
+                      <div className="space-y-0 mb-6">
+                        {specData[eqKey].map((spec) => (
+                          <div key={spec.label} className="flex items-center justify-between py-2.5 border-b border-border last:border-b-0">
+                            <span className="text-sm font-semibold text-foreground">{spec.label}</span>
+                            <span className="text-sm text-muted-foreground text-right">{spec.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* CTAs */}
+                    <div className="flex gap-3">
+                      <Link to={`/products/${item.id}`} className="flex-1">
+                        <motion.button
+                          className="w-full py-3 rounded-xl border border-border text-foreground font-semibold text-sm flex items-center justify-center gap-2 hover:bg-muted transition-colors"
+                          whileTap={{ scale: 0.97 }}
+                        >
+                          <Eye className="w-4 h-4" /> Preview
+                        </motion.button>
+                      </Link>
                       <motion.button
-                        className="w-full py-3 rounded-xl border border-border text-foreground font-semibold text-sm flex items-center justify-center gap-2 hover:bg-muted transition-colors"
+                        onClick={() => handleAdd(item)}
+                        className="flex-1 py-3 rounded-xl bg-gradient-pink text-primary-foreground font-semibold text-sm glow-pink-sm flex items-center justify-center gap-2"
+                        whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.97 }}
                       >
-                        <Eye className="w-4 h-4" /> Preview
+                        <ShoppingCart className="w-4 h-4" /> Add to Cart
                       </motion.button>
-                    </Link>
-                    <motion.button
-                      onClick={() => handleAdd(item)}
-                      className="flex-1 py-3 rounded-xl bg-gradient-pink text-primary-foreground font-semibold text-sm glow-pink-sm flex items-center justify-center gap-2"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.97 }}
-                    >
-                      <ShoppingCart className="w-4 h-4" /> Add to Cart
-                    </motion.button>
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            </Reveal>
-          );
+                </motion.div>
+              </Reveal>
+            );
           })}
         </div>
       </main>

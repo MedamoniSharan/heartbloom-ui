@@ -110,6 +110,7 @@ interface ProductState {
   fetchProducts: () => Promise<void>;
   fetchOrders: (isAdmin?: boolean) => Promise<void>;
   fetchPromos: () => Promise<void>;
+  fetchActivePromos: () => Promise<void>;
   addProduct: (product: Omit<Product, "id">) => Promise<boolean>;
   removeProduct: (id: string) => Promise<boolean>;
   addOrder: (order: Omit<Order, "id" | "createdAt">) => Promise<boolean>;
@@ -156,6 +157,15 @@ export const useProductStore = create<ProductState>((set, get) => ({
       set({ promoCodes: list.map(mapPromo), promosLoading: false });
     } catch {
       set({ promosLoading: false });
+    }
+  },
+
+  fetchActivePromos: async () => {
+    try {
+      const list = await promosApi.getActive();
+      set({ promoCodes: list.map(mapPromo) });
+    } catch {
+      // ignore
     }
   },
 
