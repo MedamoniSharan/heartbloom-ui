@@ -191,7 +191,7 @@ const Admin = () => {
 
   useEffect(() => {
     if (user?.role === "admin") {
-      fetchOrders();
+      fetchOrders(true);
       fetchPromos();
     }
   }, [user?.role, fetchOrders, fetchPromos]);
@@ -381,10 +381,10 @@ const Admin = () => {
             {/* Drag & Drop Image Upload */}
             <div
               className={`relative border-2 border-dashed rounded-2xl transition-all cursor-pointer ${dragOver
-                  ? "border-primary bg-primary/5 scale-[1.01]"
-                  : imagePreview
-                    ? "border-primary/30 bg-primary/5"
-                    : "border-border hover:border-primary/40 hover:bg-muted/30"
+                ? "border-primary bg-primary/5 scale-[1.01]"
+                : imagePreview
+                  ? "border-primary/30 bg-primary/5"
+                  : "border-border hover:border-primary/40 hover:bg-muted/30"
                 }`}
               onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
               onDragLeave={() => setDragOver(false)}

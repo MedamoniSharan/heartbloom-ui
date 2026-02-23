@@ -40,6 +40,18 @@ router.get("/", authenticate, async (req, res, next) => {
   }
 });
 
+router.get("/all", authenticate, requireAdmin, async (req, res, next) => {
+  try {
+    const list = await Order.find()
+      .populate("items.product")
+      .sort({ createdAt: -1 })
+      .lean();
+    res.json(list.map((o) => toOrderResponse(o)));
+  } catch (e) {
+    next(e);
+  }
+});
+
 router.post("/", authenticate, async (req, res, next) => {
   try {
     const { items, total, address } = req.body;

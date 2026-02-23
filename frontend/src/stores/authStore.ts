@@ -68,21 +68,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   fetchMe: async () => {
+    set({ isLoading: true });
     if (!import.meta.env.VITE_API_URL && !localStorage.getItem("magnetic_bliss_token")) {
-      set({ hydrated: true });
+      set({ hydrated: true, isLoading: false });
       return;
     }
     const token = localStorage.getItem("magnetic_bliss_token");
     if (!token) {
-      set({ hydrated: true });
+      set({ hydrated: true, isLoading: false });
       return;
     }
     try {
       const { user } = await authApi.me();
-      set({ user: mapUser(user), isAuthenticated: true, hydrated: true });
+      set({ user: mapUser(user), isAuthenticated: true, hydrated: true, isLoading: false });
     } catch {
       setToken(null);
-      set({ user: null, isAuthenticated: false, hydrated: true });
+      set({ user: null, isAuthenticated: false, hydrated: true, isLoading: false });
     }
   },
 }));

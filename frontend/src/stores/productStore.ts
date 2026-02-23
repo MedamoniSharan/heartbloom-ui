@@ -108,7 +108,7 @@ interface ProductState {
   ordersLoading: boolean;
   promosLoading: boolean;
   fetchProducts: () => Promise<void>;
-  fetchOrders: () => Promise<void>;
+  fetchOrders: (isAdmin?: boolean) => Promise<void>;
   fetchPromos: () => Promise<void>;
   addProduct: (product: Omit<Product, "id">) => Promise<boolean>;
   removeProduct: (id: string) => Promise<boolean>;
@@ -138,10 +138,10 @@ export const useProductStore = create<ProductState>((set, get) => ({
     }
   },
 
-  fetchOrders: async () => {
+  fetchOrders: async (isAdmin = false) => {
     set({ ordersLoading: true });
     try {
-      const list = await ordersApi.getMine();
+      const list = isAdmin ? await ordersApi.getAll() : await ordersApi.getMine();
       set({ orders: list.map(mapOrder), ordersLoading: false });
     } catch {
       set({ orders: [], ordersLoading: false });

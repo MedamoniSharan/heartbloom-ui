@@ -110,6 +110,7 @@ export interface ApiOrder {
 
 export const ordersApi = {
   getMine: () => request<ApiOrder[]>("/api/orders"),
+  getAll: () => request<ApiOrder[]>("/api/orders/all"),
   create: (body: { items: { product: ApiProduct; quantity: number }[]; total: number; address: ApiAddress }) =>
     request<ApiOrder>("/api/orders", {
       method: "POST",

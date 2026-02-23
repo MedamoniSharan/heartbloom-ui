@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Heart, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { LottieFromPath } from "@/components/LottieFromPath";
 
@@ -10,9 +10,17 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const { login, isLoading } = useAuthStore();
+  const { login, isLoading, isAuthenticated, user } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const from = (location.state as any)?.from?.pathname || (user.role === "admin" ? "/admin" : "/products");
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, user, navigate, location]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,6 +37,15 @@ const Login = () => {
       toast({ title: "Login failed", description: "Invalid email or password.", variant: "destructive" });
     }
   };
+
+  if (isLoading && !isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
+        <LottieFromPath path="/tri-cube-loader-2.json" className="w-20 h-20" />
+        <p className="text-muted-foreground font-medium text-sm animate-pulse">Checking session...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
