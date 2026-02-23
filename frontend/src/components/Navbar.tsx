@@ -1,6 +1,7 @@
 import { motion, useScroll, useTransform } from "framer-motion";
-import { Heart, LogOut, Shield, ShoppingCart } from "lucide-react";
+import { Heart, LogOut, Shield, ShoppingCart, RefreshCw } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 import { useAuthStore } from "@/stores/authStore";
 import { useProductStore } from "@/stores/productStore";
 import { useCartStore } from "@/stores/cartStore";
@@ -51,51 +52,80 @@ export const Navbar = () => {
           {user?.role === "admin" && <Link to="/admin" className="hover:text-foreground transition-colors flex items-center gap-1"><Shield className="w-3.5 h-3.5" /> Admin</Link>}
         </div>
 
-        <div className="flex items-center gap-2">
+        <TooltipProvider delayDuration={150}>
+          <div className="flex items-center gap-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all"
+                  aria-label="Refresh Page"
+                >
+                  <RefreshCw className="w-5 h-5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent><p className="text-xs">Refresh</p></TooltipContent>
+            </Tooltip>
 
-          <Link to="/wishlist" className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all relative">
-            <Heart className="w-5 h-5" />
-            {wishlistItemsCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center rounded-full">
-                {wishlistItemsCount}
-              </span>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link to="/wishlist" className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all relative">
+                  <Heart className="w-5 h-5" />
+                  {wishlistItemsCount > 0 && (
+                    <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center rounded-full">
+                      {wishlistItemsCount}
+                    </span>
+                  )}
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent><p className="text-xs">Wishlist</p></TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link to="/cart" className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all relative">
+                  <ShoppingCart className="w-5 h-5" />
+                  {cartItemsCount > 0 && (
+                    <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center rounded-full">
+                      {cartItemsCount}
+                    </span>
+                  )}
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent><p className="text-xs">Cart</p></TooltipContent>
+            </Tooltip>
+
+            <ThemeToggle />
+
+            {isAuthenticated ? (
+              <div className="flex items-center pl-3 pr-1 py-1 rounded-xl border border-border bg-card shadow-sm gap-2 ml-1">
+                <span className="hidden md:block text-xs font-semibold text-foreground">{user?.name}</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => { logout(); navigate("/"); }}
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
+                      aria-label="Logout"
+                    >
+                      <LogOut className="w-4 h-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent><p className="text-xs">Log out</p></TooltipContent>
+                </Tooltip>
+              </div>
+            ) : (
+              <Link to="/login">
+                <motion.button
+                  className="px-5 py-2.5 rounded-xl bg-gradient-pink text-primary-foreground text-sm font-medium glow-pink-sm"
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  Sign In
+                </motion.button>
+              </Link>
             )}
-          </Link>
-
-          <Link to="/cart" className="w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all relative">
-            <ShoppingCart className="w-5 h-5" />
-            {cartItemsCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center rounded-full">
-                {cartItemsCount}
-              </span>
-            )}
-          </Link>
-
-          <ThemeToggle />
-
-          {isAuthenticated ? (
-            <div className="flex items-center pl-3 pr-1 py-1 rounded-xl border border-border bg-card shadow-sm gap-2 ml-1">
-              <span className="hidden md:block text-xs font-semibold text-foreground">{user?.name}</span>
-              <button
-                onClick={() => { logout(); navigate("/"); }}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
-                aria-label="Logout"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
-            </div>
-          ) : (
-            <Link to="/login">
-              <motion.button
-                className="px-5 py-2.5 rounded-xl bg-gradient-pink text-primary-foreground text-sm font-medium glow-pink-sm"
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-              >
-                Sign In
-              </motion.button>
-            </Link>
-          )}
-        </div>
+          </div>
+        </TooltipProvider>
       </nav>
     </motion.header>
   );

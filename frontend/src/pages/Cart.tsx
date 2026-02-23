@@ -126,13 +126,17 @@ const Cart = () => {
                         className="w-full h-full object-cover cursor-pointer"
                         style={{ filter: buildFilterString(photo.adjustments, photo.filter) }}
                         onClick={() => setEditingPhotoId(photo.id)}
-                      />
-                      <button
-                        onClick={() => removePhoto(photo.id)}
-                        className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X className="w-2.5 h-2.5" />
-                      </button>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={() => removePhoto(photo.id)}
+                            className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="w-2.5 h-2.5" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent><p className="text-xs">Remove Photo</p></TooltipContent>
+                      </Tooltip>
                     </div>
                   ))}
                   {photos.length < MAX_PHOTOS && (
