@@ -19,9 +19,14 @@ const Login = () => {
     const ok = await login(email, password);
     if (ok) {
       toast({ title: "Welcome back!", description: "You've been logged in successfully." });
-      navigate("/products");
+      const user = useAuthStore.getState().user;
+      if (user?.role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/products");
+      }
     } else {
-      toast({ title: "Login failed", description: "Invalid email or password. Try admin@heartprinted.com / admin123", variant: "destructive" });
+      toast({ title: "Login failed", description: "Invalid email or password.", variant: "destructive" });
     }
   };
 
@@ -69,10 +74,7 @@ const Login = () => {
             <Link to="/signup" className="text-primary hover:underline font-medium">Sign Up</Link>
           </p>
 
-          <div className="text-xs text-muted-foreground text-center border-t border-border pt-3 mt-3">
-            <p>Demo: <code className="bg-muted px-1 rounded">admin@heartprinted.com</code> / <code className="bg-muted px-1 rounded">admin123</code></p>
-            <p className="mt-1">Or: <code className="bg-muted px-1 rounded">jane@example.com</code> / <code className="bg-muted px-1 rounded">password</code></p>
-          </div>
+
         </form>
       </motion.div>
     </div>
