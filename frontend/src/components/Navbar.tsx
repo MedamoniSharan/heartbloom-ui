@@ -64,7 +64,7 @@ export const Navbar = () => {
                   <RefreshCw className="w-5 h-5" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent><p className="text-xs">Refresh</p></TooltipContent>
+              <TooltipContent side="bottom"><p className="text-xs">Refresh</p></TooltipContent>
             </Tooltip>
 
             <Tooltip>
@@ -78,7 +78,7 @@ export const Navbar = () => {
                   )}
                 </Link>
               </TooltipTrigger>
-              <TooltipContent><p className="text-xs">Wishlist</p></TooltipContent>
+              <TooltipContent side="bottom"><p className="text-xs">Wishlist</p></TooltipContent>
             </Tooltip>
 
             <Tooltip>
@@ -92,7 +92,7 @@ export const Navbar = () => {
                   )}
                 </Link>
               </TooltipTrigger>
-              <TooltipContent><p className="text-xs">Cart</p></TooltipContent>
+              <TooltipContent side="bottom"><p className="text-xs">Cart</p></TooltipContent>
             </Tooltip>
 
             <ThemeToggle />
@@ -110,7 +110,7 @@ export const Navbar = () => {
                       <LogOut className="w-4 h-4" />
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent><p className="text-xs">Log out</p></TooltipContent>
+                  <TooltipContent side="bottom"><p className="text-xs">Log out</p></TooltipContent>
                 </Tooltip>
               </div>
             ) : (
