@@ -5,8 +5,7 @@ type Theme = "light" | "dark";
 const STORAGE_KEY = "heartprinted-theme";
 
 function getSystemTheme(): Theme {
-  if (typeof window === "undefined") return "light";
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  return "light";
 }
 
 function getStoredTheme(): Theme | null {
@@ -43,17 +42,7 @@ export function useTheme() {
     document.documentElement.classList.toggle("dark", theme === "dark");
   }, []);
 
-  // Listen for system preference changes
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const handler = (e: MediaQueryListEvent) => {
-      if (!getStoredTheme()) {
-        setTheme(e.matches ? "dark" : "light");
-      }
-    };
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, [setTheme]);
+  // System preference listener removed to enforce default light theme
 
   return { theme, setTheme, toggleTheme };
 }
