@@ -120,8 +120,9 @@ export const Footer = () => (
         <p className="text-xs text-muted-foreground order-2 sm:order-1">
           © {new Date().getFullYear()} Magnetic Bliss India. All rights reserved.
         </p>
-        <p className="text-xs text-muted-foreground order-1 sm:order-2">
+        <p className="text-xs text-muted-foreground order-1 sm:order-2 flex items-center gap-1">
           Developed by <span className="font-medium text-foreground">Optiwebrix Team</span>
+          <Heart className="w-3.5 h-3.5 text-primary fill-primary" />
         </p>
         <p className="text-xs text-muted-foreground order-3">
           Beeramguda, Hyderabad
