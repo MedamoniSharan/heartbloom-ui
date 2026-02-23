@@ -8,6 +8,7 @@ import { useProductStore, Address as AddressType } from "@/stores/productStore";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
+import { siteConfig } from "@/lib/siteConfig";
 
 const Address = () => {
   const navigate = useNavigate();
@@ -48,8 +49,16 @@ const Address = () => {
       toast({ title: "Order failed", description: "Could not place order. Please try again.", variant: "destructive" });
       return;
     }
+
+    // Generate WhatsApp Message
+    const itemsList = items.map(item => `${item.quantity}x ${item.product.name}`).join("\n");
+    const addressStr = `${form.fullName}\n${form.street}, ${form.city}, ${form.state} ${form.zipCode}\n${form.country}\nPhone: ${form.phone}`;
+    const message = `*New Order Placed!*\n\n*Items:*\n${itemsList}\n\n*Total:* $${total().toFixed(2)}\n\n*Shipping Address:*\n${addressStr}`;
+    const whatsappUrl = `https://wa.me/${siteConfig.whatsappDigits}?text=${encodeURIComponent(message)}`;
+
     clearCart();
-    toast({ title: "Order placed! 🎉", description: "Your magnets are on the way!" });
+    toast({ title: "Order placed! 🎉", description: "Taking you to WhatsApp to confirm..." });
+    window.open(whatsappUrl, "_blank");
     navigate("/orders");
   };
 

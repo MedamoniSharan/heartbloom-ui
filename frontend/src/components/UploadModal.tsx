@@ -1,9 +1,8 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDropzone } from "react-dropzone";
 import {
   Upload, X, Camera, Image, Link2, Check, AlertCircle, Plus,
-  Instagram, Facebook, HardDrive, Cloud,
 } from "lucide-react";
 import { usePhotoStore, MAX_PHOTOS, ACCEPTED_TYPES, MAX_FILE_SIZE } from "@/stores/photoStore";
 
@@ -30,10 +29,6 @@ function formatFileSize(bytes: number): string {
 
 const sourceButtons = [
   { icon: Camera, label: "Camera", desc: "Take a photo" },
-  { icon: Instagram, label: "Instagram", desc: "Connect your account" },
-  { icon: Facebook, label: "Facebook", desc: "Import from albums" },
-  { icon: HardDrive, label: "Google Drive", desc: "Pick from Drive" },
-  { icon: Cloud, label: "Dropbox", desc: "Choose files" },
   { icon: Link2, label: "URL", desc: "Paste image link" },
 ];
 
@@ -51,6 +46,56 @@ export const UploadModal = ({ open, onClose }: UploadModalProps) => {
   const [urlInput, setUrlInput] = useState("");
   const [showUrlInput, setShowUrlInput] = useState(false);
   const remaining = MAX_PHOTOS - photos.length;
+
+  const [showCamera, setShowCamera] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
+  const stopCamera = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    setShowCamera(false);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      stopCamera();
+    };
+  }, [stopCamera]);
+
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+      streamRef.current = stream;
+      setShowCamera(true);
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play();
+      }
+    } catch (err) {
+      alert("Camera access denied or unavailable.");
+    }
+  };
+
+  const capturePhoto = () => {
+    if (!videoRef.current) return;
+    const canvas = document.createElement("canvas");
+    canvas.width = videoRef.current.videoWidth;
+    canvas.height = videoRef.current.videoHeight;
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      ctx.drawImage(videoRef.current, 0, 0);
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const file = new File([blob], `camera-${Date.now()}.jpg`, { type: "image/jpeg" });
+          processFiles([file]);
+          stopCamera();
+        }
+      }, "image/jpeg", 0.9);
+    }
+  };
 
   const processFiles = useCallback(
     async (accepted: File[]) => {
@@ -206,11 +251,10 @@ export const UploadModal = ({ open, onClose }: UploadModalProps) => {
                   {/* Drop zone */}
                   <div
                     {...getRootProps()}
-                    className={`relative rounded-2xl border-2 border-dashed p-8 text-center transition-all cursor-pointer ${
-                      isDragActive
-                        ? "border-primary bg-primary/5 scale-[1.02]"
-                        : "border-border hover:border-primary/40"
-                    }`}
+                    className={`relative rounded-2xl border-2 border-dashed p-8 text-center transition-all cursor-pointer ${isDragActive
+                      ? "border-primary bg-primary/5 scale-[1.02]"
+                      : "border-border hover:border-primary/40"
+                      }`}
                   >
                     <input {...getInputProps()} />
                     <motion.div
@@ -228,7 +272,7 @@ export const UploadModal = ({ open, onClose }: UploadModalProps) => {
                   </div>
 
                   {/* Source buttons */}
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     {sourceButtons.map((src, i) => (
                       <motion.button
                         key={src.label}
@@ -241,8 +285,10 @@ export const UploadModal = ({ open, onClose }: UploadModalProps) => {
                         onClick={() => {
                           if (src.label === "URL") {
                             setShowUrlInput(true);
+                          } else if (src.label === "Camera") {
+                            startCamera();
                           } else {
-                            // For social sources, show coming soon toast
+                            // Social sources placeholder - user click triggers file selector for now
                             const el = document.querySelector("[data-dropzone-input]") as HTMLInputElement;
                             el?.click();
                           }
@@ -389,6 +435,36 @@ export const UploadModal = ({ open, onClose }: UploadModalProps) => {
                 </motion.button>
               )}
             </div>
+
+            {/* Camera Overlay */}
+            <AnimatePresence>
+              {showCamera && (
+                <motion.div
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 50 }}
+                  className="absolute inset-0 z-50 bg-black flex flex-col"
+                >
+                  <div className="p-4 flex justify-between items-center bg-black/50 absolute top-0 w-full z-10">
+                    <span className="text-white font-medium text-sm">Camera Capture</span>
+                    <button onClick={stopCamera} className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white">
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                  <div className="flex-1 bg-black flex items-center justify-center overflow-hidden">
+                    <video ref={videoRef} className="w-full h-full object-cover" autoPlay playsInline muted />
+                  </div>
+                  <div className="p-6 pb-8 bg-black flex justify-center w-full">
+                    <button
+                      onClick={capturePhoto}
+                      className="w-16 h-16 rounded-full border-4 border-white flex items-center justify-center active:scale-95 transition-transform"
+                    >
+                      <div className="w-12 h-12 bg-white rounded-full"></div>
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         </motion.div>
       )}
