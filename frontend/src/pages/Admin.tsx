@@ -189,6 +189,7 @@ const Admin = () => {
   const [tab, setTab] = useState<"dashboard" | "analytics" | "orders" | "products" | "add" | "promos">("dashboard");
   const [newPromo, setNewPromo] = useState({ code: "", discount: "", description: "", expiresAt: "" });
   const [editingPromoId, setEditingPromoId] = useState<string | null>(null);
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user?.role === "admin") {
@@ -231,23 +232,42 @@ const Admin = () => {
 
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    const ok = await addProduct({
-      name: newProduct.name,
-      description: newProduct.description,
-      price: parseFloat(newProduct.price),
-      image: newProduct.image || "https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?w=400&h=400&fit=crop",
-      category: newProduct.category,
-      rating: 4.5,
-      reviews: 0,
-      inStock: true,
-    });
-    if (ok) {
-      toast({ title: "Product added!" });
-      setNewProduct({ name: "", description: "", price: "", image: "", category: "Photo Magnets" });
-      clearImage();
-      setTab("products");
+    if (editingProductId) {
+      const ok = await useProductStore.getState().updateProduct(editingProductId, {
+        name: newProduct.name,
+        description: newProduct.description,
+        price: parseFloat(newProduct.price),
+        image: newProduct.image,
+        category: newProduct.category,
+      });
+      if (ok) {
+        toast({ title: "Product updated!" });
+        setNewProduct({ name: "", description: "", price: "", image: "", category: "Photo Magnets" });
+        clearImage();
+        setEditingProductId(null);
+        setTab("products");
+      } else {
+        toast({ title: "Failed to update product", variant: "destructive" });
+      }
     } else {
-      toast({ title: "Failed to add product", variant: "destructive" });
+      const ok = await addProduct({
+        name: newProduct.name,
+        description: newProduct.description,
+        price: parseFloat(newProduct.price),
+        image: newProduct.image || "https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?w=400&h=400&fit=crop",
+        category: newProduct.category,
+        rating: 4.5,
+        reviews: 0,
+        inStock: true,
+      });
+      if (ok) {
+        toast({ title: "Product added!" });
+        setNewProduct({ name: "", description: "", price: "", image: "", category: "Photo Magnets" });
+        clearImage();
+        setTab("products");
+      } else {
+        toast({ title: "Failed to add product", variant: "destructive" });
+      }
     }
   };
 
@@ -350,6 +370,18 @@ const Admin = () => {
                   <h3 className="font-display font-semibold text-foreground text-sm">{p.name}</h3>
                   <p className="text-xs text-muted-foreground mt-1">₹{p.price} · {p.category}</p>
                   <div className="flex gap-2 mt-3">
+                    <button
+                      onClick={() => {
+                        setEditingProductId(p.id);
+                        setNewProduct({ name: p.name, description: p.description, price: p.price.toString(), image: p.image, category: p.category });
+                        setImagePreview(p.image);
+                        setTab("add");
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className="flex-1 py-1.5 rounded-lg border flex items-center justify-center text-xs font-medium text-muted-foreground border-border hover:bg-muted hover:text-foreground transition-colors"
+                    >
+                      Edit
+                    </button>
                     <button onClick={async () => {
                       const ok = await removeProduct(p.id);
                       if (ok) toast({ title: "Product removed" });
@@ -364,9 +396,26 @@ const Admin = () => {
           </div>
         )}
 
-        {/* Add Product Tab */}
+        {/* Add/Edit Product Form */}
         {tab === "add" && (
-          <form onSubmit={handleAddProduct} className="bg-card border border-border rounded-2xl p-6 shadow-card space-y-4 max-w-lg">
+          <form onSubmit={handleAddProduct} className="max-w-xl bg-card border border-border rounded-2xl p-6 shadow-card space-y-4 relative">
+            {editingProductId && (
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingProductId(null);
+                  setNewProduct({ name: "", description: "", price: "", image: "", category: "Photo Magnets" });
+                  clearImage();
+                  setTab("products");
+                }}
+                className="absolute top-4 right-4 text-xs text-muted-foreground hover:text-foreground"
+              >
+                Cancel Edit
+              </button>
+            )}
+            <h3 className="font-display font-semibold text-foreground mb-4">
+              {editingProductId ? "Edit Product" : "Add New Product"}
+            </h3>
             <div className="floating-label-group">
               <input type="text" placeholder=" " value={newProduct.name} onChange={(e) => setNewProduct((p) => ({ ...p, name: e.target.value }))} required />
               <label>Product Name</label>
@@ -435,7 +484,7 @@ const Admin = () => {
               <label>Category</label>
             </div>
             <motion.button type="submit" className="w-full py-3 rounded-xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm flex items-center justify-center gap-2" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.97 }}>
-              <Plus className="w-4 h-4" /> Add Product
+              {editingProductId ? "Save Changes" : <><Plus className="w-4 h-4" /> Add Product</>}
             </motion.button>
           </form>
         )}

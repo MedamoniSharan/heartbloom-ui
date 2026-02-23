@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { PromoTicker } from "./components/PromoTicker";
+import { Loader } from "./components/Loader";
 import { useAuthStore } from "./stores/authStore";
 import { useProductStore } from "./stores/productStore";
 import { useWishlistStore } from "./stores/wishlistStore";
@@ -43,11 +44,17 @@ const App = () => {
     if (isAuthenticated) syncFromApi();
   }, [isAuthenticated, syncFromApi]);
 
+  const productsLoading = useProductStore((s) => s.productsLoading);
+  const authLoading = useAuthStore((s) => s.isLoading);
+
+  const isGlobalLoading = productsLoading || authLoading;
+
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
+      <TooltipProvider delayDuration={150}>
         <Toaster />
         <Sonner />
+        {isGlobalLoading && <Loader />}
         <BrowserRouter>
           <PromoTicker />
           <Routes>

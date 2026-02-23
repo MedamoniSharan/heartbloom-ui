@@ -112,6 +112,7 @@ interface ProductState {
   fetchPromos: () => Promise<void>;
   fetchActivePromos: () => Promise<void>;
   addProduct: (product: Omit<Product, "id">) => Promise<boolean>;
+  updateProduct: (id: string, product: Partial<Product>) => Promise<boolean>;
   removeProduct: (id: string) => Promise<boolean>;
   addOrder: (order: Omit<Order, "id" | "createdAt">) => Promise<boolean>;
   updateOrderStatus: (id: string, status: Order["status"]) => Promise<boolean>;
@@ -184,6 +185,18 @@ export const useProductStore = create<ProductState>((set, get) => ({
         customizable: product.customizable,
       });
       set((s) => ({ products: [mapProduct(created), ...s.products] }));
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  updateProduct: async (id, product) => {
+    try {
+      const updated = await productsApi.update(id, product);
+      set((s) => ({
+        products: s.products.map((p) => (p.id === id ? mapProduct(updated) : p)),
+      }));
       return true;
     } catch {
       return false;

@@ -75,6 +75,8 @@ export const productsApi = {
   getById: (id: string) => request<ApiProduct>(`/api/products/${id}`),
   create: (body: Partial<ApiProduct> & { name: string; description: string; price: number }) =>
     request<ApiProduct>("/api/products", { method: "POST", body: JSON.stringify(body) }),
+  update: (id: string, body: Partial<ApiProduct>) =>
+    request<ApiProduct>(`/api/products/${id}`, { method: "PUT", body: JSON.stringify(body) }),
   delete: (id: string) =>
     request<{ message: string }>(`/api/products/${id}`, { method: "DELETE" }),
 };

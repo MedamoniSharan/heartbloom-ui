@@ -62,4 +62,14 @@ router.delete("/:id", authenticate, requireAdmin, async (req, res, next) => {
   }
 });
 
+router.put("/:id", authenticate, requireAdmin, async (req, res, next) => {
+  try {
+    const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    if (!product) return res.status(404).json({ message: "Product not found" });
+    res.json(toProductResponse(product));
+  } catch (e) {
+    next(e);
+  }
+});
+
 export default router;
