@@ -39,7 +39,10 @@ const ProductDetail = () => {
   }
 
   const images = product.images?.length ? product.images : [product.image];
-  const whatsappLink = `https://wa.me/${siteConfig.whatsappDigits}?text=${encodeURIComponent(`Hi! I'm interested in "${product.name}" (₹${product.price}). Can you tell me more?`)}`;
+  const productUrl = typeof window !== "undefined" ? window.location.href : `https://magnetic-bliss-india.vercel.app/products/${product.id}`;
+  const whatsappLink = `https://wa.me/${siteConfig.whatsappDigits}?text=${encodeURIComponent(
+    `Hi! I'm interested in "${product.name}" ($${product.price}).\n\nCheck it out here: ${productUrl}\n\nCan you tell me more?`
+  )}`;
 
   const related = products.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4);
 
@@ -101,9 +104,8 @@ const ProductDetail = () => {
                     <button
                       key={i}
                       onClick={() => { setSelectedImage(i); setShow3D(false); }}
-                      className={`w-16 h-16 rounded-xl overflow-hidden border-2 flex-shrink-0 transition-all ${
-                        selectedImage === i ? "border-primary" : "border-border"
-                      }`}
+                      className={`w-16 h-16 rounded-xl overflow-hidden border-2 flex-shrink-0 transition-all ${selectedImage === i ? "border-primary" : "border-border"
+                        }`}
                     >
                       <img src={img} alt="" className="w-full h-full object-cover" />
                     </button>
