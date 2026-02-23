@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Upload, X, Tag, Check } from "lucide-react";
 import { useCartStore } from "@/stores/cartStore";
@@ -21,6 +21,15 @@ const Cart = () => {
   const [promoInput, setPromoInput] = useState("");
   const [promoError, setPromoError] = useState("");
   const [promoLoading, setPromoLoading] = useState(false);
+  const [activePromos, setActivePromos] = useState<any[]>([]);
+
+  useEffect(() => {
+    import("@/lib/api").then(({ promosApi }) => {
+      promosApi.getActive().then((promos) => {
+        setActivePromos(promos);
+      }).catch(console.error);
+    });
+  }, []);
 
   const editingPhoto = photos.find((p) => p.id === editingPhotoId);
 
@@ -145,7 +154,31 @@ const Cart = () => {
 
             {/* Promo Code Input */}
             {!appliedPromo ? (
-              <div className="space-y-2">
+              <div className="space-y-3">
+                {activePromos.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-foreground uppercase tracking-wider">Available Offers</p>
+                    <div className="flex flex-wrap gap-2">
+                      {activePromos.map(promo => (
+                        <button
+                          key={promo.id}
+                          onClick={() => {
+                            setPromoInput(promo.code);
+                            // We don't automatically submit so they can see it filled, or we could submit. Let's just fill it.
+                          }}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors text-left"
+                        >
+                          <Tag className="w-3 h-3 text-primary" />
+                          <div>
+                            <span className="text-xs font-bold text-primary block">{promo.code}</span>
+                            <span className="text-[10px] text-muted-foreground block leading-none mt-0.5">{promo.discount}% off</span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex gap-2">
                   <div className="relative flex-1">
                     <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
@@ -195,7 +228,7 @@ const Cart = () => {
                     </motion.p>
                   )}
                 </AnimatePresence>
-                <p className="text-[10px] text-muted-foreground">Try: WELCOME20, SPRING15</p>
+                {activePromos.length === 0 && <p className="text-[10px] text-muted-foreground">Try: WELCOME20, SPRING15</p>}
               </div>
             ) : (
               <motion.div
@@ -247,8 +280,8 @@ const Cart = () => {
               </motion.button>
             </Link>
           </div>
-        </div>
-      </main>
+        </div >
+      </main >
       <Footer />
 
       {/* Upload modal */}
@@ -327,7 +360,7 @@ const Cart = () => {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </div >
   );
 };
 

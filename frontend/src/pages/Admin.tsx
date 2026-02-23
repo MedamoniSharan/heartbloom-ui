@@ -188,6 +188,7 @@ const Admin = () => {
   const { toast } = useToast();
   const [tab, setTab] = useState<"dashboard" | "analytics" | "orders" | "products" | "add" | "promos">("dashboard");
   const [newPromo, setNewPromo] = useState({ code: "", discount: "", description: "", expiresAt: "" });
+  const [editingPromoId, setEditingPromoId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user?.role === "admin") {
@@ -442,28 +443,49 @@ const Admin = () => {
         {/* Promo Codes Tab */}
         {tab === "promos" && (
           <div className="space-y-6">
-            {/* Add promo form */}
+            {/* Add/Edit promo form */}
             <form
               onSubmit={async (e) => {
                 e.preventDefault();
                 if (!newPromo.code || !newPromo.discount) return;
-                const ok = await addPromoCode({
+
+                const promoData = {
                   code: newPromo.code.toUpperCase(),
                   discount: parseFloat(newPromo.discount),
                   description: newPromo.description,
                   active: true,
                   expiresAt: newPromo.expiresAt || undefined,
-                });
-                if (ok) {
-                  toast({ title: "Promo code created!", description: `Code "${newPromo.code.toUpperCase()}" is now live.` });
-                  setNewPromo({ code: "", discount: "", description: "", expiresAt: "" });
+                };
+
+                if (editingPromoId) {
+                  const ok = await updatePromoCode(editingPromoId, promoData);
+                  if (ok) {
+                    toast({ title: "Promo updated!" });
+                    setNewPromo({ code: "", discount: "", description: "", expiresAt: "" });
+                    setEditingPromoId(null);
+                  } else toast({ title: "Failed to update", variant: "destructive" });
                 } else {
-                  toast({ title: "Failed to create promo", variant: "destructive" });
+                  const ok = await addPromoCode(promoData);
+                  if (ok) {
+                    toast({ title: "Promo code created!", description: `Code "${newPromo.code.toUpperCase()}" is now live.` });
+                    setNewPromo({ code: "", discount: "", description: "", expiresAt: "" });
+                  } else toast({ title: "Failed to create promo", variant: "destructive" });
                 }
               }}
-              className="bg-card border border-border rounded-2xl p-6 shadow-card space-y-4 max-w-lg"
+              className="bg-card border border-border rounded-2xl p-6 shadow-card space-y-4 max-w-lg relative"
             >
-              <h3 className="font-display font-semibold text-foreground flex items-center gap-2"><Tag className="w-4 h-4 text-primary" /> Create Promo Code</h3>
+              {editingPromoId && (
+                <button
+                  type="button"
+                  onClick={() => { setEditingPromoId(null); setNewPromo({ code: "", discount: "", description: "", expiresAt: "" }); }}
+                  className="absolute top-4 right-4 text-xs text-muted-foreground hover:text-foreground"
+                >
+                  Cancel Edit
+                </button>
+              )}
+              <h3 className="font-display font-semibold text-foreground flex items-center gap-2">
+                <Tag className="w-4 h-4 text-primary" /> {editingPromoId ? "Edit Promo Code" : "Create Promo Code"}
+              </h3>
               <div className="grid grid-cols-2 gap-3">
                 <div className="floating-label-group">
                   <input type="text" placeholder=" " value={newPromo.code} onChange={(e) => setNewPromo((p) => ({ ...p, code: e.target.value }))} required />
@@ -483,7 +505,7 @@ const Admin = () => {
                 <label>Expires (optional)</label>
               </div>
               <motion.button type="submit" className="w-full py-3 rounded-xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm flex items-center justify-center gap-2" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.97 }}>
-                <Plus className="w-4 h-4" /> Create Promo Code
+                {editingPromoId ? "Save Changes" : <><Plus className="w-4 h-4" /> Create Promo Code</>}
               </motion.button>
             </form>
 
@@ -505,7 +527,22 @@ const Admin = () => {
                       <p className="text-xs text-muted-foreground mt-1">{promo.description} — {promo.discount}% off</p>
                       {promo.expiresAt && <p className="text-xs text-muted-foreground">Expires: {new Date(promo.expiresAt).toLocaleDateString()}</p>}
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 border-l border-border pl-4">
+                      <button
+                        onClick={() => {
+                          setEditingPromoId(promo.id);
+                          setNewPromo({
+                            code: promo.code,
+                            discount: promo.discount.toString(),
+                            description: promo.description,
+                            expiresAt: promo.expiresAt ? new Date(promo.expiresAt).toISOString().slice(0, 10) : "",
+                          });
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        className="text-xs font-medium text-primary hover:underline px-2"
+                      >
+                        Edit
+                      </button>
                       <button onClick={async () => {
                         const ok = await togglePromoCode(promo.id);
                         if (!ok) toast({ title: "Failed to update promo", variant: "destructive" });

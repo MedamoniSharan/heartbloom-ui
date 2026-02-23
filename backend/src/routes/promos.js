@@ -30,6 +30,22 @@ router.get("/validate/:code", async (req, res, next) => {
   }
 });
 
+router.get("/active", async (req, res, next) => {
+  try {
+    const list = await PromoCode.find({
+      active: true,
+      $or: [
+        { expiresAt: { $exists: false } },
+        { expiresAt: null },
+        { expiresAt: { $gt: new Date() } }
+      ]
+    }).lean();
+    res.json(list.map(toPromoResponse));
+  } catch (e) {
+    next(e);
+  }
+});
+
 router.get("/", authenticate, requireAdmin, async (req, res, next) => {
   try {
     const list = await PromoCode.find().lean();
@@ -63,6 +79,40 @@ router.patch("/:id", authenticate, requireAdmin, async (req, res, next) => {
     const promo = await PromoCode.findByIdAndUpdate(
       req.params.id,
       { active: !!active },
+      { new: true }
+    ).lean();
+    if (!promo) return res.status(404).json({ message: "Promo not found" });
+    res.json(toPromoResponse(promo));
+  } catch (e) {
+    next(e);
+  }
+});
+
+router.put("/:id", authenticate, requireAdmin, async (req, res, next) => {
+  try {
+    const { code, discount, description, active, expiresAt } = req.body;
+    if (!code || discount == null || !description) {
+      return res.status(400).json({ message: "code, discount and description required" });
+    }
+
+    // Explicitly handle clearing the expiration date.
+    let parsedExpiresAt = undefined;
+    if (expiresAt === null || expiresAt === "") {
+      parsedExpiresAt = null;
+    } else if (expiresAt) {
+      parsedExpiresAt = new Date(expiresAt);
+    }
+
+    const promo = await PromoCode.findByIdAndUpdate(
+      req.params.id,
+      {
+        code: String(code).toUpperCase().trim(),
+        discount: Number(discount),
+        description,
+        active: !!active,
+        ...(parsedExpiresAt !== undefined && { expiresAt: parsedExpiresAt }),
+        ...(parsedExpiresAt === null && { $unset: { expiresAt: 1 } }) // Actually remove the field if they cleared it
+      },
       { new: true }
     ).lean();
     if (!promo) return res.status(404).json({ message: "Promo not found" });

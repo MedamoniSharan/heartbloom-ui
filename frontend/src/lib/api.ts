@@ -144,9 +144,12 @@ export interface ApiPromo {
 export const promosApi = {
   validate: (code: string) =>
     request<ApiPromo>(`/api/promos/validate/${encodeURIComponent(code)}`),
+  getActive: () => request<ApiPromo[]>("/api/promos/active"),
   getAll: () => request<ApiPromo[]>("/api/promos"),
   create: (body: { code: string; discount: number; description: string; expiresAt?: string }) =>
     request<ApiPromo>("/api/promos", { method: "POST", body: JSON.stringify(body) }),
+  update: (id: string, body: { code: string; discount: number; description: string; active: boolean; expiresAt?: string | null }) =>
+    request<ApiPromo>(`/api/promos/${id}`, { method: "PUT", body: JSON.stringify(body) }),
   toggle: (id: string, active: boolean) =>
     request<ApiPromo>(`/api/promos/${id}`, { method: "PATCH", body: JSON.stringify({ active }) }),
   delete: (id: string) =>

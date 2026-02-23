@@ -115,6 +115,7 @@ interface ProductState {
   addOrder: (order: Omit<Order, "id" | "createdAt">) => Promise<boolean>;
   updateOrderStatus: (id: string, status: Order["status"]) => Promise<boolean>;
   addPromoCode: (promo: Omit<PromoCode, "id">) => Promise<boolean>;
+  updatePromoCode: (id: string, promo: Omit<PromoCode, "id">) => Promise<boolean>;
   removePromoCode: (id: string) => Promise<boolean>;
   togglePromoCode: (id: string) => Promise<boolean>;
   validatePromo: (code: string) => Promise<PromoCode | null>;
@@ -234,6 +235,18 @@ export const useProductStore = create<ProductState>((set, get) => ({
     try {
       await promosApi.delete(id);
       set((s) => ({ promoCodes: s.promoCodes.filter((p) => p.id !== id) }));
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  updatePromoCode: async (id, data) => {
+    try {
+      const p = await promosApi.update(id, data);
+      set((s) => ({
+        promoCodes: s.promoCodes.map((x) => (x.id === id ? mapPromo(p) : x)),
+      }));
       return true;
     } catch {
       return false;
