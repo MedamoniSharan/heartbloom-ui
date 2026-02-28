@@ -137,7 +137,7 @@ export const MagneticCursor = () => {
           opacity: visible ? (cursorState === "hover" ? 0.8 : 0.4) : 0,
           backgroundColor:
             cursorState === "hover"
-              ? "hsla(326,82%,51%,0.15)"
+              ? "hsla(28,52%,42%,0.2)"
               : "transparent",
         }}
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
@@ -147,7 +147,7 @@ export const MagneticCursor = () => {
           style={{
             borderColor:
               cursorState === "button"
-                ? "hsl(326,82%,51%)"
+                ? "hsl(28,52%,42%)"
                 : "hsl(0,0%,100%)",
           }}
         />
@@ -167,7 +167,7 @@ export const MagneticCursor = () => {
           y: mouseY,
           translateX: "-50%",
           translateY: "-50%",
-          backgroundColor: "hsl(326,82%,51%)",
+          backgroundColor: "hsl(28,52%,42%)",
         }}
         animate={{
           width: cursorState === "text" ? 2 : dotVisible ? 8 : 0,
@@ -190,7 +190,7 @@ export const MagneticCursor = () => {
             translateY: "-50%",
             width: 4,
             height: 4,
-            backgroundColor: "hsl(326,82%,51%)",
+            backgroundColor: "hsl(28,52%,42%)",
             opacity: visible ? t.opacity : 0,
           }}
         />

@@ -146,7 +146,7 @@ const Events = () => {
                       </div>
                     </div>
                     <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-success text-success-foreground text-xs font-bold">
-                      Save ₹{pack.savings}
+                      Save Rs{pack.savings}
                     </div>
                   </div>
 
@@ -164,8 +164,8 @@ const Events = () => {
 
                     <div className="flex items-end justify-between pt-2 border-t border-border">
                       <div>
-                        <p className="text-2xl font-bold text-foreground font-display">₹{pack.totalPrice.toFixed(2)}</p>
-                        <p className="text-xs text-muted-foreground">₹{pack.pricePerUnit}/magnet · {pack.qty} magnets</p>
+                        <p className="text-2xl font-bold text-foreground font-display">Rs{pack.totalPrice.toFixed(2)}</p>
+                        <p className="text-xs text-muted-foreground">Rs{pack.pricePerUnit}/magnet · {pack.qty} magnets</p>
                       </div>
                       <motion.button
                         onClick={() => handleAddPack(pack)}

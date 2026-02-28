@@ -15,7 +15,7 @@ import { LottieFromPath } from "@/components/LottieFromPath";
 import { siteConfig } from "@/lib/siteConfig";
 
 const getWhatsAppLink = (product: Product) => {
-  const message = encodeURIComponent(`Hi! I'm interested in "${product.name}" (₹${product.price}). Can you tell me more?`);
+  const message = encodeURIComponent(`Hi! I'm interested in "${product.name}" (Rs${product.price}). Can you tell me more?`);
   return `https://wa.me/${siteConfig.whatsappDigits}?text=${message}`;
 };
 
@@ -158,7 +158,7 @@ const Products = () => {
                         <span className="text-xs text-muted-foreground">({product.reviews})</span>
                       </div>
                       <div className="flex items-center justify-between pt-1">
-                        <span className="text-lg font-bold text-foreground font-display">₹{product.price}</span>
+                        <span className="text-lg font-bold text-foreground font-display">Rs{product.price}</span>
                       </div>
                     </div>
                   </Link>

@@ -7,7 +7,6 @@ import { TestimonialsSection } from "@/components/TestimonialsSection";
 import { Footer } from "@/components/Footer";
 import { ScrollProgress } from "@/components/ScrollProgress";
 import { PageTransition } from "@/components/PageTransition";
-import { MagneticCursor } from "@/components/MagneticCursor";
 import { UploadModal } from "@/components/UploadModal";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { SkipToContent, SRAnnouncer } from "@/components/Accessibility";
@@ -20,7 +19,6 @@ const Index = () => {
       <div className="min-h-screen bg-background">
         <SkipToContent />
         <SRAnnouncer />
-        <MagneticCursor />
         <ScrollProgress />
         <Navbar />
         <main id="main-content" role="main">

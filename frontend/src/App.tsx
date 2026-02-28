@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { PromoTicker } from "./components/PromoTicker";
+import { FloatingWhatsApp } from "./components/FloatingWhatsApp";
 import { Loader } from "./components/Loader";
 import { useAuthStore } from "./stores/authStore";
 import { useProductStore } from "./stores/productStore";
@@ -57,6 +58,7 @@ const App = () => {
         {isGlobalLoading && <Loader />}
         <BrowserRouter>
           <PromoTicker />
+          <FloatingWhatsApp />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />

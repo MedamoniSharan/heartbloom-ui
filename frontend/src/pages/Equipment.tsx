@@ -91,7 +91,7 @@ const Equipment = () => {
                     <Link to={`/products/${item.id}`}>
                       <h3 className="font-display font-bold text-foreground text-lg mb-1 text-center hover:text-primary transition-colors">{item.name}</h3>
                     </Link>
-                    <p className="text-2xl font-bold text-primary text-center mb-4 font-display">₹{item.price.toLocaleString()}</p>
+                    <p className="text-2xl font-bold text-primary text-center mb-4 font-display">Rs{item.price.toLocaleString()}</p>
 
                     {/* Specs Table */}
                     {specData[eqKey] && (

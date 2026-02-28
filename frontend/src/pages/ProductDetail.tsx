@@ -42,7 +42,7 @@ const ProductDetail = () => {
   const images = product.images?.length ? product.images : [product.image];
   const productUrl = typeof window !== "undefined" ? window.location.href : `https://magnetic-bliss-india.vercel.app/products/${product.id}`;
   const whatsappLink = `https://wa.me/${siteConfig.whatsappDigits}?text=${encodeURIComponent(
-    `Hi! I'm interested in "${product.name}" (₹${product.price}).\n\nCheck it out here: ${productUrl}\n\nCan you tell me more?`
+    `Hi! I'm interested in "${product.name}" (Rs${product.price}).\n\nCheck it out here: ${productUrl}\n\nCan you tell me more?`
   )}`;
 
   const related = products.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4);
@@ -147,7 +147,7 @@ const ProductDetail = () => {
               </Reveal>
 
               <Reveal delay={120}>
-                <p className="text-3xl font-bold text-foreground font-display">₹{product.price}</p>
+                <p className="text-3xl font-bold text-foreground font-display">Rs{product.price}</p>
               </Reveal>
 
               <Reveal delay={160}>
@@ -236,7 +236,7 @@ const ProductDetail = () => {
                       </div>
                       <div className="p-3">
                         <h3 className="text-sm font-display font-semibold text-foreground truncate">{p.name}</h3>
-                        <p className="text-primary font-bold font-display mt-1">₹{p.price}</p>
+                        <p className="text-primary font-bold font-display mt-1">Rs{p.price}</p>
                       </div>
                     </Link>
                   </Reveal>

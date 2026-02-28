@@ -265,7 +265,7 @@ const Cart = () => {
 
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between text-muted-foreground">
-                  <span>Subtotal</span><span>₹{subtotal().toFixed(2)}</span>
+                  <span>Subtotal</span><span>Rs{subtotal().toFixed(2)}</span>
                 </div>
                 {appliedPromo && (
                   <motion.div
@@ -274,14 +274,14 @@ const Cart = () => {
                     className="flex justify-between text-primary text-sm"
                   >
                     <span>Discount ({appliedPromo.discount}%)</span>
-                    <span>−₹{discountAmount().toFixed(2)}</span>
+                    <span>−Rs{discountAmount().toFixed(2)}</span>
                   </motion.div>
                 )}
                 <div className="flex justify-between text-muted-foreground">
                   <span>Shipping</span><span className="text-primary">Free</span>
                 </div>
                 <div className="border-t border-border pt-2 flex justify-between font-bold text-foreground">
-                  <span>Total</span><span className="font-display">₹{total().toFixed(2)}</span>
+                  <span>Total</span><span className="font-display">Rs{total().toFixed(2)}</span>
                 </div>
               </div>
               <Link to="/address">

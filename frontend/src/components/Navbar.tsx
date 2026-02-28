@@ -43,6 +43,7 @@ export const Navbar = () => {
         </Link>
 
         <div className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
+          <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
           <Link to="/products" className="hover:text-foreground transition-colors">Products</Link>
           <Link to="/events" className="hover:text-foreground transition-colors">Events</Link>
           <Link to="/gallery" className="hover:text-foreground transition-colors">Gallery</Link>
