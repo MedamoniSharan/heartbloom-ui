@@ -21,7 +21,7 @@ export const Navbar = () => {
 
   return (
     <motion.header
-      className={`fixed left-0 right-0 z-50 px-6 py-4 ${hasPromos ? "top-8" : "top-0"}`}
+      className={`fixed left-0 right-0 z-50 pl-0 pr-6 py-4 ${hasPromos ? "top-8" : "top-0"}`}
       style={{
         backgroundColor: `hsl(var(--background) / ${bgOpacity})`,
         backdropFilter: "blur(20px)",
@@ -44,7 +44,9 @@ export const Navbar = () => {
 
         <div className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
           <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
-          <Link to="/products" className="hover:text-foreground transition-colors">Products</Link>
+          <Link to="/products" className="hover:text-foreground transition-colors">Order Magnet</Link>
+          <Link to="/bulk-orders" className="hover:text-foreground transition-colors">Bulk Orders</Link>
+          <Link to="/courses" className="hover:text-foreground transition-colors">Courses</Link>
           <Link to="/events" className="hover:text-foreground transition-colors">Events</Link>
           <Link to="/gallery" className="hover:text-foreground transition-colors">Gallery</Link>
           <Link to="/equipment" className="hover:text-foreground transition-colors">Machines</Link>

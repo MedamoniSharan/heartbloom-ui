@@ -21,6 +21,8 @@ import Orders from "./pages/Orders";
 import Admin from "./pages/Admin";
 import ProductDetail from "./pages/ProductDetail";
 import Contact from "./pages/Contact";
+import BulkOrders from "./pages/BulkOrders";
+import Courses from "./pages/Courses";
 import Equipment from "./pages/Equipment";
 import Wishlist from "./pages/Wishlist";
 import Events from "./pages/Events";
@@ -70,6 +72,8 @@ const App = () => {
             <Route path="/orders" element={<Orders />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/bulk-orders" element={<BulkOrders />} />
+            <Route path="/courses" element={<Courses />} />
             <Route path="/equipment" element={<Equipment />} />
             <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/events" element={<Events />} />

@@ -25,13 +25,13 @@ const Products = () => {
   const { toggle, isWishlisted } = useWishlistStore();
   const { toast } = useToast();
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("All");
+  const [sizeFilter, setSizeFilter] = useState("All");
 
-  const categories = ["All", ...new Set(products.map((p) => p.category))];
+  const sizeOptions = ["All", "2.5 x 2.5", "2 x 2", "Upload"];
   const filtered = products.filter((p) => {
     const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
-    const matchCat = category === "All" || p.category === category;
-    return matchSearch && matchCat;
+    const matchSize = sizeFilter === "All" || p.category === sizeFilter;
+    return matchSearch && matchSize;
   });
 
   const handleAdd = (product: Product) => {
@@ -44,8 +44,8 @@ const Products = () => {
       <div className="min-h-screen bg-background">
         <Navbar />
         <main className="pt-32 px-6 pb-16 max-w-6xl mx-auto">
-          <Reveal><h1 className="text-h1 text-foreground mb-2">Our Products</h1></Reveal>
-          <Reveal delay={100}><p className="text-muted-foreground mb-6">Premium photo magnets for every occasion</p></Reveal>
+          <Reveal><h1 className="text-h1 text-foreground mb-2">Order Magnet</h1></Reveal>
+          <Reveal delay={100}><p className="text-muted-foreground mb-6">Choose size: 2.5 x 2.5, 2 x 2, or upload your design</p></Reveal>
 
 
 
@@ -57,7 +57,7 @@ const Products = () => {
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
                   type="text"
-                  placeholder="Search products..."
+                  placeholder="Search magnets..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="w-full pl-11 pr-4 py-3 rounded-xl border border-border bg-background text-foreground text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-muted-foreground"
@@ -65,24 +65,24 @@ const Products = () => {
               </div>
               <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 sm:pb-0">
                 <span className="text-xs text-muted-foreground font-medium px-1 hidden sm:block whitespace-nowrap">Filter:</span>
-                {categories.map((cat) => (
+                {sizeOptions.map((size) => (
                   <motion.button
-                    key={cat}
-                    onClick={() => setCategory(cat)}
-                    className={`relative px-4 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-200 ${category === cat
+                    key={size}
+                    onClick={() => setSizeFilter(size)}
+                    className={`relative px-4 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-200 ${sizeFilter === size
                       ? "text-primary-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted"
                       }`}
                     whileTap={{ scale: 0.95 }}
                   >
-                    {category === cat && (
+                    {sizeFilter === size && (
                       <motion.div
                         layoutId="activeFilter"
                         className="absolute inset-0 bg-primary rounded-lg"
                         transition={{ type: "spring", stiffness: 400, damping: 30 }}
                       />
                     )}
-                    <span className="relative z-10">{cat}</span>
+                    <span className="relative z-10">{size}</span>
                   </motion.button>
                 ))}
               </div>
@@ -107,7 +107,7 @@ const Products = () => {
               <p className="text-muted-foreground mb-6">Try a different search or category</p>
               <button
                 type="button"
-                onClick={() => { setSearch(""); setCategory("All"); }}
+                onClick={() => { setSearch(""); setSizeFilter("All"); }}
                 className="px-6 py-3 rounded-xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm"
               >
                 Clear filters

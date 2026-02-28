@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ShoppingCart, Heart, Star, ChevronLeft, Check, Minus, Plus, Box } from "lucide-react";
-import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { useProductStore, Product } from "@/stores/productStore";
 import { useCartStore } from "@/stores/cartStore";
 import { useWishlistStore } from "@/stores/wishlistStore";
@@ -12,7 +11,6 @@ import { Footer } from "@/components/Footer";
 import { Reveal } from "@/components/Reveal";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { MagnetMockup3D } from "@/components/MagnetMockup3D";
-import { siteConfig } from "@/lib/siteConfig";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -40,10 +38,6 @@ const ProductDetail = () => {
   }
 
   const images = product.images?.length ? product.images : [product.image];
-  const productUrl = typeof window !== "undefined" ? window.location.href : `https://magnetic-bliss-india.vercel.app/products/${product.id}`;
-  const whatsappLink = `https://wa.me/${siteConfig.whatsappDigits}?text=${encodeURIComponent(
-    `Hi! I'm interested in "${product.name}" (Rs${product.price}).\n\nCheck it out here: ${productUrl}\n\nCan you tell me more?`
-  )}`;
 
   const related = products.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4);
 
@@ -203,18 +197,6 @@ const ProductDetail = () => {
                     Buy Now
                   </motion.button>
                 </div>
-              </Reveal>
-
-              {/* WhatsApp */}
-              <Reveal delay={280}>
-                <a
-                  href={whatsappLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[hsl(142,70%,45%)] text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
-                >
-                  <WhatsAppIcon className="w-4 h-4" /> Chat on WhatsApp
-                </a>
               </Reveal>
 
               {!product.inStock && (

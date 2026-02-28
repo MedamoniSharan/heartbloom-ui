@@ -6,6 +6,7 @@ import {
   Upload, ImageIcon, X, BarChart3, ShoppingCart, Calendar,
 } from "lucide-react";
 import { useProductStore, Product, Order, PromoCode } from "@/stores/productStore";
+import { useSiteContentStore } from "@/stores/siteContentStore";
 import { useAuthStore } from "@/stores/authStore";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -186,7 +187,7 @@ const Admin = () => {
   const { user } = useAuthStore();
   const { products, orders, promoCodes, fetchOrders, fetchPromos, addProduct, removeProduct, updateOrderStatus, addPromoCode, removePromoCode, togglePromoCode, updatePromoCode } = useProductStore();
   const { toast } = useToast();
-  const [tab, setTab] = useState<"dashboard" | "analytics" | "orders" | "products" | "add" | "promos">("dashboard");
+  const [tab, setTab] = useState<"dashboard" | "analytics" | "orders" | "products" | "add" | "promos" | "bulk" | "courses">("dashboard");
   const [newPromo, setNewPromo] = useState({ code: "", discount: "", description: "", expiresAt: "" });
   const [editingPromoId, setEditingPromoId] = useState<string | null>(null);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
@@ -198,7 +199,8 @@ const Admin = () => {
     }
   }, [user?.role, fetchOrders, fetchPromos]);
 
-  const [newProduct, setNewProduct] = useState({ name: "", description: "", price: "", image: "", category: "Photo Magnets" });
+  const SIZE_OPTIONS = ["2.5 x 2.5", "2 x 2", "Upload"] as const;
+  const [newProduct, setNewProduct] = useState({ name: "", description: "", price: "", image: "", category: "2.5 x 2.5" });
   const [dragOver, setDragOver] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
@@ -242,7 +244,7 @@ const Admin = () => {
       });
       if (ok) {
         toast({ title: "Product updated!" });
-        setNewProduct({ name: "", description: "", price: "", image: "", category: "Photo Magnets" });
+        setNewProduct({ name: "", description: "", price: "", image: "", category: "2.5 x 2.5" });
         clearImage();
         setEditingProductId(null);
         setTab("products");
@@ -262,7 +264,7 @@ const Admin = () => {
       });
       if (ok) {
         toast({ title: "Product added!" });
-        setNewProduct({ name: "", description: "", price: "", image: "", category: "Photo Magnets" });
+        setNewProduct({ name: "", description: "", price: "", image: "", category: "2.5 x 2.5" });
         clearImage();
         setTab("products");
       } else {
@@ -302,8 +304,8 @@ const Admin = () => {
 
         {/* Tabs */}
         <div className="flex gap-2 mb-6 border-b border-border pb-3 overflow-x-auto">
-          {(["dashboard", "analytics", "orders", "products", "add", "promos"] as const).map((t) => {
-            const labels: Record<string, string> = { dashboard: "Dashboard", analytics: "Analytics", orders: "Orders", products: "Products", add: "Add Product", promos: "Promo Codes" };
+          {(["dashboard", "analytics", "orders", "products", "add", "promos", "bulk", "courses"] as const).map((t) => {
+            const labels: Record<string, string> = { dashboard: "Dashboard", analytics: "Analytics", orders: "Orders", products: "Products", add: "Add Product", promos: "Promo Codes", bulk: "Bulk Orders", courses: "Courses" };
             return (
               <button
                 key={t}
@@ -373,7 +375,7 @@ const Admin = () => {
                     <button
                       onClick={() => {
                         setEditingProductId(p.id);
-                        setNewProduct({ name: p.name, description: p.description, price: p.price.toString(), image: p.image, category: p.category });
+                        setNewProduct({ name: p.name, description: p.description, price: p.price.toString(), image: p.image, category: SIZE_OPTIONS.includes(p.category as any) ? p.category : "2.5 x 2.5" });
                         setImagePreview(p.image);
                         setTab("add");
                         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -404,7 +406,7 @@ const Admin = () => {
                 type="button"
                 onClick={() => {
                   setEditingProductId(null);
-                  setNewProduct({ name: "", description: "", price: "", image: "", category: "Photo Magnets" });
+                  setNewProduct({ name: "", description: "", price: "", image: "", category: "2.5 x 2.5" });
                   clearImage();
                   setTab("products");
                 }}
@@ -479,9 +481,13 @@ const Admin = () => {
                 </div>
               )}
             </div>
-            <div className="floating-label-group">
-              <input type="text" placeholder=" " value={newProduct.category} onChange={(e) => setNewProduct((p) => ({ ...p, category: e.target.value }))} />
-              <label>Category</label>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Size / Subcategory</label>
+              <select value={newProduct.category} onChange={(e) => setNewProduct((p) => ({ ...p, category: e.target.value }))} className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none">
+                {SIZE_OPTIONS.map((opt) => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
             </div>
             <motion.button type="submit" className="w-full py-3 rounded-xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm flex items-center justify-center gap-2" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.97 }}>
               {editingProductId ? "Save Changes" : <><Plus className="w-4 h-4" /> Add Product</>}
@@ -612,10 +618,164 @@ const Admin = () => {
             </div>
           </div>
         )}
+
+        {/* Bulk Orders Tab */}
+        {tab === "bulk" && (
+          <BulkOrdersAdminTab />
+        )}
+
+        {/* Courses Tab */}
+        {tab === "courses" && (
+          <CoursesAdminTab />
+        )}
       </main>
       <Footer />
     </div>
   );
 };
+
+function BulkOrdersAdminTab() {
+  const { bulkOrder, setBulkOrder } = useSiteContentStore();
+  const { toast } = useToast();
+  const [form, setForm] = useState(() => ({
+    title: bulkOrder.title,
+    subtitle: bulkOrder.subtitle,
+    formIntro: bulkOrder.formIntro,
+    price50: bulkOrder.price50.toString(),
+    price100: bulkOrder.price100.toString(),
+  }));
+  useEffect(() => {
+    setForm({
+      title: bulkOrder.title,
+      subtitle: bulkOrder.subtitle,
+      formIntro: bulkOrder.formIntro,
+      price50: bulkOrder.price50.toString(),
+      price100: bulkOrder.price100.toString(),
+    });
+  }, [bulkOrder.title, bulkOrder.subtitle, bulkOrder.formIntro, bulkOrder.price50, bulkOrder.price100]);
+
+  const save = () => {
+    setBulkOrder({
+      title: form.title,
+      subtitle: form.subtitle,
+      formIntro: form.formIntro,
+      price50: parseFloat(form.price50) || 0,
+      price100: parseFloat(form.price100) || 0,
+    });
+    toast({ title: "Bulk Orders content saved!" });
+  };
+
+  return (
+    <div className="max-w-xl space-y-4">
+      <h3 className="font-display font-semibold text-foreground">Bulk Orders page content</h3>
+      <p className="text-xs text-muted-foreground">This content appears on the Bulk Orders page. Subcategories: 50 items and 100 items with prices.</p>
+      <div className="bg-card border border-border rounded-2xl p-6 shadow-card space-y-4">
+        <div className="floating-label-group">
+          <input type="text" placeholder=" " value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} />
+          <label>Page title</label>
+        </div>
+        <div className="floating-label-group">
+          <input type="text" placeholder=" " value={form.subtitle} onChange={(e) => setForm((f) => ({ ...f, subtitle: e.target.value }))} />
+          <label>Subtitle</label>
+        </div>
+        <div className="floating-label-group">
+          <input type="text" placeholder=" " value={form.formIntro} onChange={(e) => setForm((f) => ({ ...f, formIntro: e.target.value }))} />
+          <label>Form intro text</label>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="floating-label-group">
+            <input type="number" min="0" step="1" placeholder=" " value={form.price50} onChange={(e) => setForm((f) => ({ ...f, price50: e.target.value }))} />
+            <label>Price for 50 items (Rs)</label>
+          </div>
+          <div className="floating-label-group">
+            <input type="number" min="0" step="1" placeholder=" " value={form.price100} onChange={(e) => setForm((f) => ({ ...f, price100: e.target.value }))} />
+            <label>Price for 100 items (Rs)</label>
+          </div>
+        </div>
+        <motion.button type="button" onClick={save} className="w-full py-3 rounded-xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.97 }}>
+          Save Bulk Orders content
+        </motion.button>
+      </div>
+    </div>
+  );
+}
+
+function CoursesAdminTab() {
+  const { courses, setCourses } = useSiteContentStore();
+  const { toast } = useToast();
+  const [form, setForm] = useState(() => ({
+    title: courses.title,
+    description: courses.description,
+    youtubeUrl: courses.youtubeUrl,
+    book1to1Label: courses.book1to1Label,
+    book1to1Url: courses.book1to1Url,
+    bookGroupLabel: courses.bookGroupLabel,
+    bookGroupUrl: courses.bookGroupUrl,
+  }));
+  useEffect(() => {
+    setForm({
+      title: courses.title,
+      description: courses.description,
+      youtubeUrl: courses.youtubeUrl,
+      book1to1Label: courses.book1to1Label,
+      book1to1Url: courses.book1to1Url,
+      bookGroupLabel: courses.bookGroupLabel,
+      bookGroupUrl: courses.bookGroupUrl,
+    });
+  }, [courses.title, courses.description, courses.youtubeUrl, courses.book1to1Label, courses.book1to1Url, courses.bookGroupLabel, courses.bookGroupUrl]);
+
+  const save = () => {
+    setCourses({
+      title: form.title,
+      description: form.description,
+      youtubeUrl: form.youtubeUrl,
+      book1to1Label: form.book1to1Label,
+      book1to1Url: form.book1to1Url,
+      bookGroupLabel: form.bookGroupLabel,
+      bookGroupUrl: form.bookGroupUrl,
+    });
+    toast({ title: "Courses content saved!" });
+  };
+
+  return (
+    <div className="max-w-xl space-y-4">
+      <h3 className="font-display font-semibold text-foreground">Courses page content</h3>
+      <p className="text-xs text-muted-foreground">YouTube video, 1:1 session link, and group session link. Shown on the Courses page.</p>
+      <div className="bg-card border border-border rounded-2xl p-6 shadow-card space-y-4">
+        <div className="floating-label-group">
+          <input type="text" placeholder=" " value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} />
+          <label>Page title</label>
+        </div>
+        <div className="floating-label-group">
+          <textarea placeholder=" " rows={3} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} className="resize-none" />
+          <label>Description</label>
+        </div>
+        <div className="floating-label-group">
+          <input type="url" placeholder=" " value={form.youtubeUrl} onChange={(e) => setForm((f) => ({ ...f, youtubeUrl: e.target.value }))} />
+          <label>YouTube video URL</label>
+        </div>
+        <div className="floating-label-group">
+          <input type="text" placeholder=" " value={form.book1to1Label} onChange={(e) => setForm((f) => ({ ...f, book1to1Label: e.target.value }))} />
+          <label>Book 1:1 session – button label</label>
+        </div>
+        <div className="floating-label-group">
+          <input type="url" placeholder=" " value={form.book1to1Url} onChange={(e) => setForm((f) => ({ ...f, book1to1Url: e.target.value }))} />
+          <label>Book 1:1 session – URL</label>
+        </div>
+        <div className="floating-label-group">
+          <input type="text" placeholder=" " value={form.bookGroupLabel} onChange={(e) => setForm((f) => ({ ...f, bookGroupLabel: e.target.value }))} />
+          <label>Book group session – button label</label>
+        </div>
+        <div className="floating-label-group">
+          <input type="url" placeholder=" " value={form.bookGroupUrl} onChange={(e) => setForm((f) => ({ ...f, bookGroupUrl: e.target.value }))} />
+          <label>Book group session – URL</label>
+        </div>
+        <motion.button type="button" onClick={save} className="w-full py-3 rounded-xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.97 }}>
+          Save Courses content
+        </motion.button>
+      </div>
+    </div>
+  );
+}
 
 export default Admin;
