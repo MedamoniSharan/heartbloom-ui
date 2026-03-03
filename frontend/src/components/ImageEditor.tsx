@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef, type MutableRefObject } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Check, Crop, Sliders, Sparkles, RotateCw, FlipHorizontal, FlipVertical,
@@ -114,18 +114,7 @@ export const ImageEditor = ({ photo, onSave, onClose }: ImageEditorProps) => {
     setHistoryIndex((i) => i + 1);
   }, [history, historyIndex]);
 
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-      if (e.key === "Enter") handleSave();
-      if ((e.metaKey || e.ctrlKey) && e.key === "z") {
-        e.preventDefault();
-        if (e.shiftKey) redo(); else undo();
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [undo, redo]);
+  const saveRef = useRef<() => void>(() => {});
 
   const filterString = useMemo(
     () => buildFilterString(adjustments, selectedFilter),
@@ -150,6 +139,21 @@ export const ImageEditor = ({ photo, onSave, onClose }: ImageEditorProps) => {
     });
     onClose();
   };
+
+  saveRef.current = handleSave;
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { e.stopPropagation(); onClose(); }
+      if (e.key === "Enter") saveRef.current();
+      if ((e.metaKey || e.ctrlKey) && e.key === "z") {
+        e.preventDefault();
+        if (e.shiftKey) redo(); else undo();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [undo, redo, onClose]);
 
   const updateSlider = (key: keyof Adjustments, value: number) => {
     setAdjustments((prev) => ({ ...prev, [key]: value }));
@@ -258,13 +262,13 @@ export const ImageEditor = ({ photo, onSave, onClose }: ImageEditorProps) => {
 
   return (
     <motion.div
-      className="fixed inset-0 z-[60] flex flex-col bg-[hsl(var(--navy))]"
+      className="fixed inset-0 z-[100] flex flex-col bg-[hsl(var(--navy))]"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
       {/* Top bar */}
-      <div className="flex items-center justify-between px-5 py-3 border-b border-white/10 shrink-0">
+      <div className="flex items-center justify-between px-5 py-3 pt-4 border-b border-white/10 shrink-0">
         <motion.button
           onClick={onClose}
           className="w-10 h-10 rounded-full flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-colors"

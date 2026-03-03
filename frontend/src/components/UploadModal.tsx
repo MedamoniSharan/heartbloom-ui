@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDropzone } from "react-dropzone";
 import {
-  Upload, X, Camera, Image, Link2, Check, AlertCircle, Plus, ShoppingCart,
+  Upload, X, Camera, Link2, Check, AlertCircle, Plus, ShoppingCart, Copy, ZoomIn, ArrowLeft,
 } from "lucide-react";
 import { usePhotoStore, MAX_PHOTOS, ACCEPTED_TYPES, MAX_FILE_SIZE } from "@/stores/photoStore";
 import { Switch } from "@/components/ui/switch";
@@ -10,9 +10,7 @@ import { Switch } from "@/components/ui/switch";
 interface UploadModalProps {
   open: boolean;
   onClose: () => void;
-  /** When set, user must upload this many images; shows "Add to Cart" when met. */
   requiredCount?: number;
-  /** Called when user clicks Add to Cart (only when requiredCount is set and met). Passes current social media consent. */
   onAddToCart?: (socialMediaConsent: boolean) => void;
 }
 
@@ -32,11 +30,6 @@ function formatFileSize(bytes: number): string {
   return (bytes / 1048576).toFixed(1) + " MB";
 }
 
-const sourceButtons = [
-  { icon: Camera, label: "Camera", desc: "Take a photo" },
-  { icon: Link2, label: "URL", desc: "Paste image link" },
-];
-
 function validateFile(file: File): string | null {
   if (file.size > MAX_FILE_SIZE) return `File too large (max 20MB)`;
   const ext = file.name.toLowerCase().split(".").pop();
@@ -51,6 +44,7 @@ export const UploadModal = ({ open, onClose, requiredCount, onAddToCart }: Uploa
   const [urlInput, setUrlInput] = useState("");
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [socialMediaConsent, setSocialMediaConsent] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const remaining = requiredCount != null
     ? Math.max(0, requiredCount - photos.length)
     : MAX_PHOTOS - photos.length;
@@ -69,9 +63,7 @@ export const UploadModal = ({ open, onClose, requiredCount, onAddToCart }: Uploa
   }, []);
 
   useEffect(() => {
-    return () => {
-      stopCamera();
-    };
+    return () => { stopCamera(); };
   }, [stopCamera]);
 
   const startCamera = async () => {
@@ -83,7 +75,7 @@ export const UploadModal = ({ open, onClose, requiredCount, onAddToCart }: Uploa
         videoRef.current.srcObject = stream;
         videoRef.current.play();
       }
-    } catch (err) {
+    } catch {
       alert("Camera access denied or unavailable.");
     }
   };
@@ -109,7 +101,6 @@ export const UploadModal = ({ open, onClose, requiredCount, onAddToCart }: Uploa
   const processFiles = useCallback(
     async (accepted: File[]) => {
       if (remaining <= 0) return;
-
       const toProcess = accepted.slice(0, remaining);
       const newUploading: UploadingFile[] = [];
       const validFiles: File[] = [];
@@ -117,42 +108,26 @@ export const UploadModal = ({ open, onClose, requiredCount, onAddToCart }: Uploa
       for (const file of toProcess) {
         const error = validateFile(file);
         const id = `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-
         if (error) {
-          newUploading.push({
-            id, name: file.name, size: formatFileSize(file.size),
-            progress: 0, status: "error", errorMsg: error,
-          });
+          newUploading.push({ id, name: file.name, size: formatFileSize(file.size), progress: 0, status: "error", errorMsg: error });
         } else {
           let processedFile = file;
-
-          // Convert HEIC to JPG
           if (file.name.toLowerCase().endsWith(".heic") || file.name.toLowerCase().endsWith(".heif")) {
             try {
               const heic2any = (await import("heic2any")).default;
               const blob = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.9 }) as Blob;
               processedFile = new File([blob], file.name.replace(/\.heic$/i, ".jpg"), { type: "image/jpeg" });
             } catch {
-              newUploading.push({
-                id, name: file.name, size: formatFileSize(file.size),
-                progress: 0, status: "error", errorMsg: "Failed to convert HEIC",
-              });
+              newUploading.push({ id, name: file.name, size: formatFileSize(file.size), progress: 0, status: "error", errorMsg: "Failed to convert HEIC" });
               continue;
             }
           }
-
           validFiles.push(processedFile);
-          newUploading.push({
-            id, name: processedFile.name, size: formatFileSize(processedFile.size),
-            progress: 0, status: "uploading",
-            preview: URL.createObjectURL(processedFile),
-          });
+          newUploading.push({ id, name: processedFile.name, size: formatFileSize(processedFile.size), progress: 0, status: "uploading", preview: URL.createObjectURL(processedFile) });
         }
       }
 
       setUploadingFiles((prev) => [...prev, ...newUploading]);
-
-      // Simulate upload progress then add to store
       const uploading = newUploading.filter((f) => f.status === "uploading");
       for (const uf of uploading) {
         let progress = 0;
@@ -162,20 +137,14 @@ export const UploadModal = ({ open, onClose, requiredCount, onAddToCart }: Uploa
             if (progress >= 100) {
               progress = 100;
               clearInterval(interval);
-              setUploadingFiles((prev) =>
-                prev.map((f) => (f.id === uf.id ? { ...f, progress: 100, status: "done" as const } : f))
-              );
+              setUploadingFiles((prev) => prev.map((f) => (f.id === uf.id ? { ...f, progress: 100, status: "done" as const } : f)));
               resolve();
             } else {
-              setUploadingFiles((prev) =>
-                prev.map((f) => (f.id === uf.id ? { ...f, progress } : f))
-              );
+              setUploadingFiles((prev) => prev.map((f) => (f.id === uf.id ? { ...f, progress } : f)));
             }
           }, 200);
         });
       }
-
-      // Add to global store
       addPhotos(validFiles);
     },
     [remaining, addPhotos]
@@ -201,7 +170,6 @@ export const UploadModal = ({ open, onClose, requiredCount, onAddToCart }: Uploa
       setUrlInput("");
       setShowUrlInput(false);
     } catch {
-      // Show error in uploading files
       setUploadingFiles((prev) => [
         ...prev,
         { id: Date.now().toString(), name: "URL Import", size: "0", progress: 0, status: "error", errorMsg: "Failed to fetch URL" },
@@ -210,6 +178,8 @@ export const UploadModal = ({ open, onClose, requiredCount, onAddToCart }: Uploa
   };
 
   const clearUploads = () => setUploadingFiles([]);
+
+  const totalSlots = requiredCount ?? MAX_PHOTOS;
 
   return (
     <AnimatePresence>
@@ -220,263 +190,328 @@ export const UploadModal = ({ open, onClose, requiredCount, onAddToCart }: Uploa
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
         >
-          {/* Backdrop */}
           <motion.div
-            className="absolute inset-0 bg-foreground/40 backdrop-blur-sm"
-            initial={{ backdropFilter: "blur(0px)" }}
-            animate={{ backdropFilter: "blur(12px)" }}
-            exit={{ backdropFilter: "blur(0px)" }}
+            className="absolute inset-0 bg-black/50 backdrop-blur-md"
             onClick={onClose}
           />
 
-          {/* Modal */}
+          {/* Modal container */}
           <motion.div
-            className="relative w-full max-w-lg max-h-[85vh] bg-card rounded-3xl shadow-elevated border border-border overflow-y-auto"
-            initial={{ scale: 0.92, opacity: 0, y: 20 }}
+            className="relative z-10 w-full max-w-5xl bg-card rounded-2xl shadow-elevated border border-border overflow-hidden"
+            style={{ maxHeight: "90vh" }}
+            initial={{ scale: 0.95, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.92, opacity: 0, y: 20 }}
+            exit={{ scale: 0.95, opacity: 0, y: 20 }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
           >
-            {/* Header */}
-            <div className="sticky top-0 z-10 flex items-center justify-between px-6 pt-6 pb-3 bg-card/95 backdrop-blur-sm">
+            {/* Top bar */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-card">
               <div>
-                <h3 className="font-display text-h3 text-foreground">
-                  {requiredCount != null ? "Upload images" : "Upload Photos"}
-                </h3>
+                <h3 className="font-display text-lg font-semibold text-foreground">Upload Images</h3>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {requiredCount != null
-                    ? `${photos.length}/${requiredCount} photos added`
-                    : `${photos.length}/${MAX_PHOTOS} photos added`}
+                  {photos.length}/{totalSlots} photos added
+                  {remaining > 0 && photos.length > 0 && (
+                    <span className="text-primary ml-2 font-medium">• {remaining} more needed</span>
+                  )}
                 </p>
               </div>
               <motion.button
                 onClick={onClose}
-                className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-                whileHover={{ scale: 1.1 }}
+                className="w-9 h-9 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.9 }}
-                aria-label="Close"
               >
                 <X className="w-4 h-4" />
               </motion.button>
             </div>
 
-            <div className="px-6 pb-6 space-y-4">
-              {remaining > 0 ? (
-                <>
-                  {/* Drop zone */}
-                  <div
-                    {...getRootProps()}
-                    className={`relative rounded-2xl border-2 border-dashed p-8 text-center transition-all cursor-pointer ${isDragActive
-                      ? "border-primary bg-primary/5 scale-[1.02]"
-                      : "border-border hover:border-primary/40"
+            {/* Content — scrollable */}
+            <div className="overflow-y-auto" style={{ maxHeight: "calc(90vh - 70px)" }}>
+              {/* Upload area */}
+              <div className="px-6 pt-5 pb-4">
+                {remaining > 0 ? (
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    {/* Drop zone */}
+                    <div
+                      {...getRootProps()}
+                      className={`flex-1 rounded-xl border-2 border-dashed px-6 py-5 text-center transition-all cursor-pointer ${
+                        isDragActive ? "border-primary bg-primary/5" : "border-border hover:border-primary/40 hover:bg-muted/20"
                       }`}
-                  >
-                    <input {...getInputProps()} />
-                    <motion.div
-                      animate={{ y: [0, -4, 0] }}
-                      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                     >
-                      <Upload className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                    </motion.div>
-                    <p className="text-sm font-medium text-foreground mb-1">
-                      {isDragActive ? "Drop to upload" : "Drop photos here or click to browse"}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      JPG, PNG, WEBP, HEIC • Max 20MB • {remaining} slot{remaining !== 1 ? "s" : ""} remaining
-                    </p>
-                  </div>
-
-                  {/* Source buttons */}
-                  <div className="grid grid-cols-2 gap-2">
-                    {sourceButtons.map((src, i) => (
-                      <motion.button
-                        key={src.label}
-                        className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.05 + i * 0.04, duration: 0.3 }}
-                        whileHover={{ y: -3 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => {
-                          if (src.label === "URL") {
-                            setShowUrlInput(true);
-                          } else if (src.label === "Camera") {
-                            startCamera();
-                          } else {
-                            // Social sources placeholder - user click triggers file selector for now
-                            const el = document.querySelector("[data-dropzone-input]") as HTMLInputElement;
-                            el?.click();
-                          }
-                        }}
-                      >
-                        <src.icon className="w-5 h-5" />
-                        <span className="text-xs font-medium">{src.label}</span>
-                      </motion.button>
-                    ))}
-                  </div>
-
-                  {/* URL import */}
-                  <AnimatePresence>
-                    {showUrlInput && (
-                      <motion.div
-                        className="flex gap-2"
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                      >
-                        <input
-                          value={urlInput}
-                          onChange={(e) => setUrlInput(e.target.value)}
-                          placeholder="Paste image URL..."
-                          className="flex-1 px-3 py-2 rounded-xl border border-border bg-background text-foreground text-sm"
-                          onKeyDown={(e) => e.key === "Enter" && handleUrlImport()}
-                          autoFocus
-                        />
-                        <motion.button
-                          onClick={handleUrlImport}
-                          className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium"
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          Import
-                        </motion.button>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </>
-              ) : (
-                <div className="text-center py-6">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-                    <Check className="w-6 h-6 text-primary" />
-                  </div>
-                  <p className="text-sm font-medium text-foreground">
-                    All {requiredCount ?? MAX_PHOTOS} slot{(requiredCount ?? MAX_PHOTOS) !== 1 ? "s" : ""} filled!
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">Remove a photo to add a different one</p>
-                </div>
-              )}
-
-              {/* Uploading file list */}
-              <AnimatePresence>
-                {uploadingFiles.length > 0 && (
-                  <motion.div
-                    className="space-y-2"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground font-medium">Recent uploads</span>
-                      <button onClick={clearUploads} className="text-xs text-muted-foreground hover:text-foreground">Clear</button>
+                      <input {...getInputProps()} />
+                      <Upload className="w-7 h-7 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-sm font-medium text-foreground">
+                        {isDragActive ? "Drop to upload" : "Drop photos or click to browse"}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground mt-1">JPG, PNG, WEBP, HEIC • Max 20MB</p>
                     </div>
-                    {uploadingFiles.slice(-5).map((file) => (
-                      <motion.div
-                        key={file.id}
-                        className="flex items-center gap-3 p-3 rounded-xl bg-muted/30"
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        layout
+
+                    {/* Quick actions */}
+                    <div className="flex sm:flex-col gap-2 sm:w-28">
+                      <button
+                        onClick={startCamera}
+                        className="flex-1 flex flex-col items-center justify-center gap-1 p-3 rounded-xl bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
                       >
-                        {file.preview && (
-                          <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-muted">
-                            <img src={file.preview} alt="" className="w-full h-full object-cover" />
+                        <Camera className="w-5 h-5" />
+                        <span className="text-[10px] font-medium">Camera</span>
+                      </button>
+                      <button
+                        onClick={() => setShowUrlInput(!showUrlInput)}
+                        className="flex-1 flex flex-col items-center justify-center gap-1 p-3 rounded-xl bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <Link2 className="w-5 h-5" />
+                        <span className="text-[10px] font-medium">URL</span>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3 p-4 rounded-xl bg-primary/5 border border-primary/20">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Check className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">All {totalSlots} slots filled!</p>
+                      <p className="text-xs text-muted-foreground">Remove a photo to replace it with a different one</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* URL import input */}
+                <AnimatePresence>
+                  {showUrlInput && (
+                    <motion.div className="flex gap-2 mt-3" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}>
+                      <input
+                        value={urlInput}
+                        onChange={(e) => setUrlInput(e.target.value)}
+                        placeholder="Paste image URL..."
+                        className="flex-1 px-3 py-2 rounded-xl border border-border bg-background text-foreground text-sm"
+                        onKeyDown={(e) => e.key === "Enter" && handleUrlImport()}
+                        autoFocus
+                      />
+                      <motion.button onClick={handleUrlImport} className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium" whileTap={{ scale: 0.95 }}>
+                        Import
+                      </motion.button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Upload progress */}
+                <AnimatePresence>
+                  {uploadingFiles.length > 0 && (
+                    <motion.div className="mt-3 space-y-1.5" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] text-muted-foreground font-medium">Recent uploads</span>
+                        <button onClick={clearUploads} className="text-[11px] text-muted-foreground hover:text-foreground">Clear</button>
+                      </div>
+                      {uploadingFiles.slice(-3).map((file) => (
+                        <div key={file.id} className="flex items-center gap-2 p-2 rounded-lg bg-muted/20">
+                          {file.preview && <img src={file.preview} alt="" className="w-8 h-8 rounded-md object-cover flex-shrink-0" />}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs text-foreground truncate">{file.name}</p>
+                            {file.status === "uploading" && (
+                              <div className="mt-0.5 h-1 rounded-full bg-muted overflow-hidden">
+                                <div className="h-full bg-gradient-pink rounded-full transition-all" style={{ width: `${file.progress}%` }} />
+                              </div>
+                            )}
                           </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-foreground truncate">{file.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {file.errorMsg || file.size}
-                          </p>
-                          {file.status === "uploading" && (
-                            <div className="mt-1 h-1 rounded-full bg-muted overflow-hidden">
-                              <motion.div
-                                className="h-full bg-gradient-pink rounded-full"
-                                animate={{ width: `${file.progress}%` }}
-                                transition={{ duration: 0.3 }}
-                              />
+                          {file.status === "done" && <Check className="w-4 h-4 text-primary flex-shrink-0" />}
+                          {file.status === "error" && <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0" />}
+                        </div>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Divider with label */}
+              <div className="px-6">
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 h-px bg-border" />
+                  <span className="text-xs font-semibold text-foreground uppercase tracking-wider">Preview Grid</span>
+                  <div className="flex-1 h-px bg-border" />
+                </div>
+              </div>
+
+              {/* Preview grid */}
+              <div className="p-6">
+                {requiredCount != null && requiredCount > 0 ? (
+                  <div className={`grid gap-4 ${requiredCount <= 2 ? "grid-cols-2" : requiredCount <= 4 ? "grid-cols-2 sm:grid-cols-4" : requiredCount <= 6 ? "grid-cols-3 sm:grid-cols-3" : "grid-cols-3 sm:grid-cols-4"}`}>
+                    {Array.from({ length: requiredCount }).map((_, idx) => {
+                      const photo = photos[idx];
+                      return (
+                        <motion.div
+                          key={idx}
+                          className={`relative aspect-square rounded-2xl overflow-hidden ${
+                            photo
+                              ? "ring-2 ring-primary/30 shadow-md"
+                              : "border-2 border-dashed border-border hover:border-primary/30 bg-muted/10 hover:bg-muted/20"
+                          } transition-all`}
+                          initial={{ opacity: 0, scale: 0.92 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: idx * 0.03 }}
+                        >
+                          {photo ? (
+                            <>
+                              <img src={photo.preview} alt={`Image ${idx + 1}`} className="w-full h-full object-cover" />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
+
+                              {/* Slot number */}
+                              <span className="absolute top-2.5 left-2.5 min-w-[26px] h-[26px] rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shadow-md px-1">
+                                {idx + 1}
+                              </span>
+
+                              {/* Top-right actions */}
+                              <div className="absolute top-2.5 right-2.5 flex gap-1.5">
+                                <button
+                                  onClick={() => setPreviewImage(photo.preview)}
+                                  className="w-7 h-7 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center backdrop-blur-sm transition-colors"
+                                  title="Zoom"
+                                >
+                                  <ZoomIn className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => { usePhotoStore.getState().removePhoto(photo.id); }}
+                                  className="w-7 h-7 rounded-full bg-black/50 hover:bg-destructive text-white flex items-center justify-center backdrop-blur-sm transition-colors"
+                                  title="Remove"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+
+                              {/* Copy button */}
+                              {photos.length < requiredCount && (
+                                <button
+                                  onClick={() => { usePhotoStore.getState().addPhotos([photo.file]); }}
+                                  className="absolute bottom-2.5 right-2.5 flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-black/50 hover:bg-primary text-white text-[11px] font-medium backdrop-blur-sm transition-colors"
+                                  title="Copy to next empty slot"
+                                >
+                                  <Copy className="w-3 h-3" />
+                                  Fill next
+                                </button>
+                              )}
+                            </>
+                          ) : (
+                            <div
+                              {...getRootProps()}
+                              className="w-full h-full flex flex-col items-center justify-center cursor-pointer gap-2 transition-colors"
+                            >
+                              <div className="w-12 h-12 rounded-full bg-border/30 flex items-center justify-center">
+                                <Plus className="w-6 h-6 text-muted-foreground/50" />
+                              </div>
+                              <span className="text-sm font-medium text-muted-foreground/60">Slot {idx + 1}</span>
+                              <span className="text-[10px] text-muted-foreground/40">Click or drop image</span>
                             </div>
                           )}
-                        </div>
-                        {file.status === "done" && (
-                          <motion.div initial={{ scale: 0 }} animate={{ scale: [0, 1.2, 1] }}>
-                            <Check className="w-5 h-5 text-primary" />
-                          </motion.div>
-                        )}
-                        {file.status === "error" && (
-                          <motion.div animate={{ x: [0, -4, 4, -4, 0] }} transition={{ duration: 0.4 }}>
-                            <AlertCircle className="w-5 h-5 text-destructive" />
-                          </motion.div>
-                        )}
-                      </motion.div>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Added photos thumbnail strip */}
-              {photos.length > 0 && (
-                <div>
-                  <p className="text-xs text-muted-foreground font-medium mb-2">Added photos</p>
-                  <div className="flex gap-2 overflow-x-auto pb-2">
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                ) : photos.length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                     {photos.map((photo, i) => (
                       <motion.div
                         key={photo.id}
-                        className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 border border-border relative group"
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.05 }}
+                        className="relative aspect-square rounded-2xl overflow-hidden ring-2 ring-primary/30 shadow-md"
+                        initial={{ opacity: 0, scale: 0.92 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: i * 0.03 }}
                       >
                         <img src={photo.preview} alt="" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
+                        <span className="absolute top-2.5 left-2.5 min-w-[26px] h-[26px] rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shadow-md px-1">
+                          {i + 1}
+                        </span>
+                        <button
+                          onClick={() => setPreviewImage(photo.preview)}
+                          className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center backdrop-blur-sm transition-colors"
+                        >
+                          <ZoomIn className="w-3.5 h-3.5" />
+                        </button>
                       </motion.div>
                     ))}
                     {remaining > 0 && (
                       <div
                         {...getRootProps()}
-                        className="w-14 h-14 rounded-xl border-2 border-dashed border-border flex items-center justify-center flex-shrink-0 hover:border-primary/50 transition-colors cursor-pointer"
+                        className="aspect-square rounded-2xl border-2 border-dashed border-border hover:border-primary/30 flex flex-col items-center justify-center cursor-pointer bg-muted/10 hover:bg-muted/20 transition-colors gap-2"
                       >
-                        <Plus className="w-5 h-5 text-muted-foreground" />
+                        <Plus className="w-7 h-7 text-muted-foreground/50" />
+                        <span className="text-xs text-muted-foreground">Add more</span>
                       </div>
                     )}
                   </div>
+                ) : (
+                  <div className="py-16 flex flex-col items-center justify-center text-center">
+                    <div className="w-16 h-16 rounded-full bg-muted/20 flex items-center justify-center mb-4">
+                      <Upload className="w-7 h-7 text-muted-foreground/30" />
+                    </div>
+                    <p className="text-base font-medium text-muted-foreground/50">No images yet</p>
+                    <p className="text-sm text-muted-foreground/30 mt-1">Upload photos using the area above</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Bottom action bar */}
+              {(canAddToCart || (photos.length > 0 && !requiredCount)) && (
+                <div className="sticky bottom-0 px-6 py-4 bg-card/95 backdrop-blur-sm border-t border-border">
+                  {canAddToCart && (
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                      <label className="flex items-center gap-2.5 cursor-pointer flex-1">
+                        <Switch checked={socialMediaConsent} onCheckedChange={setSocialMediaConsent} />
+                        <span className="text-xs text-foreground">I agree to have my order featured in your social media content.</span>
+                      </label>
+                      <motion.button
+                        onClick={() => { onAddToCart?.(socialMediaConsent); onClose(); }}
+                        className="w-full sm:w-auto px-8 py-3 rounded-xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm flex items-center justify-center gap-2"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <ShoppingCart className="w-4 h-4" /> Add to Cart
+                      </motion.button>
+                    </div>
+                  )}
+                  {!canAddToCart && photos.length > 0 && !requiredCount && (
+                    <motion.button
+                      onClick={onClose}
+                      className="w-full py-3 rounded-xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm"
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      Continue with {photos.length} photo{photos.length !== 1 ? "s" : ""}
+                    </motion.button>
+                  )}
                 </div>
               )}
-
-              {/* Social media consent (when Add to Cart flow) */}
-              {canAddToCart && (
-                <label className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 border border-border cursor-pointer">
-                  <Switch
-                    checked={socialMediaConsent}
-                    onCheckedChange={setSocialMediaConsent}
-                  />
-                  <span className="text-sm text-foreground">
-                    I agree to have my order featured in your social media content.
-                  </span>
-                </label>
-              )}
-
-              {/* Action buttons */}
-              {canAddToCart ? (
-                <motion.button
-                  onClick={() => {
-                    onAddToCart?.(socialMediaConsent);
-                    onClose();
-                  }}
-                  className="w-full py-3 rounded-2xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm flex items-center justify-center gap-2"
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <ShoppingCart className="w-4 h-4" /> Add to Cart
-                </motion.button>
-              ) : photos.length > 0 && !requiredCount ? (
-                <motion.button
-                  onClick={onClose}
-                  className="w-full py-3 rounded-2xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm"
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  Continue with {photos.length} photo{photos.length !== 1 ? "s" : ""}
-                </motion.button>
-              ) : null}
             </div>
+
+            {/* Full-screen zoom overlay */}
+            <AnimatePresence>
+              {previewImage && (
+                <motion.div
+                  className="absolute inset-0 z-50 bg-black/90 flex items-center justify-center"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setPreviewImage(null)}
+                >
+                  <motion.button
+                    onClick={() => setPreviewImage(null)}
+                    className="absolute top-4 left-4 flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm font-medium backdrop-blur-sm transition-colors z-10"
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <ArrowLeft className="w-4 h-4" /> Back
+                  </motion.button>
+                  <motion.img
+                    src={previewImage}
+                    alt="Full preview"
+                    className="max-w-[85%] max-h-[85%] object-contain rounded-2xl shadow-2xl"
+                    initial={{ scale: 0.85, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.85, opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Camera Overlay */}
             <AnimatePresence>
@@ -501,7 +536,7 @@ export const UploadModal = ({ open, onClose, requiredCount, onAddToCart }: Uploa
                       onClick={capturePhoto}
                       className="w-16 h-16 rounded-full border-4 border-white flex items-center justify-center active:scale-95 transition-transform"
                     >
-                      <div className="w-12 h-12 bg-white rounded-full"></div>
+                      <div className="w-12 h-12 bg-white rounded-full" />
                     </button>
                   </div>
                 </motion.div>

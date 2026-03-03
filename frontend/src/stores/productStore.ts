@@ -232,6 +232,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
         address: order.address,
         allowSocialMediaFeature: order.allowSocialMediaFeature,
         customerPhotos: order.customerPhotos,
+        guestName: order.userName,
       });
       set((s) => ({ orders: [mapOrder(created), ...s.orders] }));
       return true;

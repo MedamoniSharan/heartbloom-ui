@@ -15,7 +15,7 @@ const ReviewCard = ({ name, text, rating }: typeof reviews[0]) => (
   <div className="flex-shrink-0 w-80 p-6 rounded-2xl bg-card shadow-card mx-3">
     <div className="flex gap-1 mb-3">
       {Array.from({ length: rating }).map((_, i) => (
-        <Star key={i} className="w-4 h-4 fill-primary text-primary" />
+        <Star key={i} className="w-4 h-4 fill-warning text-warning" />
       ))}
     </div>
     <p className="text-sm text-foreground leading-relaxed mb-4">"{text}"</p>

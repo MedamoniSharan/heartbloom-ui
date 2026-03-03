@@ -24,6 +24,12 @@ export interface OrderQuantityConfig {
   max: number;
 }
 
+export interface HeroStatsConfig {
+  happyCustomers: number;
+  magnetsPrinted: number;
+  avgRating: number;
+}
+
 const defaultBulk: BulkOrderConfig = {
   title: "Wholesale Orders",
   subtitle: "Interested in bulk orders?",
@@ -47,13 +53,21 @@ const defaultOrderQuantity: OrderQuantityConfig = {
   max: 12,
 };
 
+const defaultHeroStats: HeroStatsConfig = {
+  happyCustomers: 70000,
+  magnetsPrinted: 800000,
+  avgRating: 4.9,
+};
+
 interface SiteContentState {
   bulkOrder: BulkOrderConfig;
   courses: CoursesConfig;
   orderQuantity: OrderQuantityConfig;
+  heroStats: HeroStatsConfig;
   setBulkOrder: (config: Partial<BulkOrderConfig>) => void;
   setCourses: (config: Partial<CoursesConfig>) => void;
   setOrderQuantity: (config: Partial<OrderQuantityConfig>) => void;
+  setHeroStats: (config: Partial<HeroStatsConfig>) => void;
 }
 
 export const useSiteContentStore = create<SiteContentState>()(
@@ -62,12 +76,15 @@ export const useSiteContentStore = create<SiteContentState>()(
       bulkOrder: defaultBulk,
       courses: defaultCourses,
       orderQuantity: defaultOrderQuantity,
+      heroStats: defaultHeroStats,
       setBulkOrder: (config) =>
         set((s) => ({ bulkOrder: { ...s.bulkOrder, ...config } })),
       setCourses: (config) =>
         set((s) => ({ courses: { ...s.courses, ...config } })),
       setOrderQuantity: (config) =>
         set((s) => ({ orderQuantity: { ...s.orderQuantity, ...config } })),
+      setHeroStats: (config) =>
+        set((s) => ({ heroStats: { ...s.heroStats, ...config } })),
     }),
     { name: "magnetic-bliss-site-content" }
   )

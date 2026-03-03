@@ -118,7 +118,7 @@ export interface ApiOrder {
 export const ordersApi = {
   getMine: () => request<ApiOrder[]>("/api/orders"),
   getAll: () => request<ApiOrder[]>("/api/orders/all"),
-  create: (body: { items: { product: ApiProduct; quantity: number }[]; total: number; address: ApiAddress; allowSocialMediaFeature?: boolean; customerPhotos?: string[] }) =>
+  create: (body: { items: { product: ApiProduct; quantity: number }[]; total: number; address: ApiAddress; allowSocialMediaFeature?: boolean; customerPhotos?: string[]; guestName?: string }) =>
     request<ApiOrder>("/api/orders", {
       method: "POST",
       body: JSON.stringify({
@@ -131,6 +131,7 @@ export const ordersApi = {
         address: body.address,
         allowSocialMediaFeature: body.allowSocialMediaFeature === true,
         customerPhotos: body.customerPhotos || [],
+        guestName: body.guestName || "",
       }),
     }),
   updateStatus: (orderId: string, status: ApiOrder["status"]) =>

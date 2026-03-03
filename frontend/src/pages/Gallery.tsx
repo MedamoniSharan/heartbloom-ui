@@ -5,23 +5,21 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Reveal } from "@/components/Reveal";
 import { siteConfig } from "@/lib/siteConfig";
-import { galleryApi, statsApi, type ApiGalleryItem, type ApiStats } from "@/lib/api";
+import { galleryApi, type ApiGalleryItem } from "@/lib/api";
+import { useSiteContentStore } from "@/stores/siteContentStore";
 
 const Gallery = () => {
   const [items, setItems] = useState<ApiGalleryItem[]>([]);
-  const [stats, setStats] = useState<ApiStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<ApiGalleryItem | null>(null);
+  const { heroStats } = useSiteContentStore();
 
   useEffect(() => {
-    Promise.all([
-      galleryApi.getAll().catch(() => []),
-      statsApi.get().catch(() => null),
-    ]).then(([g, s]) => {
-      setItems(g);
-      setStats(s);
-      setLoading(false);
-    });
+    galleryApi
+      .getAll()
+      .then(setItems)
+      .catch(() => setItems([]))
+      .finally(() => setLoading(false));
   }, []);
 
   const handleLike = async (item: ApiGalleryItem) => {
@@ -54,26 +52,24 @@ const Gallery = () => {
             </p>
           </Reveal>
 
-          {stats && (
-            <Reveal delay={200}>
-              <div className="flex items-center justify-center gap-8 mt-8">
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-foreground font-display">{stats.totalCustomers > 0 ? `${stats.totalCustomers}+` : "0"}</p>
-                  <p className="text-xs text-muted-foreground">Happy Customers</p>
-                </div>
-                <div className="w-px h-10 bg-border" />
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-foreground font-display">{stats.avgRating}★</p>
-                  <p className="text-xs text-muted-foreground">Average Rating</p>
-                </div>
-                <div className="w-px h-10 bg-border" />
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-foreground font-display">{stats.totalReviews}+</p>
-                  <p className="text-xs text-muted-foreground">Reviews</p>
-                </div>
+          <Reveal delay={200}>
+            <div className="flex items-center justify-center gap-8 mt-8">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-foreground font-display">{heroStats.happyCustomers.toLocaleString()}+</p>
+                <p className="text-xs text-muted-foreground">Happy Customers</p>
               </div>
-            </Reveal>
-          )}
+              <div className="w-px h-10 bg-border" />
+              <div className="text-center">
+                <p className="text-2xl font-bold text-foreground font-display">{heroStats.avgRating}★</p>
+                <p className="text-xs text-muted-foreground">Average Rating</p>
+              </div>
+              <div className="w-px h-10 bg-border" />
+              <div className="text-center">
+                <p className="text-2xl font-bold text-foreground font-display">{heroStats.magnetsPrinted.toLocaleString()}+</p>
+                <p className="text-xs text-muted-foreground">Magnets Created</p>
+              </div>
+            </div>
+          </Reveal>
         </div>
 
         {loading ? (

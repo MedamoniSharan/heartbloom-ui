@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Package, Upload as UploadIcon, Mail } from "lucide-react";
+import { Package, Upload as UploadIcon } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Reveal } from "@/components/Reveal";
@@ -79,21 +79,41 @@ const BulkOrders = () => {
           <p className="text-muted-foreground mb-8">{bulkOrder.formIntro || "Please fill out the form below and we will be in touch with you!"}</p>
         </Reveal>
 
-        {/* Subcategories: 50 & 100 items with price */}
+        {/* Subcategories: 50 & 100 items with price — clickable to select */}
         <div className="grid grid-cols-2 gap-4 mb-8">
           <Reveal delay={120}>
-            <div className="bg-card border border-border rounded-2xl p-5 shadow-card text-center">
-              <Package className="w-8 h-8 text-primary mx-auto mb-2" />
+            <motion.button
+              type="button"
+              onClick={() => update("quantity", "50")}
+              className={`w-full bg-card rounded-2xl p-5 shadow-card text-center transition-all duration-200 ${
+                form.quantity === "50"
+                  ? "border-2 border-primary ring-2 ring-primary/20"
+                  : "border border-border hover:border-primary/40"
+              }`}
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Package className={`w-8 h-8 mx-auto mb-2 ${form.quantity === "50" ? "text-primary" : "text-muted-foreground"}`} />
               <h3 className="font-display font-semibold text-foreground">50 items</h3>
-              <p className="text-2xl font-bold text-primary font-display mt-1">Rs {price50.toLocaleString()}</p>
-            </div>
+              <p className={`text-2xl font-bold font-display mt-1 ${form.quantity === "50" ? "text-primary" : "text-muted-foreground"}`}>Rs {price50.toLocaleString()}</p>
+            </motion.button>
           </Reveal>
           <Reveal delay={160}>
-            <div className="bg-card border border-border rounded-2xl p-5 shadow-card text-center">
-              <Package className="w-8 h-8 text-primary mx-auto mb-2" />
+            <motion.button
+              type="button"
+              onClick={() => update("quantity", "100")}
+              className={`w-full bg-card rounded-2xl p-5 shadow-card text-center transition-all duration-200 ${
+                form.quantity === "100"
+                  ? "border-2 border-primary ring-2 ring-primary/20"
+                  : "border border-border hover:border-primary/40"
+              }`}
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Package className={`w-8 h-8 mx-auto mb-2 ${form.quantity === "100" ? "text-primary" : "text-muted-foreground"}`} />
               <h3 className="font-display font-semibold text-foreground">100 items</h3>
-              <p className="text-2xl font-bold text-primary font-display mt-1">Rs {price100.toLocaleString()}</p>
-            </div>
+              <p className={`text-2xl font-bold font-display mt-1 ${form.quantity === "100" ? "text-primary" : "text-muted-foreground"}`}>Rs {price100.toLocaleString()}</p>
+            </motion.button>
           </Reveal>
         </div>
 
@@ -124,14 +144,12 @@ const BulkOrders = () => {
                 <label>Last name *</label>
               </div>
             </div>
-            <div className="floating-label-group relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <div className="floating-label-group">
               <input
                 type="email"
                 placeholder=" "
                 value={form.email}
                 onChange={(e) => update("email", e.target.value)}
-                className="pl-11"
                 required
               />
               <label>Email *</label>

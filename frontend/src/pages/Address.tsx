@@ -51,7 +51,7 @@ const Address = () => {
     city: "",
     state: "",
     zipCode: "",
-    country: "US",
+    country: "India",
   });
 
   const update = (key: keyof AddressType, val: string) => setForm((f) => ({ ...f, [key]: val }));
@@ -59,11 +59,6 @@ const Address = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (items.length === 0) { toast({ title: "Cart is empty", variant: "destructive" }); return; }
-    if (!user) {
-      toast({ title: "Please sign in", description: "You need to be logged in to place an order.", variant: "destructive" });
-      navigate("/login");
-      return;
-    }
     setPlacing(true);
 
     let customerPhotos: string[] = [];
@@ -76,8 +71,8 @@ const Address = () => {
     }
 
     const ok = await addOrder({
-      userId: user.id,
-      userName: user.name,
+      userId: user?.id || "guest",
+      userName: user?.name || form.fullName || "Guest",
       items,
       total: total(),
       status: "pending",
@@ -100,17 +95,17 @@ const Address = () => {
     clearPhotos();
     toast({ title: "Order placed!", description: "Taking you to WhatsApp to confirm..." });
     window.open(whatsappUrl, "_blank");
-    navigate("/orders");
+    navigate(user ? "/orders" : "/");
   };
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="pt-32 px-6 pb-16 max-w-3xl mx-auto">
+      <main className="pt-32 px-6 pb-16 max-w-5xl mx-auto">
         <h1 className="text-h1 text-foreground mb-2">Shipping Address</h1>
         <p className="text-muted-foreground mb-8 text-sm">Where should we deliver your magnets?</p>
 
-        <div className="grid lg:grid-cols-[1fr,300px] gap-8">
+        <div className="grid lg:grid-cols-[1fr,400px] gap-8">
           <form onSubmit={handleSubmit} className="bg-card border border-border rounded-2xl p-6 shadow-card space-y-4">
             <div className="floating-label-group">
               <input type="text" placeholder=" " value={form.fullName} onChange={(e) => update("fullName", e.target.value)} required />
@@ -164,11 +159,11 @@ const Address = () => {
           {/* Google Maps placeholder */}
           <div className="space-y-4">
             <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-card">
-              <div className="aspect-square bg-muted flex items-center justify-center relative">
+              <div className="aspect-[4/5] bg-muted flex items-center justify-center relative">
                 <iframe
                   title="Google Maps"
                   src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${encodeURIComponent(
-                    [form.street, form.city, form.state, form.country].filter(Boolean).join(", ") || "New York"
+                    [form.street, form.city, form.state, form.country].filter(Boolean).join(", ") || "Hyderabad, India"
                   )}`}
                   className="absolute inset-0 w-full h-full border-0"
                   allowFullScreen

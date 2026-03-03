@@ -54,9 +54,9 @@ router.get("/all", authenticate, requireAdmin, async (req, res, next) => {
   }
 });
 
-router.post("/", authenticate, async (req, res, next) => {
+router.post("/", async (req, res, next) => {
   try {
-    const { items, total, address, allowSocialMediaFeature, customerPhotos } = req.body;
+    const { items, total, address, allowSocialMediaFeature, customerPhotos, guestName } = req.body;
     if (!items?.length || total == null || !address) {
       return res.status(400).json({ message: "items, total and address required" });
     }
@@ -72,9 +72,29 @@ router.post("/", authenticate, async (req, res, next) => {
         image: product.image,
       });
     }
+
+    // Support both logged-in and guest users
+    let userId = "guest";
+    let userName = guestName || address.fullName || "Guest";
+    const token = req.headers.authorization?.replace("Bearer ", "");
+    if (token) {
+      try {
+        const jwt = await import("jsonwebtoken");
+        const decoded = jwt.default.verify(token, process.env.JWT_SECRET);
+        const User = (await import("../models/User.js")).default;
+        const user = await User.findById(decoded.id);
+        if (user) {
+          userId = user._id.toString();
+          userName = user.name;
+        }
+      } catch {
+        // token invalid — proceed as guest
+      }
+    }
+
     const order = await Order.create({
-      userId: req.user._id.toString(),
-      userName: req.user.name,
+      userId,
+      userName,
       items: orderItems,
       total,
       address,

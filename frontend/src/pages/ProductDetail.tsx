@@ -1,17 +1,19 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingCart, Heart, Star, ChevronLeft, Check, Minus, Plus, Box, Upload, ThumbsUp, Send, MessageSquare } from "lucide-react";
+import { ShoppingCart, Heart, Star, ChevronLeft, Check, Minus, Plus, Box, Upload, ThumbsUp, Send, MessageSquare, ShieldCheck, Truck, X, Copy, ZoomIn, ArrowLeft, Pencil } from "lucide-react";
 import { useProductStore, Product } from "@/stores/productStore";
 import { useCartStore } from "@/stores/cartStore";
 import { useWishlistStore } from "@/stores/wishlistStore";
 import { useSiteContentStore } from "@/stores/siteContentStore";
-import { usePhotoStore } from "@/stores/photoStore";
+import { usePhotoStore, buildFilterString } from "@/stores/photoStore";
 import { useAuthStore } from "@/stores/authStore";
 import { useToast } from "@/hooks/use-toast";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { UploadModal } from "@/components/UploadModal";
+import { useDropzone } from "react-dropzone";
+import { MAX_PHOTOS, MAX_FILE_SIZE, type PhotoItem } from "@/stores/photoStore";
+import { ImageEditor } from "@/components/ImageEditor";
 import { Reveal } from "@/components/Reveal";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { MagnetMockup3D } from "@/components/MagnetMockup3D";
@@ -47,14 +49,16 @@ const ProductDetail = () => {
   const { products, fetchProducts } = useProductStore();
   const { addToCart, setSocialMediaConsent, socialMediaConsent } = useCartStore();
   const { toggle, isWishlisted } = useWishlistStore();
-  const { clearPhotos } = usePhotoStore();
+  const { photos, addPhotos, clearPhotos } = usePhotoStore();
   const { orderQuantity } = useSiteContentStore();
   const { user } = useAuthStore();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [selectedImage, setSelectedImage] = useState(0);
   const [show3D, setShow3D] = useState(false);
-  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showUploadSection, setShowUploadSection] = useState(false);
+  const [previewZoom, setPreviewZoom] = useState<string | null>(null);
+  const [editingPhotoId, setEditingPhotoId] = useState<string | null>(null);
 
   const [reviews, setReviews] = useState<ApiReview[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
@@ -110,6 +114,37 @@ const ProductDetail = () => {
     }
   };
 
+  const uploadProcessFiles = async (accepted: File[]) => {
+    const rem = (product ? qty : 0) - photos.length;
+    if (rem <= 0) return;
+    const toProcess = accepted.slice(0, rem);
+    const validFiles: File[] = [];
+    for (const file of toProcess) {
+      if (file.size > MAX_FILE_SIZE) continue;
+      const ext = file.name.toLowerCase().split(".").pop();
+      if (!["jpg", "jpeg", "png", "webp", "heic", "heif"].includes(ext || "")) continue;
+      let pf = file;
+      if (ext === "heic" || ext === "heif") {
+        try {
+          const heic2any = (await import("heic2any")).default;
+          const blob = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.9 }) as Blob;
+          pf = new File([blob], file.name.replace(/\.heic$/i, ".jpg"), { type: "image/jpeg" });
+        } catch { continue; }
+      }
+      validFiles.push(pf);
+    }
+    if (validFiles.length > 0) addPhotos(validFiles);
+  };
+
+  const uploadDropzone = useDropzone({
+    onDrop: uploadProcessFiles,
+    accept: { "image/*": [".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif"] },
+    maxSize: MAX_FILE_SIZE,
+    maxFiles: Math.max(0, qty - photos.length),
+    disabled: photos.length >= qty,
+    noClick: false,
+  });
+
   if (!product) {
     return (
       <div className="min-h-screen bg-background">
@@ -139,13 +174,16 @@ const ProductDetail = () => {
 
   const openUploadFlow = () => {
     clearPhotos();
-    setShowUploadModal(true);
+    setShowUploadSection(true);
   };
 
-  const handleAddToCartFromUpload = (socialMediaConsent: boolean) => {
-    setSocialMediaConsent(socialMediaConsent);
+  const handleAddToCartWithPhotos = () => {
+    if (photos.length < qty) {
+      toast({ title: "Upload all images", description: `Please upload ${qty} image${qty !== 1 ? "s" : ""} before adding to cart.`, variant: "destructive" });
+      return;
+    }
     addToCart(product, qty);
-    setShowUploadModal(false);
+    setShowUploadSection(false);
     toast({ title: "Added to cart!", description: `${qty}× ${product.name} with your photos` });
   };
 
@@ -311,15 +349,27 @@ const ProductDetail = () => {
                 <div className="flex flex-col sm:flex-row gap-3">
                   {product.customizable ? (
                     <>
-                      <motion.button
-                        onClick={openUploadFlow}
-                        disabled={!product.inStock}
-                        className="flex-1 py-3.5 rounded-2xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm flex items-center justify-center gap-2 disabled:opacity-50"
-                        whileHover={{ scale: 1.01 }}
-                        whileTap={{ scale: 0.97 }}
-                      >
-                        <Upload className="w-4 h-4" /> Upload pictures
-                      </motion.button>
+                      {!showUploadSection ? (
+                        <motion.button
+                          onClick={openUploadFlow}
+                          disabled={!product.inStock}
+                          className="flex-1 py-3.5 rounded-2xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                          whileHover={{ scale: 1.01 }}
+                          whileTap={{ scale: 0.97 }}
+                        >
+                          <Upload className="w-4 h-4" /> Upload pictures
+                        </motion.button>
+                      ) : (
+                        <motion.button
+                          onClick={handleAddToCartWithPhotos}
+                          disabled={!product.inStock || photos.length < qty}
+                          className="flex-1 py-3.5 rounded-2xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                          whileHover={{ scale: 1.01 }}
+                          whileTap={{ scale: 0.97 }}
+                        >
+                          <ShoppingCart className="w-4 h-4" /> Add to Cart ({photos.length}/{qty})
+                        </motion.button>
+                      )}
                       <motion.button
                         onClick={handleBuyNow}
                         disabled={!product.inStock}
@@ -353,14 +403,201 @@ const ProductDetail = () => {
                 </div>
               </Reveal>
 
-              {product.customizable && (
-                <UploadModal
-                  open={showUploadModal}
-                  onClose={() => setShowUploadModal(false)}
-                  requiredCount={qty}
-                  onAddToCart={handleAddToCartFromUpload}
-                />
-              )}
+              {/* Trust Badges */}
+              <Reveal delay={260}>
+                <div className="flex items-center justify-between pt-5 mt-2 border-t border-border">
+                  <div className="flex flex-col items-center gap-1 flex-1">
+                    <svg className="w-6 h-[18px]" viewBox="0 0 900 600" aria-label="Indian Flag">
+                      <rect width="900" height="200" fill="#FF9933" />
+                      <rect y="200" width="900" height="200" fill="#FFFFFF" />
+                      <rect y="400" width="900" height="200" fill="#138808" />
+                      <circle cx="450" cy="300" r="60" fill="none" stroke="#000080" strokeWidth="6" />
+                      <circle cx="450" cy="300" r="8" fill="#000080" />
+                      {Array.from({ length: 24 }).map((_, i) => (
+                        <line key={i} x1="450" y1="300" x2={450 + 55 * Math.cos((i * 15 * Math.PI) / 180)} y2={300 + 55 * Math.sin((i * 15 * Math.PI) / 180)} stroke="#000080" strokeWidth="2" />
+                      ))}
+                    </svg>
+                    <p className="text-xs font-semibold text-foreground">Made in India</p>
+                    <p className="text-[10px] text-muted-foreground">Hyderabad</p>
+                  </div>
+                  <div className="w-px h-10 bg-border" />
+                  <div className="flex flex-col items-center gap-1 flex-1">
+                    <ShieldCheck className="w-5 h-5 text-primary" />
+                    <p className="text-xs font-semibold text-foreground">Satisfaction</p>
+                    <p className="text-[10px] text-muted-foreground">100% Guaranteed</p>
+                  </div>
+                  <div className="w-px h-10 bg-border" />
+                  <div className="flex flex-col items-center gap-1 flex-1">
+                    <Truck className="w-5 h-5 text-primary" />
+                    <p className="text-xs font-semibold text-foreground">Fast Production</p>
+                    <p className="text-[10px] text-muted-foreground">Ships in 24–48 hours</p>
+                  </div>
+                </div>
+              </Reveal>
+
+              {/* Full-screen Upload Step */}
+              <AnimatePresence>
+                {product.customizable && showUploadSection && (
+                  <motion.div
+                    className="fixed inset-0 z-[70] bg-background flex flex-col"
+                    initial={{ opacity: 0, y: "100%" }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: "100%" }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Escape" && !editingPhotoId) {
+                        clearPhotos();
+                        setShowUploadSection(false);
+                      }
+                    }}
+                    tabIndex={0}
+                    ref={(el) => el?.focus()}
+                  >
+                    {/* Top bar */}
+                    <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-card shrink-0">
+                      <div className="flex items-center gap-4">
+                        <motion.button
+                          onClick={() => { clearPhotos(); setShowUploadSection(false); }}
+                          className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          <ArrowLeft className="w-4 h-4" />
+                        </motion.button>
+                        <div>
+                          <h2 className="font-display text-lg font-semibold text-foreground">Upload Your Photos</h2>
+                          <p className="text-xs text-muted-foreground">
+                            {photos.length}/{qty} uploaded
+                            {photos.length > 0 && photos.length < qty && <span className="text-primary font-medium ml-1">• {qty - photos.length} more needed</span>}
+                            {photos.length >= qty && <span className="text-green-600 font-medium ml-1">• All done!</span>}
+                          </p>
+                        </div>
+                      </div>
+                      <motion.button
+                        onClick={handleAddToCartWithPhotos}
+                        disabled={photos.length < qty}
+                        className="px-6 py-2.5 rounded-xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                        whileHover={photos.length >= qty ? { scale: 1.02 } : {}}
+                        whileTap={photos.length >= qty ? { scale: 0.98 } : {}}
+                      >
+                        <ShoppingCart className="w-4 h-4" /> Add to Cart
+                      </motion.button>
+                    </div>
+
+                    {/* Main content area */}
+                    <div className="flex-1 overflow-y-auto">
+                      {/* Drop zone */}
+                      {photos.length < qty && (
+                        <div className="px-6 pt-6 max-w-4xl mx-auto">
+                          <div
+                            {...uploadDropzone.getRootProps()}
+                            className={`rounded-2xl border-2 border-dashed px-6 py-6 text-center cursor-pointer transition-all ${
+                              uploadDropzone.isDragActive ? "border-primary bg-primary/5" : "border-border hover:border-primary/40 hover:bg-muted/20"
+                            }`}
+                          >
+                            <input {...uploadDropzone.getInputProps()} />
+                            <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                            <p className="text-sm font-medium text-foreground">Drop photos here or click to browse</p>
+                            <p className="text-xs text-muted-foreground mt-1">JPG, PNG, WEBP, HEIC • Max 20MB • {qty - photos.length} slot{qty - photos.length !== 1 ? "s" : ""} remaining</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Preview grid */}
+                      <div className="px-6 py-6 max-w-4xl mx-auto">
+                        <div className={`grid gap-4 ${qty <= 2 ? "grid-cols-2" : qty <= 4 ? "grid-cols-2 sm:grid-cols-4" : qty <= 6 ? "grid-cols-2 sm:grid-cols-3" : "grid-cols-2 sm:grid-cols-4"}`}>
+                          {Array.from({ length: qty }).map((_, idx) => {
+                            const photo = photos[idx];
+                            return (
+                              <motion.div
+                                key={idx}
+                                className={`relative aspect-square rounded-2xl overflow-hidden transition-all ${
+                                  photo ? "ring-2 ring-primary/30 shadow-lg" : "border-2 border-dashed border-border hover:border-primary/30 bg-muted/5"
+                                }`}
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: idx * 0.04 }}
+                              >
+                                {photo ? (
+                                  <>
+                                    <img
+                                      src={photo.preview}
+                                      alt={`Image ${idx + 1}`}
+                                      className="w-full h-full object-cover"
+                                      style={{
+                                        filter: buildFilterString(photo.adjustments, photo.filter),
+                                        transform: [
+                                          photo.rotation ? `rotate(${photo.rotation}deg)` : "",
+                                          photo.flipH ? "scaleX(-1)" : "",
+                                          photo.flipV ? "scaleY(-1)" : "",
+                                        ].filter(Boolean).join(" ") || undefined,
+                                      }}
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
+
+                                    <span className="absolute top-3 left-3 w-7 h-7 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shadow-md">
+                                      {idx + 1}
+                                    </span>
+
+                                    <div className="absolute top-3 right-3 flex gap-2">
+                                      <button
+                                        onClick={() => setEditingPhotoId(photo.id)}
+                                        className="w-8 h-8 rounded-full bg-black/50 hover:bg-primary text-white flex items-center justify-center backdrop-blur-sm transition-colors"
+                                        title="Edit image"
+                                      >
+                                        <Pencil className="w-4 h-4" />
+                                      </button>
+                                      <button
+                                        onClick={() => usePhotoStore.getState().removePhoto(photo.id)}
+                                        className="w-8 h-8 rounded-full bg-black/50 hover:bg-destructive text-white flex items-center justify-center backdrop-blur-sm transition-colors"
+                                        title="Remove"
+                                      >
+                                        <X className="w-4 h-4" />
+                                      </button>
+                                    </div>
+
+                                    {photos.length < qty && (
+                                      <button
+                                        onClick={() => usePhotoStore.getState().addPhotos([photo.file])}
+                                        className="absolute bottom-3 right-3 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black/50 hover:bg-primary text-white text-xs font-medium backdrop-blur-sm transition-colors"
+                                      >
+                                        <Copy className="w-3 h-3" /> Fill next
+                                      </button>
+                                    )}
+                                  </>
+                                ) : (
+                                  <div
+                                    {...uploadDropzone.getRootProps()}
+                                    className="w-full h-full flex flex-col items-center justify-center cursor-pointer gap-2 hover:bg-muted/20 transition-colors"
+                                  >
+                                    <div className="w-12 h-12 rounded-full bg-muted/30 flex items-center justify-center">
+                                      <Plus className="w-6 h-6 text-muted-foreground/40" />
+                                    </div>
+                                    <span className="text-sm text-muted-foreground/50 font-medium">Slot {idx + 1}</span>
+                                    <span className="text-[10px] text-muted-foreground/30">Click or drop</span>
+                                  </div>
+                                )}
+                              </motion.div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Image Editor */}
+                    {editingPhotoId && photos.find((p) => p.id === editingPhotoId) && (
+                      <ImageEditor
+                        key={editingPhotoId}
+                        photo={photos.find((p) => p.id === editingPhotoId)!}
+                        onSave={(updates) => {
+                          usePhotoStore.getState().updatePhoto(editingPhotoId!, updates);
+                          setEditingPhotoId(null);
+                        }}
+                        onClose={() => setEditingPhotoId(null)}
+                      />
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {!product.inStock && (
                 <p className="text-destructive text-sm font-medium">Currently out of stock</p>
