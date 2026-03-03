@@ -5,6 +5,7 @@ import {
   Upload, X, Camera, Image, Link2, Check, AlertCircle, Plus, ShoppingCart,
 } from "lucide-react";
 import { usePhotoStore, MAX_PHOTOS, ACCEPTED_TYPES, MAX_FILE_SIZE } from "@/stores/photoStore";
+import { Switch } from "@/components/ui/switch";
 
 interface UploadModalProps {
   open: boolean;
@@ -442,11 +443,9 @@ export const UploadModal = ({ open, onClose, requiredCount, onAddToCart }: Uploa
               {/* Social media consent (when Add to Cart flow) */}
               {canAddToCart && (
                 <label className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 border border-border cursor-pointer">
-                  <input
-                    type="checkbox"
+                  <Switch
                     checked={socialMediaConsent}
-                    onChange={(e) => setSocialMediaConsent(e.target.checked)}
-                    className="rounded border-border text-primary focus:ring-primary"
+                    onCheckedChange={setSocialMediaConsent}
                   />
                   <span className="text-sm text-foreground">
                     I agree to have my order featured in your social media content.

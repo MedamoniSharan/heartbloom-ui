@@ -17,6 +17,8 @@ export interface Product {
   inStock: boolean;
   customizable?: boolean;
   whatsappMessage?: string;
+  minQuantity?: number | null;
+  maxQuantity?: number | null;
 }
 
 export interface Order {
@@ -28,6 +30,7 @@ export interface Order {
   status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
   address: Address;
   allowSocialMediaFeature?: boolean;
+  customerPhotos?: string[];
   createdAt: string;
 }
 
@@ -68,6 +71,8 @@ const mapProduct = (p: ApiProduct): Product => ({
   inStock: p.inStock,
   customizable: p.customizable,
   whatsappMessage: p.whatsappMessage,
+  minQuantity: p.minQuantity,
+  maxQuantity: p.maxQuantity,
 });
 
 const mapOrder = (o: ApiOrder): Order => ({
@@ -92,6 +97,7 @@ const mapOrder = (o: ApiOrder): Order => ({
   status: o.status,
   address: o.address,
   allowSocialMediaFeature: o.allowSocialMediaFeature,
+  customerPhotos: o.customerPhotos,
   createdAt: o.createdAt,
 });
 
@@ -184,8 +190,8 @@ export const useProductStore = create<ProductState>((set, get) => ({
         image: product.image,
         images: product.images?.slice(0, 4),
         category: product.category,
-        rating: product.rating ?? 4.5,
-        reviews: product.reviews ?? 0,
+        rating: 0,
+        reviews: 0,
         inStock: product.inStock !== false,
         customizable: product.customizable,
       });
@@ -225,6 +231,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
         total: order.total,
         address: order.address,
         allowSocialMediaFeature: order.allowSocialMediaFeature,
+        customerPhotos: order.customerPhotos,
       });
       set((s) => ({ orders: [mapOrder(created), ...s.orders] }));
       return true;

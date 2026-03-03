@@ -18,8 +18,8 @@ const Cart = () => {
   const { items, removeFromCart, updateQuantity, subtotal, discountAmount, total, clearCart, appliedPromo, applyPromo, removePromo } = useCartStore();
   const { validatePromo } = useProductStore();
   const { orderQuantity } = useSiteContentStore();
-  const minQty = orderQuantity.min ?? 4;
-  const maxQty = orderQuantity.max ?? 12;
+  const globalMin = orderQuantity.min ?? 4;
+  const globalMax = orderQuantity.max ?? 12;
   const { photos, removePhoto, updatePhoto } = usePhotoStore();
   const [uploadOpen, setUploadOpen] = useState(false);
   const [editingPhotoId, setEditingPhotoId] = useState<string | null>(null);
@@ -95,15 +95,21 @@ const Cart = () => {
                     )}
 
                     <div className="flex items-center gap-3 mt-3">
-                      <div className="flex items-center gap-1 bg-muted rounded-lg">
-                        <button onClick={() => updateQuantity(item.product.id, Math.max(minQty, item.quantity - 1))} className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50" disabled={item.quantity <= minQty}>
-                          <Minus className="w-3.5 h-3.5" />
-                        </button>
-                        <span className="w-8 text-center text-sm font-medium text-foreground">{item.quantity}</span>
-                        <button onClick={() => updateQuantity(item.product.id, Math.min(maxQty, item.quantity + 1))} className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50" disabled={item.quantity >= maxQty}>
-                          <Plus className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
+                      {(() => {
+                        const minQty = item.product.minQuantity ?? globalMin;
+                        const maxQty = item.product.maxQuantity ?? globalMax;
+                        return (
+                          <div className="flex items-center gap-1 bg-muted rounded-lg">
+                            <button onClick={() => updateQuantity(item.product.id, Math.max(minQty, item.quantity - 1))} className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50" disabled={item.quantity <= minQty}>
+                              <Minus className="w-3.5 h-3.5" />
+                            </button>
+                            <span className="w-8 text-center text-sm font-medium text-foreground">{item.quantity}</span>
+                            <button onClick={() => updateQuantity(item.product.id, Math.min(maxQty, item.quantity + 1))} className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50" disabled={item.quantity >= maxQty}>
+                              <Plus className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        );
+                      })()}
                       <button onClick={() => removeFromCart(item.product.id)} className="text-destructive hover:bg-destructive/10 rounded-lg p-1.5 transition-colors">
                         <Trash2 className="w-4 h-4" />
                       </button>

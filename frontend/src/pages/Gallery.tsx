@@ -1,35 +1,38 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Star, X, Camera, Quote } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Reveal } from "@/components/Reveal";
 import { siteConfig } from "@/lib/siteConfig";
-
-interface GalleryItem {
-  id: string;
-  image: string;
-  name: string;
-  location: string;
-  caption: string;
-  rating: number;
-  likes: number;
-}
-
-const GALLERY_ITEMS: GalleryItem[] = [
-  { id: "g1", image: "https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?w=600&h=600&fit=crop", name: "Sarah M.", location: "New York, NY", caption: "These magnets are absolutely gorgeous! They bring so much joy every time I open the fridge. 💕", rating: 5, likes: 234 },
-  { id: "g2", image: "https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=600&h=600&fit=crop", name: "Mike T.", location: "Austin, TX", caption: "Ordered heart-shaped magnets for our anniversary. My wife cried happy tears! Best gift ever.", rating: 5, likes: 189 },
-  { id: "g3", image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=600&h=600&fit=crop", name: "Emily R.", location: "Seattle, WA", caption: "The quality is insane. Colors pop beautifully and the magnet is super strong. Already ordered another set!", rating: 5, likes: 312 },
-  { id: "g4", image: "https://images.unsplash.com/photo-1531265726475-52ad60219627?w=600&h=600&fit=crop", name: "David K.", location: "Chicago, IL", caption: "Used these as wedding favors. Guests absolutely loved them! Such a unique and personal touch.", rating: 5, likes: 445 },
-  { id: "g5", image: "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=600&h=600&fit=crop", name: "Lisa Chen", location: "San Francisco, CA", caption: "Family photos on the fridge make my kitchen feel so warm and homey. The print quality is professional!", rating: 4, likes: 156 },
-  { id: "g6", image: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=600&h=600&fit=crop", name: "James W.", location: "Denver, CO", caption: "My dog looks absolutely adorable as a magnet! Everyone who visits comments on them. 🐶", rating: 5, likes: 278 },
-  { id: "g7", image: "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=600&h=600&fit=crop", name: "Ana P.", location: "Miami, FL", caption: "Travel magnets from our honeymoon! So much better than the generic tourist ones. Highly recommend!", rating: 5, likes: 201 },
-  { id: "g8", image: "https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?w=600&h=600&fit=crop", name: "Tom H.", location: "Portland, OR", caption: "The custom text magnets with our family motto are perfect. Great quality and fast delivery!", rating: 4, likes: 98 },
-  { id: "g9", image: "https://images.unsplash.com/photo-1555252333-9f8e92e65df9?w=600&h=600&fit=crop", name: "Rachel S.", location: "Boston, MA", caption: "Baby shower favors were a HUGE hit. Everyone asked where I got them. Affordable and beautiful!", rating: 5, likes: 167 },
-];
+import { galleryApi, statsApi, type ApiGalleryItem, type ApiStats } from "@/lib/api";
 
 const Gallery = () => {
-  const [selected, setSelected] = useState<GalleryItem | null>(null);
+  const [items, setItems] = useState<ApiGalleryItem[]>([]);
+  const [stats, setStats] = useState<ApiStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<ApiGalleryItem | null>(null);
+
+  useEffect(() => {
+    Promise.all([
+      galleryApi.getAll().catch(() => []),
+      statsApi.get().catch(() => null),
+    ]).then(([g, s]) => {
+      setItems(g);
+      setStats(s);
+      setLoading(false);
+    });
+  }, []);
+
+  const handleLike = async (item: ApiGalleryItem) => {
+    try {
+      const updated = await galleryApi.like(item.id);
+      setItems((prev) => prev.map((g) => (g.id === item.id ? updated : g)));
+      if (selected?.id === item.id) setSelected(updated);
+    } catch {
+      // ignore
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -51,64 +54,86 @@ const Gallery = () => {
             </p>
           </Reveal>
 
-          {/* Stats */}
-          <Reveal delay={200}>
-            <div className="flex items-center justify-center gap-8 mt-8">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-foreground font-display">10K+</p>
-                <p className="text-xs text-muted-foreground">Happy Customers</p>
+          {stats && (
+            <Reveal delay={200}>
+              <div className="flex items-center justify-center gap-8 mt-8">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-foreground font-display">{stats.totalCustomers > 0 ? `${stats.totalCustomers}+` : "0"}</p>
+                  <p className="text-xs text-muted-foreground">Happy Customers</p>
+                </div>
+                <div className="w-px h-10 bg-border" />
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-foreground font-display">{stats.avgRating}★</p>
+                  <p className="text-xs text-muted-foreground">Average Rating</p>
+                </div>
+                <div className="w-px h-10 bg-border" />
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-foreground font-display">{stats.totalReviews}+</p>
+                  <p className="text-xs text-muted-foreground">Reviews</p>
+                </div>
               </div>
-              <div className="w-px h-10 bg-border" />
-              <div className="text-center">
-                <p className="text-2xl font-bold text-foreground font-display">4.9★</p>
-                <p className="text-xs text-muted-foreground">Average Rating</p>
-              </div>
-              <div className="w-px h-10 bg-border" />
-              <div className="text-center">
-                <p className="text-2xl font-bold text-foreground font-display">50K+</p>
-                <p className="text-xs text-muted-foreground">Magnets Created</p>
-              </div>
-            </div>
-          </Reveal>
+            </Reveal>
+          )}
         </div>
 
-        {/* Masonry-ish Grid */}
-        <div className="columns-1 sm:columns-2 lg:columns-3 gap-5 space-y-5">
-          {GALLERY_ITEMS.map((item, i) => (
-            <Reveal key={item.id} delay={i * 60}>
-              <motion.div
-                className="break-inside-avoid bg-card border border-border rounded-2xl overflow-hidden shadow-card group cursor-pointer hover:shadow-elevated transition-shadow duration-300"
-                whileHover={{ y: -3 }}
-                onClick={() => setSelected(item)}
-              >
-                <div className="relative overflow-hidden">
-                  <img src={item.image} alt={`Photo by ${item.name}`} className="w-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                </div>
+        {loading ? (
+          <div className="columns-1 sm:columns-2 lg:columns-3 gap-5 space-y-5">
+            {[0, 1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="break-inside-avoid bg-card border border-border rounded-2xl overflow-hidden animate-pulse">
+                <div className="aspect-square bg-muted" />
                 <div className="p-4 space-y-3">
-                  <div className="flex items-start gap-2">
-                    <Quote className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-foreground leading-relaxed">{item.caption}</p>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">{item.name}</p>
-                      <p className="text-xs text-muted-foreground">{item.location}</p>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Heart className="w-3.5 h-3.5 text-primary fill-primary" />
-                      <span className="text-xs text-muted-foreground">{item.likes}</span>
-                    </div>
-                  </div>
-                  <div className="flex">
-                    {[...Array(5)].map((_, si) => (
-                      <Star key={si} className={`w-3.5 h-3.5 ${si < item.rating ? "fill-warning text-warning" : "text-border"}`} />
-                    ))}
-                  </div>
+                  <div className="h-4 bg-muted rounded w-3/4" />
+                  <div className="h-3 bg-muted rounded w-1/2" />
                 </div>
-              </motion.div>
-            </Reveal>
-          ))}
-        </div>
+              </div>
+            ))}
+          </div>
+        ) : items.length === 0 ? (
+          <div className="text-center py-20">
+            <Camera className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
+            <p className="text-muted-foreground">No gallery items yet. Check back soon!</p>
+          </div>
+        ) : (
+          <div className="columns-1 sm:columns-2 lg:columns-3 gap-5 space-y-5">
+            {items.map((item, i) => (
+              <Reveal key={item.id} delay={i * 60}>
+                <motion.div
+                  className="break-inside-avoid bg-card border border-border rounded-2xl overflow-hidden shadow-card group cursor-pointer hover:shadow-elevated transition-shadow duration-300"
+                  whileHover={{ y: -3 }}
+                  onClick={() => setSelected(item)}
+                >
+                  <div className="relative overflow-hidden">
+                    <img src={item.image} alt={`Photo by ${item.name}`} className="w-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  </div>
+                  <div className="p-4 space-y-3">
+                    <div className="flex items-start gap-2">
+                      <Quote className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                      <p className="text-sm text-foreground leading-relaxed">{item.caption}</p>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">{item.name}</p>
+                        <p className="text-xs text-muted-foreground">{item.location}</p>
+                      </div>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleLike(item); }}
+                        className="flex items-center gap-1 hover:scale-110 transition-transform"
+                      >
+                        <Heart className="w-3.5 h-3.5 text-primary fill-primary" />
+                        <span className="text-xs text-muted-foreground">{item.likes}</span>
+                      </button>
+                    </div>
+                    <div className="flex">
+                      {[...Array(5)].map((_, si) => (
+                        <Star key={si} className={`w-3.5 h-3.5 ${si < item.rating ? "fill-warning text-warning" : "text-border"}`} />
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              </Reveal>
+            ))}
+          </div>
+        )}
 
         {/* CTA */}
         <Reveal delay={200}>
@@ -164,10 +189,13 @@ const Gallery = () => {
                     <p className="text-sm text-muted-foreground">{selected.location}</p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => handleLike(selected)}
+                      className="flex items-center gap-1 hover:scale-110 transition-transform"
+                    >
                       <Heart className="w-4 h-4 text-primary fill-primary" />
                       <span className="text-sm text-muted-foreground">{selected.likes}</span>
-                    </div>
+                    </button>
                     <div className="flex">
                       {[...Array(5)].map((_, si) => (
                         <Star key={si} className={`w-4 h-4 ${si < selected.rating ? "fill-warning text-warning" : "text-border"}`} />

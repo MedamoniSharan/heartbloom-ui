@@ -8,30 +8,21 @@ import promoRoutes from "./routes/promos.js";
 import wishlistRoutes from "./routes/wishlist.js";
 import contactRoutes from "./routes/contact.js";
 import journeyVideosRoutes from "./routes/journeyVideos.js";
+import reviewRoutes from "./routes/reviews.js";
+import galleryRoutes from "./routes/gallery.js";
+import eventPackRoutes from "./routes/eventPacks.js";
+import statsRoutes from "./routes/stats.js";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-const allowedOrigins = [
-  "http://localhost:8080",
-  "http://localhost:5173",
-  "http://localhost:3000",
-  "http://127.0.0.1:8080",
-  "http://127.0.0.1:5173",
-  "http://127.0.0.1:3000",
-  "https://magnetic-bliss-india.vercel.app"
-];
-
 function corsMiddleware(req, res, next) {
-  const origin = req.headers.origin;
-  const allowOrigin = !origin || allowedOrigins.includes(origin) ? (origin || allowedOrigins[0]) : null;
-  if (allowOrigin) {
-    res.setHeader("Access-Control-Allow-Origin", allowOrigin);
-    res.setHeader("Access-Control-Allow-Credentials", "true");
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    res.setHeader("Access-Control-Max-Age", "86400");
-  }
+  const origin = req.headers.origin || "*";
+  res.setHeader("Access-Control-Allow-Origin", origin);
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Max-Age", "86400");
   if (req.method === "OPTIONS") {
     return res.sendStatus(204);
   }
@@ -47,6 +38,10 @@ app.use("/api/promos", promoRoutes);
 app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/journey-videos", journeyVideosRoutes);
+app.use("/api/reviews", reviewRoutes);
+app.use("/api/gallery", galleryRoutes);
+app.use("/api/event-packs", eventPackRoutes);
+app.use("/api/stats", statsRoutes);
 
 app.get("/api/health", (req, res) => res.json({ ok: true }));
 

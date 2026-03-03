@@ -27,7 +27,7 @@ const Products = () => {
   const [search, setSearch] = useState("");
   const [sizeFilter, setSizeFilter] = useState("All");
 
-  const sizeOptions = ["All", "2.5 x 2.5", "2 x 2", "Upload"];
+  const sizeOptions = ["All", ...new Set(products.map((p) => p.category).filter(Boolean))];
   const filtered = products.filter((p) => {
     const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
     const matchSize = sizeFilter === "All" || p.category === sizeFilter;
@@ -153,14 +153,25 @@ const Products = () => {
                       <h3 className="font-display font-semibold text-foreground text-sm line-clamp-2">{product.name}</h3>
                       <p className="text-xs text-muted-foreground line-clamp-2">{product.description}</p>
                       <div className="flex items-center gap-1">
-                        <Star className="w-3.5 h-3.5 fill-warning text-warning" />
-                        <span className="text-xs font-medium text-foreground">{product.rating}</span>
-                        <span className="text-xs text-muted-foreground">({product.reviews})</span>
+                        {product.reviews > 0 ? (
+                          <>
+                            <Star className="w-3.5 h-3.5 fill-warning text-warning" />
+                            <span className="text-xs font-medium text-foreground">{product.rating}</span>
+                            <span className="text-xs text-muted-foreground">({product.reviews})</span>
+                          </>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">No reviews yet</span>
+                        )}
                       </div>
                       <div className="flex items-center justify-between pt-1">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           {product.originalPrice != null && product.originalPrice > product.price && (
-                            <span className="text-sm text-muted-foreground line-through">Rs{product.originalPrice}</span>
+                            <>
+                              <span className="text-sm text-muted-foreground line-through">Rs{product.originalPrice}</span>
+                              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]">
+                                {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}% OFF
+                              </span>
+                            </>
                           )}
                           <span className="text-lg font-bold text-foreground font-display">Rs{product.price}</span>
                         </div>

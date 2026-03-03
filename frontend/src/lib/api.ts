@@ -69,6 +69,8 @@ export interface ApiProduct {
   inStock: boolean;
   customizable?: boolean;
   whatsappMessage?: string;
+  minQuantity?: number | null;
+  maxQuantity?: number | null;
 }
 
 export const productsApi = {
@@ -109,13 +111,14 @@ export interface ApiOrder {
   status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
   address: ApiAddress;
   allowSocialMediaFeature?: boolean;
+  customerPhotos?: string[];
   createdAt: string;
 }
 
 export const ordersApi = {
   getMine: () => request<ApiOrder[]>("/api/orders"),
   getAll: () => request<ApiOrder[]>("/api/orders/all"),
-  create: (body: { items: { product: ApiProduct; quantity: number }[]; total: number; address: ApiAddress; allowSocialMediaFeature?: boolean }) =>
+  create: (body: { items: { product: ApiProduct; quantity: number }[]; total: number; address: ApiAddress; allowSocialMediaFeature?: boolean; customerPhotos?: string[] }) =>
     request<ApiOrder>("/api/orders", {
       method: "POST",
       body: JSON.stringify({
@@ -127,6 +130,7 @@ export const ordersApi = {
         total: body.total,
         address: body.address,
         allowSocialMediaFeature: body.allowSocialMediaFeature === true,
+        customerPhotos: body.customerPhotos || [],
       }),
     }),
   updateStatus: (orderId: string, status: ApiOrder["status"]) =>
@@ -201,4 +205,94 @@ export const journeyVideosApi = {
     request<ApiJourneyVideo>(`/api/journey-videos/${id}`, { method: "PUT", body: JSON.stringify(body) }),
   delete: (id: string) =>
     request<{ message: string }>(`/api/journey-videos/${id}`, { method: "DELETE" }),
+};
+
+// Reviews
+export interface ApiReview {
+  id: string;
+  productId: string;
+  userId: string | null;
+  userName: string;
+  userAvatar: string;
+  rating: number;
+  comment: string;
+  helpful: number;
+  createdAt: string;
+}
+
+export const reviewsApi = {
+  getByProduct: (productId: string) =>
+    request<ApiReview[]>("/api/reviews", { params: { productId } }),
+  getAll: () => request<ApiReview[]>("/api/reviews"),
+  create: (body: { productId: string; rating: number; comment: string }) =>
+    request<ApiReview>("/api/reviews", { method: "POST", body: JSON.stringify(body) }),
+  markHelpful: (id: string) =>
+    request<ApiReview>(`/api/reviews/${id}/helpful`, { method: "PATCH" }),
+  delete: (id: string) =>
+    request<{ message: string }>(`/api/reviews/${id}`, { method: "DELETE" }),
+};
+
+// Gallery
+export interface ApiGalleryItem {
+  id: string;
+  image: string;
+  name: string;
+  location: string;
+  caption: string;
+  rating: number;
+  likes: number;
+  order: number;
+}
+
+export const galleryApi = {
+  getAll: () => request<ApiGalleryItem[]>("/api/gallery"),
+  create: (body: Partial<ApiGalleryItem>) =>
+    request<ApiGalleryItem>("/api/gallery", { method: "POST", body: JSON.stringify(body) }),
+  update: (id: string, body: Partial<ApiGalleryItem>) =>
+    request<ApiGalleryItem>(`/api/gallery/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+  like: (id: string) =>
+    request<ApiGalleryItem>(`/api/gallery/${id}/like`, { method: "PATCH" }),
+  delete: (id: string) =>
+    request<{ message: string }>(`/api/gallery/${id}`, { method: "DELETE" }),
+};
+
+// Event Packs
+export interface ApiEventPack {
+  id: string;
+  name: string;
+  tagline: string;
+  description: string;
+  icon: string;
+  image: string;
+  qty: number;
+  pricePerUnit: number;
+  totalPrice: number;
+  savings: number;
+  features: string[];
+  color: string;
+  active: boolean;
+  order: number;
+}
+
+export const eventPacksApi = {
+  getAll: () => request<ApiEventPack[]>("/api/event-packs"),
+  getAllAdmin: () => request<ApiEventPack[]>("/api/event-packs/all"),
+  create: (body: Partial<ApiEventPack>) =>
+    request<ApiEventPack>("/api/event-packs", { method: "POST", body: JSON.stringify(body) }),
+  update: (id: string, body: Partial<ApiEventPack>) =>
+    request<ApiEventPack>(`/api/event-packs/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+  delete: (id: string) =>
+    request<{ message: string }>(`/api/event-packs/${id}`, { method: "DELETE" }),
+};
+
+// Stats (public)
+export interface ApiStats {
+  totalCustomers: number;
+  totalMagnets: number;
+  avgRating: number;
+  totalReviews: number;
+}
+
+export const statsApi = {
+  get: () => request<ApiStats>("/api/stats"),
 };

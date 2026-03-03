@@ -11,11 +11,13 @@ const productSchema = new mongoose.Schema(
     images: [{ type: String }],
     category: { type: String, required: true, trim: true },
     slug: { type: String, trim: true, sparse: true },
-    rating: { type: Number, default: 4.5, min: 0, max: 5 },
+    rating: { type: Number, default: 0, min: 0, max: 5 },
     reviews: { type: Number, default: 0, min: 0 },
     inStock: { type: Boolean, default: true },
     customizable: { type: Boolean, default: false },
     whatsappMessage: { type: String, default: "" },
+    minQuantity: { type: Number, default: null, min: 1 },
+    maxQuantity: { type: Number, default: null, min: 1 },
   },
   { timestamps: true }
 );

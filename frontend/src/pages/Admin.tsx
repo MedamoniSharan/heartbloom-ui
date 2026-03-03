@@ -2,8 +2,8 @@ import { useState, useCallback, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Package, DollarSign, Users, TrendingUp, Plus,
-  Eye, Trash2, ChevronDown, Tag, ToggleLeft, ToggleRight,
-  Upload, ImageIcon, X, BarChart3, ShoppingCart, Calendar,
+  Eye, Trash2, ChevronDown, ChevronUp, Tag, ToggleLeft, ToggleRight,
+  Upload, ImageIcon, X, BarChart3, ShoppingCart, Calendar, MapPin, Phone, User, Camera, Filter,
 } from "lucide-react";
 import { useProductStore, Product, Order, PromoCode } from "@/stores/productStore";
 import { useSiteContentStore } from "@/stores/siteContentStore";
@@ -13,6 +13,10 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
 import { Navigate } from "react-router-dom";
+import {
+  AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter,
+  AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, AreaChart, Area, Legend,
@@ -78,7 +82,7 @@ const DashboardTab = ({ orders, products, setTab }: { orders: Order[]; products:
       <div className="bg-card border border-border rounded-2xl p-6 shadow-card">
         <div className="flex items-center justify-between mb-4">
           <div><h3 className="font-display font-bold text-foreground">Revenue Overview</h3><p className="text-xs text-muted-foreground">Last 7 days</p></div>
-          <div className="text-right"><p className="text-2xl font-bold text-foreground font-display">${totalRevenue.toFixed(0)}</p><p className="text-xs text-[hsl(var(--success))]">↑ 18% vs last week</p></div>
+          <div className="text-right"><p className="text-2xl font-bold text-foreground font-display">Rs{totalRevenue.toFixed(0)}</p><p className="text-xs text-[hsl(var(--success))]">↑ 18% vs last week</p></div>
         </div>
         <ResponsiveContainer width="100%" height={200}>
           <AreaChart data={revenueData}>
@@ -192,6 +196,9 @@ const Admin = () => {
   const [newPromo, setNewPromo] = useState({ code: "", discount: "", description: "", expiresAt: "" });
   const [editingPromoId, setEditingPromoId] = useState<string | null>(null);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  const [deletingProduct, setDeletingProduct] = useState<Product | null>(null);
+  const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
+  const [orderFilter, setOrderFilter] = useState<"all" | Order["status"]>("all");
 
   useEffect(() => {
     if (user?.role === "admin") {
@@ -200,8 +207,8 @@ const Admin = () => {
     }
   }, [user?.role, fetchOrders, fetchPromos]);
 
-  const SIZE_OPTIONS = ["2.5 x 2.5", "2 x 2", "Upload"] as const;
   const REFERENCE_IMAGE_COUNT = 4;
+  const existingCategories = useMemo(() => [...new Set(products.map((p) => p.category).filter(Boolean))], [products]);
   const [newProduct, setNewProduct] = useState<{
     name: string;
     description: string;
@@ -210,9 +217,12 @@ const Admin = () => {
     image: string;
     category: string;
     images: string[];
-  }>({ name: "", description: "", price: "", originalPrice: "", image: "", category: "2.5 x 2.5", images: [] });
+    minQuantity: string;
+    maxQuantity: string;
+  }>({ name: "", description: "", price: "", originalPrice: "", image: "", category: "", images: [], minQuantity: "", maxQuantity: "" });
   const [dragOver, setDragOver] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [refImagePreviews, setRefImagePreviews] = useState<(string | null)[]>([null, null, null, null]);
 
   const handleImageDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -240,6 +250,29 @@ const Admin = () => {
     setNewProduct((p) => ({ ...p, image: "" }));
   };
 
+  const handleRefImageSelect = useCallback((index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith("image/")) {
+      const url = URL.createObjectURL(file);
+      setRefImagePreviews((prev) => { const next = [...prev]; next[index] = url; return next; });
+      setNewProduct((p) => {
+        const next = [...(p.images || [])];
+        while (next.length <= index) next.push("");
+        next[index] = url;
+        return { ...p, images: next.slice(0, REFERENCE_IMAGE_COUNT) };
+      });
+    }
+  }, []);
+
+  const clearRefImage = (index: number) => {
+    setRefImagePreviews((prev) => { const next = [...prev]; if (next[index]) URL.revokeObjectURL(next[index]!); next[index] = null; return next; });
+    setNewProduct((p) => {
+      const next = [...(p.images || [])];
+      next[index] = "";
+      return { ...p, images: next.slice(0, REFERENCE_IMAGE_COUNT) };
+    });
+  };
+
   if (!user || user.role !== "admin") return <Navigate to="/login" replace />;
 
   const handleAddProduct = async (e: React.FormEvent) => {
@@ -253,11 +286,14 @@ const Admin = () => {
         image: newProduct.image,
         images: newProduct.images?.slice(0, REFERENCE_IMAGE_COUNT).filter(Boolean) || [],
         category: newProduct.category,
+        minQuantity: newProduct.minQuantity ? parseInt(newProduct.minQuantity) : null,
+        maxQuantity: newProduct.maxQuantity ? parseInt(newProduct.maxQuantity) : null,
       });
       if (ok) {
         toast({ title: "Product updated!" });
-        setNewProduct({ name: "", description: "", price: "", originalPrice: "", image: "", category: "2.5 x 2.5", images: [] });
+        setNewProduct({ name: "", description: "", price: "", originalPrice: "", image: "", category: "", images: [], minQuantity: "", maxQuantity: "" });
         clearImage();
+        setRefImagePreviews([null, null, null, null]);
         setEditingProductId(null);
         setTab("products");
       } else {
@@ -272,14 +308,17 @@ const Admin = () => {
         image: newProduct.image || "https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?w=400&h=400&fit=crop",
         images: newProduct.images?.slice(0, REFERENCE_IMAGE_COUNT).filter(Boolean) || [],
         category: newProduct.category,
-        rating: 4.5,
+        rating: 0,
         reviews: 0,
         inStock: true,
+        minQuantity: newProduct.minQuantity ? parseInt(newProduct.minQuantity) : null,
+        maxQuantity: newProduct.maxQuantity ? parseInt(newProduct.maxQuantity) : null,
       });
       if (ok) {
         toast({ title: "Product added!" });
-        setNewProduct({ name: "", description: "", price: "", originalPrice: "", image: "", category: "2.5 x 2.5", images: [] });
+        setNewProduct({ name: "", description: "", price: "", originalPrice: "", image: "", category: "", images: [], minQuantity: "", maxQuantity: "" });
         clearImage();
+        setRefImagePreviews([null, null, null, null]);
         setTab("products");
       } else {
         toast({ title: "Failed to add product", variant: "destructive" });
@@ -317,7 +356,7 @@ const Admin = () => {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6 border-b border-border pb-3 overflow-x-auto">
+        <div className="flex gap-2 mb-6 border-b border-border pb-3 overflow-x-auto scrollbar-hide">
           {(["dashboard", "analytics", "orders", "products", "add", "promos", "bulk", "courses", "journey", "settings"] as const).map((t) => {
             const labels: Record<string, string> = { dashboard: "Dashboard", analytics: "Analytics", orders: "Orders", products: "Products", add: "Add Product", promos: "Promo Codes", bulk: "Bulk Orders", courses: "Courses", journey: "Follow My Journey", settings: "Settings" };
             return (
@@ -341,78 +380,231 @@ const Admin = () => {
 
         {/* Orders Tab */}
         {tab === "orders" && (
-          <div className="space-y-3">
-            {orders.map((order) => (
-              <div key={order.id} className="bg-card border border-border rounded-2xl p-4 shadow-card">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div>
-                    <span className="font-display font-bold text-foreground">{order.id}</span>
-                    <p className="text-xs text-muted-foreground">{order.userName} · {new Date(order.createdAt).toLocaleDateString()}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{order.address.street}, {order.address.city}</p>
-                    {order.allowSocialMediaFeature && (
-                      <p className="text-xs text-primary font-medium mt-1.5">✓ OK to feature on social media</p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="font-display font-bold text-foreground">Rs{order.total.toFixed(2)}</span>
-                    <div className="relative">
-                      <select
-                        value={order.status}
-                        onChange={async (e) => {
-                          const ok = await updateOrderStatus(order.id, e.target.value as Order["status"]);
-                          if (!ok) toast({ title: "Failed to update status", variant: "destructive" });
-                        }}
-                        className="appearance-none bg-muted border border-border rounded-lg px-3 py-1.5 pr-7 text-xs font-medium text-foreground cursor-pointer"
-                      >
-                        <option value="pending">Pending</option>
-                        <option value="processing">Processing</option>
-                        <option value="shipped">Shipped</option>
-                        <option value="delivered">Delivered</option>
-                        <option value="cancelled">Cancelled</option>
-                      </select>
-                      <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
+          <div className="space-y-4">
+            {/* Status filter */}
+            <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1">
+              <Filter className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+              {(["all", "pending", "processing", "shipped", "delivered", "cancelled"] as const).map((s) => {
+                const counts: Record<string, number> = { all: orders.length };
+                orders.forEach((o) => { counts[o.status] = (counts[o.status] || 0) + 1; });
+                return (
+                  <button
+                    key={s}
+                    onClick={() => setOrderFilter(s)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${orderFilter === s ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}
+                  >
+                    {s === "all" ? "All" : s.charAt(0).toUpperCase() + s.slice(1)} {counts[s] ? `(${counts[s]})` : ""}
+                  </button>
+                );
+              })}
+            </div>
+
+            {orders.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-10">No orders yet.</p>
+            ) : orders.filter((o) => orderFilter === "all" || o.status === orderFilter).length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-10">No {orderFilter} orders.</p>
+            ) : orders.filter((o) => orderFilter === "all" || o.status === orderFilter).map((order) => {
+              const isExpanded = expandedOrders.has(order.id);
+              const toggleExpand = () => setExpandedOrders((prev) => {
+                const next = new Set(prev);
+                if (next.has(order.id)) next.delete(order.id); else next.add(order.id);
+                return next;
+              });
+              const statusColor: Record<string, string> = {
+                pending: "bg-amber-500/15 text-amber-600",
+                processing: "bg-blue-500/15 text-blue-600",
+                shipped: "bg-purple-500/15 text-purple-600",
+                delivered: "bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]",
+                cancelled: "bg-destructive/15 text-destructive",
+              };
+              return (
+                <div key={order.id} className="bg-card border border-border rounded-2xl shadow-card overflow-hidden">
+                  {/* Order header — always visible */}
+                  <button
+                    type="button"
+                    onClick={toggleExpand}
+                    className="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 text-left hover:bg-muted/30 transition-colors"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-display font-bold text-foreground text-sm">{order.id}</span>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${statusColor[order.status] || "bg-muted text-muted-foreground"}`}>
+                          {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                        </span>
+                        {order.allowSocialMediaFeature && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-primary/10 text-primary">Social Media OK</span>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">{order.userName} · {new Date(order.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })} · {order.items.length} item{order.items.length !== 1 ? "s" : ""}</p>
                     </div>
-                  </div>
+                    <div className="flex items-center gap-3">
+                      <span className="font-display font-bold text-foreground">Rs{order.total.toFixed(2)}</span>
+                      {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                    </div>
+                  </button>
+
+                  {/* Expanded details */}
+                  {isExpanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      transition={{ duration: 0.25 }}
+                      className="border-t border-border"
+                    >
+                      <div className="p-4 space-y-4">
+                        {/* Status selector */}
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs font-medium text-muted-foreground">Update status:</span>
+                          <div className="relative">
+                            <select
+                              value={order.status}
+                              onChange={async (e) => {
+                                const ok = await updateOrderStatus(order.id, e.target.value as Order["status"]);
+                                if (!ok) toast({ title: "Failed to update status", variant: "destructive" });
+                              }}
+                              className="appearance-none bg-muted border border-border rounded-lg px-3 py-1.5 pr-7 text-xs font-medium text-foreground cursor-pointer"
+                            >
+                              <option value="pending">Pending</option>
+                              <option value="processing">Processing</option>
+                              <option value="shipped">Shipped</option>
+                              <option value="delivered">Delivered</option>
+                              <option value="cancelled">Cancelled</option>
+                            </select>
+                            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Address card */}
+                          <div className="bg-muted/40 rounded-xl p-4 space-y-2.5">
+                            <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-primary" /> Delivery Address</h4>
+                            <div className="space-y-1.5">
+                              <p className="text-sm font-medium text-foreground flex items-center gap-1.5"><User className="w-3.5 h-3.5 text-muted-foreground" /> {order.address.fullName}</p>
+                              <p className="text-sm text-muted-foreground flex items-center gap-1.5"><Phone className="w-3.5 h-3.5 text-muted-foreground" /> {order.address.phone}</p>
+                              <div className="text-sm text-muted-foreground pl-5">
+                                <p>{order.address.street}</p>
+                                <p>{order.address.city}, {order.address.state} {order.address.zipCode}</p>
+                                <p>{order.address.country}</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Order summary card */}
+                          <div className="bg-muted/40 rounded-xl p-4 space-y-2.5">
+                            <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider flex items-center gap-1.5"><Package className="w-3.5 h-3.5 text-primary" /> Order Summary</h4>
+                            <div className="space-y-1.5 text-sm">
+                              <div className="flex justify-between"><span className="text-muted-foreground">Order ID</span><span className="font-medium text-foreground">{order.id}</span></div>
+                              <div className="flex justify-between"><span className="text-muted-foreground">Date</span><span className="text-foreground">{new Date(order.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</span></div>
+                              <div className="flex justify-between"><span className="text-muted-foreground">Customer</span><span className="text-foreground">{order.userName}</span></div>
+                              <div className="flex justify-between border-t border-border pt-1.5 mt-1.5"><span className="font-medium text-foreground">Total</span><span className="font-bold text-foreground font-display">Rs{order.total.toFixed(2)}</span></div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Ordered products */}
+                        <div>
+                          <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-3 flex items-center gap-1.5"><ShoppingCart className="w-3.5 h-3.5 text-primary" /> Products Ordered</h4>
+                          <div className="space-y-2">
+                            {order.items.map((item, idx) => (
+                              <div key={idx} className="flex items-center gap-3 bg-muted/40 rounded-xl p-3">
+                                <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border border-border bg-background">
+                                  <img src={item.product.image} alt={item.product.name} className="w-full h-full object-cover" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium text-foreground truncate">{item.product.name}</p>
+                                  <p className="text-xs text-muted-foreground">Qty: {item.quantity} × Rs{item.product.price}</p>
+                                </div>
+                                <p className="text-sm font-bold text-foreground font-display flex-shrink-0">Rs{(item.product.price * item.quantity).toFixed(2)}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Customer uploaded photos */}
+                        {order.customerPhotos && order.customerPhotos.length > 0 && (
+                          <div>
+                            <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-3 flex items-center gap-1.5"><Camera className="w-3.5 h-3.5 text-primary" /> Customer Photos ({order.customerPhotos.length})</h4>
+                            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                              {order.customerPhotos.map((photoUrl, idx) => (
+                                <a key={idx} href={photoUrl} target="_blank" rel="noopener noreferrer" className="aspect-square rounded-lg overflow-hidden border border-border bg-background hover:ring-2 hover:ring-primary/40 transition-all">
+                                  <img src={photoUrl} alt={`Customer photo ${idx + 1}`} className="w-full h-full object-cover" />
+                                </a>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
         {/* Products Tab */}
         {tab === "products" && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {products.map((p) => (
-              <div key={p.id} className="bg-card border border-border rounded-2xl overflow-hidden shadow-card">
-                <img src={p.image} alt={p.name} className="w-full aspect-video object-cover" />
-                <div className="p-4">
-                  <h3 className="font-display font-semibold text-foreground text-sm">{p.name}</h3>
-                  <p className="text-xs text-muted-foreground mt-1">Rs{p.price} · {p.category}</p>
-                  <div className="flex gap-2 mt-3">
-                    <button
-                      onClick={() => {
-                        setEditingProductId(p.id);
-                        setNewProduct({ name: p.name, description: p.description, price: p.price.toString(), originalPrice: p.originalPrice != null ? p.originalPrice.toString() : "", image: p.image, category: SIZE_OPTIONS.includes(p.category as any) ? p.category : "2.5 x 2.5", images: (p.images || []).slice(0, REFERENCE_IMAGE_COUNT) });
-                        setImagePreview(p.image);
-                        setTab("add");
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
-                      className="flex-1 py-1.5 rounded-lg border flex items-center justify-center text-xs font-medium text-muted-foreground border-border hover:bg-muted hover:text-foreground transition-colors"
-                    >
-                      Edit
-                    </button>
-                    <button onClick={async () => {
-                      const ok = await removeProduct(p.id);
-                      if (ok) toast({ title: "Product removed" });
-                      else toast({ title: "Failed to remove", variant: "destructive" });
-                    }} className="px-3 py-1.5 rounded-lg bg-destructive/10 text-destructive text-xs font-medium hover:bg-destructive/20 transition-colors flex items-center gap-1">
-                      <Trash2 className="w-3 h-3" /> Remove
-                    </button>
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {products.map((p) => (
+                <div key={p.id} className="bg-card border border-border rounded-2xl overflow-hidden shadow-card">
+                  <img src={p.image} alt={p.name} className="w-full aspect-video object-cover" />
+                  <div className="p-4">
+                    <h3 className="font-display font-semibold text-foreground text-sm">{p.name}</h3>
+                    <p className="text-xs text-muted-foreground mt-1">Rs{p.price} · {p.category}</p>
+                    <div className="flex gap-2 mt-3">
+                      <button
+                        onClick={() => {
+                          setEditingProductId(p.id);
+                          const refImgs = (p.images || []).slice(0, REFERENCE_IMAGE_COUNT);
+                          setNewProduct({ name: p.name, description: p.description, price: p.price.toString(), originalPrice: p.originalPrice != null ? p.originalPrice.toString() : "", image: p.image, category: p.category, images: refImgs, minQuantity: p.minQuantity != null ? p.minQuantity.toString() : "", maxQuantity: p.maxQuantity != null ? p.maxQuantity.toString() : "" });
+                          setImagePreview(p.image);
+                          setRefImagePreviews([refImgs[0] || null, refImgs[1] || null, refImgs[2] || null, refImgs[3] || null]);
+                          setTab("add");
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        className="flex-1 py-1.5 rounded-lg border flex items-center justify-center text-xs font-medium text-muted-foreground border-border hover:bg-muted hover:text-foreground transition-colors"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => setDeletingProduct(p)}
+                        className="px-3 py-1.5 rounded-lg bg-destructive/10 text-destructive text-xs font-medium hover:bg-destructive/20 transition-colors flex items-center gap-1"
+                      >
+                        <Trash2 className="w-3 h-3" /> Remove
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+
+            <AlertDialog open={!!deletingProduct} onOpenChange={(open) => { if (!open) setDeletingProduct(null); }}>
+              <AlertDialogContent className="rounded-2xl">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete "{deletingProduct?.name}"?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently remove the product from your store.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    onClick={async () => {
+                      if (!deletingProduct) return;
+                      const ok = await removeProduct(deletingProduct.id);
+                      if (ok) toast({ title: "Product removed" });
+                      else toast({ title: "Failed to remove", variant: "destructive" });
+                      setDeletingProduct(null);
+                    }}
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </>
         )}
 
         {/* Add/Edit Product Form */}
@@ -423,8 +615,9 @@ const Admin = () => {
                 type="button"
                 onClick={() => {
                   setEditingProductId(null);
-                  setNewProduct({ name: "", description: "", price: "", originalPrice: "", image: "", category: "2.5 x 2.5", images: [] });
+                  setNewProduct({ name: "", description: "", price: "", originalPrice: "", image: "", category: "", images: [], minQuantity: "", maxQuantity: "" });
                   clearImage();
+                  setRefImagePreviews([null, null, null, null]);
                   setTab("products");
                 }}
                 className="absolute top-4 right-4 text-xs text-muted-foreground hover:text-foreground"
@@ -502,34 +695,95 @@ const Admin = () => {
                 </div>
               )}
             </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Reference images (up to 4) — optional URLs</label>
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-muted-foreground">Reference images (up to 4) — optional</label>
               <p className="text-xs text-muted-foreground">These show on the product page as reference. Main image above is always first.</p>
-              {[0, 1, 2, 3].map((i) => (
-                <div key={i} className="flex gap-2 items-center">
-                  <span className="text-xs text-muted-foreground w-6">#{i + 1}</span>
-                  <input
-                    type="url"
-                    placeholder={`Reference image ${i + 1} URL`}
-                    value={newProduct.images?.[i] ?? ""}
-                    onChange={(e) => {
-                      const next = [...(newProduct.images || [])];
-                      while (next.length <= i) next.push("");
-                      next[i] = e.target.value;
-                      setNewProduct((p) => ({ ...p, images: next.slice(0, REFERENCE_IMAGE_COUNT) }));
-                    }}
-                    className="flex-1 rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
-                  />
-                </div>
-              ))}
+              <div className="grid grid-cols-2 gap-3">
+                {[0, 1, 2, 3].map((i) => {
+                  const preview = refImagePreviews[i] || newProduct.images?.[i] || null;
+                  return (
+                    <div key={i} className="relative">
+                      <input
+                        id={`ref-image-input-${i}`}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => handleRefImageSelect(i, e)}
+                      />
+                      {preview ? (
+                        <div className="relative aspect-square rounded-xl overflow-hidden border border-primary/30 bg-primary/5">
+                          <img src={preview} alt={`Ref ${i + 1}`} className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-black/0 hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 hover:opacity-100">
+                            <motion.button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); clearRefImage(i); }}
+                              className="w-8 h-8 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-md"
+                              whileTap={{ scale: 0.9 }}
+                            >
+                              <X className="w-4 h-4" />
+                            </motion.button>
+                          </div>
+                          <span className="absolute top-1.5 left-1.5 text-[10px] font-semibold bg-card/80 backdrop-blur-sm px-1.5 py-0.5 rounded-md text-foreground">#{i + 1}</span>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => document.getElementById(`ref-image-input-${i}`)?.click()}
+                          className="w-full aspect-square rounded-xl border-2 border-dashed border-border hover:border-primary/40 hover:bg-muted/30 transition-all flex flex-col items-center justify-center gap-1.5"
+                        >
+                          <ImageIcon className="w-5 h-5 text-muted-foreground" />
+                          <span className="text-[10px] text-muted-foreground font-medium">Image #{i + 1}</span>
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Size / Subcategory</label>
-              <select value={newProduct.category} onChange={(e) => setNewProduct((p) => ({ ...p, category: e.target.value }))} className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none">
-                {SIZE_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt}>{opt}</option>
+              <label className="text-xs font-medium text-muted-foreground">Category</label>
+              <input
+                type="text"
+                list="category-suggestions"
+                placeholder="Type or select a category"
+                value={newProduct.category}
+                onChange={(e) => setNewProduct((p) => ({ ...p, category: e.target.value }))}
+                required
+                className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none placeholder:text-muted-foreground"
+              />
+              <datalist id="category-suggestions">
+                {existingCategories.map((cat) => (
+                  <option key={cat} value={cat} />
                 ))}
-              </select>
+              </datalist>
+              {existingCategories.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {existingCategories.map((cat) => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setNewProduct((p) => ({ ...p, category: cat }))}
+                      className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${newProduct.category === cat ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80"}`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Quantity Limits (optional, per product)</label>
+              <p className="text-xs text-muted-foreground">Leave blank to use global defaults from Settings.</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="floating-label-group">
+                  <input type="number" min="1" placeholder=" " value={newProduct.minQuantity} onChange={(e) => setNewProduct((p) => ({ ...p, minQuantity: e.target.value }))} />
+                  <label>Min quantity</label>
+                </div>
+                <div className="floating-label-group">
+                  <input type="number" min="1" placeholder=" " value={newProduct.maxQuantity} onChange={(e) => setNewProduct((p) => ({ ...p, maxQuantity: e.target.value }))} />
+                  <label>Max quantity</label>
+                </div>
+              </div>
             </div>
             <motion.button type="submit" className="w-full py-3 rounded-xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm flex items-center justify-center gap-2" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.97 }}>
               {editingProductId ? "Save Changes" : <><Plus className="w-4 h-4" /> Add Product</>}

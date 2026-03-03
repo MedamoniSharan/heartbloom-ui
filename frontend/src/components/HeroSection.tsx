@@ -1,8 +1,10 @@
+import { useEffect, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Heart, ArrowRight } from "lucide-react";
 import { StatCounter } from "./StatCounter";
 import { Reveal } from "./Reveal";
 import heroImage from "@/assets/hero-magnets.jpg";
+import { statsApi, type ApiStats } from "@/lib/api";
 
 const stagger = {
   hidden: {},
@@ -28,6 +30,11 @@ export const HeroSection = ({ onUploadClick }: HeroSectionProps) => {
   const { scrollY } = useScroll();
   const heroY = useTransform(scrollY, [0, 600], [0, -60]);
   const imageY = useTransform(scrollY, [0, 600], [0, -36]);
+  const [stats, setStats] = useState<ApiStats | null>(null);
+
+  useEffect(() => {
+    statsApi.get().then(setStats).catch(() => {});
+  }, []);
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden">
@@ -80,9 +87,9 @@ export const HeroSection = ({ onUploadClick }: HeroSectionProps) => {
 
             {/* Stats */}
             <motion.div variants={fadeUp} className="flex gap-8 mb-10">
-              <StatCounter target={70000} suffix="+" label="Happy Customers" />
-              <StatCounter target={800000} suffix="+" label="Magnets Printed" />
-              <StatCounter target={4.9} suffix="" label="Average Rating" />
+              <StatCounter target={stats?.totalCustomers ?? 0} suffix="+" label="Happy Customers" />
+              <StatCounter target={stats?.totalMagnets ?? 0} suffix="+" label="Magnets Printed" />
+              <StatCounter target={stats?.avgRating ?? 0} suffix="" label="Average Rating" />
             </motion.div>
 
             {/* CTA */}

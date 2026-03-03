@@ -5,17 +5,44 @@ import { useNavigate } from "react-router-dom";
 import { useCartStore } from "@/stores/cartStore";
 import { useAuthStore } from "@/stores/authStore";
 import { useProductStore, Address as AddressType } from "@/stores/productStore";
+import { usePhotoStore, buildFilterString } from "@/stores/photoStore";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
 import { siteConfig } from "@/lib/siteConfig";
+import { Switch } from "@/components/ui/switch";
+
+function photoToDataUrl(photo: { file: File; adjustments: any; filter: string }): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 800;
+      let w = img.width, h = img.height;
+      if (w > MAX || h > MAX) {
+        const ratio = Math.min(MAX / w, MAX / h);
+        w = Math.round(w * ratio);
+        h = Math.round(h * ratio);
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d")!;
+      ctx.filter = buildFilterString(photo.adjustments, photo.filter);
+      ctx.drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL("image/jpeg", 0.7));
+    };
+    img.src = URL.createObjectURL(photo.file);
+  });
+}
 
 const Address = () => {
   const navigate = useNavigate();
   const { items, total, clearCart, socialMediaConsent, setSocialMediaConsent } = useCartStore();
   const { user } = useAuthStore();
   const { addOrder } = useProductStore();
+  const { photos, clearPhotos } = usePhotoStore();
   const { toast } = useToast();
+  const [placing, setPlacing] = useState(false);
 
   const [form, setForm] = useState<AddressType>({
     fullName: user?.name || "",
@@ -37,6 +64,17 @@ const Address = () => {
       navigate("/login");
       return;
     }
+    setPlacing(true);
+
+    let customerPhotos: string[] = [];
+    if (photos.length > 0) {
+      try {
+        customerPhotos = await Promise.all(photos.map((p) => photoToDataUrl(p)));
+      } catch {
+        // continue without photos if conversion fails
+      }
+    }
+
     const ok = await addOrder({
       userId: user.id,
       userName: user.name,
@@ -45,20 +83,22 @@ const Address = () => {
       status: "pending",
       address: form,
       allowSocialMediaFeature: socialMediaConsent,
+      customerPhotos,
     });
+    setPlacing(false);
     if (!ok) {
       toast({ title: "Order failed", description: "Could not place order. Please try again.", variant: "destructive" });
       return;
     }
 
-    // Generate WhatsApp Message
     const itemsList = items.map(item => `${item.quantity}x ${item.product.name}`).join("\n");
     const addressStr = `${form.fullName}\n${form.street}, ${form.city}, ${form.state} ${form.zipCode}\n${form.country}\nPhone: ${form.phone}`;
     const message = `*New Order Placed!*\n\n*Items:*\n${itemsList}\n\n*Total:* Rs${total().toFixed(2)}\n\n*Shipping Address:*\n${addressStr}`;
     const whatsappUrl = `https://wa.me/${siteConfig.whatsappDigits}?text=${encodeURIComponent(message)}`;
 
     clearCart();
-    toast({ title: "Order placed! 🎉", description: "Taking you to WhatsApp to confirm..." });
+    clearPhotos();
+    toast({ title: "Order placed!", description: "Taking you to WhatsApp to confirm..." });
     window.open(whatsappUrl, "_blank");
     navigate("/orders");
   };
@@ -106,22 +146,18 @@ const Address = () => {
             </div>
 
             <label className="flex items-center gap-3 p-4 rounded-xl bg-muted/30 border border-border cursor-pointer">
-              <input
-                type="checkbox"
-                checked={socialMediaConsent}
-                onChange={(e) => setSocialMediaConsent(e.target.checked)}
-                className="rounded border-border text-primary focus:ring-primary"
-              />
+              <Switch checked={socialMediaConsent} onCheckedChange={setSocialMediaConsent} />
               <span className="text-sm text-foreground">I agree to have my order featured in your social media content.</span>
             </label>
 
             <motion.button
               type="submit"
-              className="w-full py-3 rounded-xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm flex items-center justify-center gap-2"
+              disabled={placing}
+              className="w-full py-3 rounded-xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm flex items-center justify-center gap-2 disabled:opacity-70"
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.97 }}
             >
-              Place Order — Rs{total().toFixed(2)} <ArrowRight className="w-4 h-4" />
+              {placing ? "Placing order..." : <>Place Order — Rs{total().toFixed(2)} <ArrowRight className="w-4 h-4" /></>}
             </motion.button>
           </form>
 

@@ -17,11 +17,13 @@ function toProductResponse(doc) {
     images: o.images,
     category: o.category,
     slug: o.slug,
-    rating: o.rating ?? 4.5,
+    rating: o.rating ?? 0,
     reviews: o.reviews ?? 0,
     inStock: o.inStock ?? true,
     customizable: o.customizable,
     whatsappMessage: o.whatsappMessage,
+    minQuantity: o.minQuantity ?? null,
+    maxQuantity: o.maxQuantity ?? null,
   };
 }
 

@@ -1,69 +1,41 @@
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { Star } from "lucide-react";
 import { TestimonialsColumn } from "@/components/ui/testimonials-columns-1";
 import type { TestimonialItem } from "@/components/ui/testimonials-columns-1";
+import { reviewsApi, type ApiReview } from "@/lib/api";
 
-const testimonials: TestimonialItem[] = [
-  {
-    text: "The custom photo magnets turned out even better than I hoped. Quality is superb and delivery was fast. Highly recommend!",
-    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=face",
-    name: "Priya S.",
-    role: "Hyderabad",
-  },
-  {
-    text: "Ordered heart-shaped magnets for our anniversary. My wife loved them. The print clarity and finish are excellent.",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face",
-    name: "Rahul K.",
-    role: "Customer",
-  },
-  {
-    text: "Used these as wedding favors. Guests kept asking where we got them. Affordable, beautiful, and the team was so helpful.",
-    image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&h=80&fit=crop&crop=face",
-    name: "Anitha M.",
-    role: "Bride",
-  },
-  {
-    text: "Family photos on the fridge look so good. The magnets are strong and the colors are vibrant. Will order again for gifts.",
-    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&crop=face",
-    name: "Vikram R.",
-    role: "Customer",
-  },
-  {
-    text: "Baby shower favors were a hit. Everyone wanted to know the source. Great quality and the customization process was easy.",
-    image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&h=80&fit=crop&crop=face",
-    name: "Deepa L.",
-    role: "Event Host",
-  },
-  {
-    text: "The custom text magnets with our family motto are perfect. Sturdy, well-packaged, and arrived on time. Very happy.",
-    image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=face",
-    name: "Kiran P.",
-    role: "Customer",
-  },
-  {
-    text: "Ordered multiple sets for our café — menu boards and specials. Customers love the look. Professional finish.",
-    image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=80&h=80&fit=crop&crop=face",
-    name: "Arjun N.",
-    role: "Café Owner",
-  },
-  {
-    text: "Gift for my parents — their wedding photo as a magnet. They were so touched. Beautiful product and thoughtful packaging.",
-    image: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=80&h=80&fit=crop&crop=face",
-    name: "Meera T.",
-    role: "Customer",
-  },
-  {
-    text: "Travel magnets from our trip look amazing. Way better than generic souvenirs. Fast turnaround and great communication.",
-    image: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=80&h=80&fit=crop&crop=face",
-    name: "Suresh G.",
-    role: "Customer",
-  },
-];
-
-const firstColumn = testimonials.slice(0, 3);
-const secondColumn = testimonials.slice(3, 6);
-const thirdColumn = testimonials.slice(6, 9);
+function reviewToTestimonial(r: ApiReview): TestimonialItem {
+  const avatarUrl = r.userAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(r.userName)}&background=random&size=80`;
+  return {
+    text: r.comment,
+    image: avatarUrl,
+    name: r.userName,
+    role: `${"★".repeat(r.rating)}${"☆".repeat(5 - r.rating)}`,
+  };
+}
 
 export const TestimonialsSection = () => {
+  const [testimonials, setTestimonials] = useState<TestimonialItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    reviewsApi
+      .getAll()
+      .then((reviews) => {
+        const sorted = [...reviews].sort((a, b) => b.rating - a.rating || b.helpful - a.helpful);
+        setTestimonials(sorted.slice(0, 9).map(reviewToTestimonial));
+      })
+      .catch(() => setTestimonials([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading || testimonials.length === 0) return null;
+
+  const firstColumn = testimonials.slice(0, 3);
+  const secondColumn = testimonials.slice(3, 6);
+  const thirdColumn = testimonials.slice(6, 9);
+
   return (
     <section className="bg-background my-20 relative">
       <div className="container z-10 mx-auto px-6">
@@ -75,7 +47,8 @@ export const TestimonialsSection = () => {
           className="flex flex-col items-center justify-center max-w-[540px] mx-auto"
         >
           <div className="flex justify-center">
-            <div className="border border-border py-1 px-4 rounded-lg text-muted-foreground text-sm">
+            <div className="border border-border py-1 px-4 rounded-lg text-muted-foreground text-sm flex items-center gap-1.5">
+              <Star className="w-3.5 h-3.5 fill-warning text-warning" />
               Testimonials
             </div>
           </div>
@@ -83,14 +56,14 @@ export const TestimonialsSection = () => {
             What our customers say
           </h2>
           <p className="text-center mt-5 opacity-75 text-muted-foreground">
-            See what people are saying about Magnetic Bliss India.
+            Real reviews from real customers. See what people love about Magnetic Bliss India.
           </p>
         </motion.div>
 
         <div className="flex justify-center gap-6 mt-10 [mask-image:linear-gradient(to_bottom,transparent,black_25%,black_75%,transparent)] max-h-[740px] overflow-hidden">
-          <TestimonialsColumn testimonials={firstColumn} duration={15} />
-          <TestimonialsColumn testimonials={secondColumn} className="hidden md:block" duration={19} />
-          <TestimonialsColumn testimonials={thirdColumn} className="hidden lg:block" duration={17} />
+          {firstColumn.length > 0 && <TestimonialsColumn testimonials={firstColumn} duration={15} />}
+          {secondColumn.length > 0 && <TestimonialsColumn testimonials={secondColumn} className="hidden md:block" duration={19} />}
+          {thirdColumn.length > 0 && <TestimonialsColumn testimonials={thirdColumn} className="hidden lg:block" duration={17} />}
         </div>
       </div>
     </section>
