@@ -1123,6 +1123,36 @@ function JourneyAdminTab({ toast }: { toast: (t: { title: string; description?: 
     comments: "",
   });
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [thumbDragOver, setThumbDragOver] = useState(false);
+  const [thumbPreview, setThumbPreview] = useState<string | null>(null);
+
+  const processThumbImage = useCallback((file: File) => {
+    if (!file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result as string;
+      setThumbPreview(base64);
+      setForm((f) => ({ ...f, thumbnailUrl: base64 }));
+    };
+    reader.readAsDataURL(file);
+  }, []);
+
+  const handleThumbDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setThumbDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file) processThumbImage(file);
+  }, [processThumbImage]);
+
+  const handleThumbSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) processThumbImage(file);
+  }, [processThumbImage]);
+
+  const clearThumb = useCallback(() => {
+    setThumbPreview(null);
+    setForm((f) => ({ ...f, thumbnailUrl: "" }));
+  }, []);
 
   const fetchVideos = useCallback(() => {
     setLoading(true);
@@ -1149,6 +1179,7 @@ function JourneyAdminTab({ toast }: { toast: (t: { title: string; description?: 
         toast({ title: "Video added!" });
       }
       setForm({ url: "", platform: "instagram", thumbnailUrl: "", username: "heartprinted", views: "", likes: "", comments: "" });
+      setThumbPreview(null);
       fetchVideos();
     } catch {
       toast({ title: "Failed to save", variant: "destructive" });
@@ -1187,9 +1218,48 @@ function JourneyAdminTab({ toast }: { toast: (t: { title: string; description?: 
             <label>Username (e.g. heartprinted)</label>
           </div>
         </div>
-        <div className="floating-label-group">
-          <input type="url" placeholder=" " value={form.thumbnailUrl} onChange={(e) => setForm((f) => ({ ...f, thumbnailUrl: e.target.value }))} />
-          <label>Thumbnail image URL (optional)</label>
+        {/* Drag & Drop Thumbnail Upload */}
+        <div
+          className={`relative border-2 border-dashed rounded-2xl transition-all cursor-pointer ${thumbDragOver
+            ? "border-primary bg-primary/5 scale-[1.01]"
+            : thumbPreview
+              ? "border-primary/30 bg-primary/5"
+              : "border-border hover:border-primary/40 hover:bg-muted/30"
+          }`}
+          onDragOver={(e) => { e.preventDefault(); setThumbDragOver(true); }}
+          onDragLeave={() => setThumbDragOver(false)}
+          onDrop={handleThumbDrop}
+          onClick={() => document.getElementById("journey-thumb-input")?.click()}
+        >
+          <input
+            id="journey-thumb-input"
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleThumbSelect}
+          />
+          {thumbPreview ? (
+            <div className="relative p-3">
+              <img src={thumbPreview} alt="Thumbnail preview" className="w-full aspect-video object-cover rounded-xl" />
+              <motion.button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); clearThumb(); }}
+                className="absolute top-5 right-5 w-7 h-7 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <X className="w-3.5 h-3.5" />
+              </motion.button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-6 gap-2">
+              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                <ImageIcon className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <p className="text-sm font-medium text-foreground">Drop thumbnail image here</p>
+              <p className="text-xs text-muted-foreground">or click to browse (optional)</p>
+            </div>
+          )}
         </div>
         <div className="grid grid-cols-3 gap-3">
           <div className="floating-label-group">
@@ -1228,6 +1298,7 @@ function JourneyAdminTab({ toast }: { toast: (t: { title: string; description?: 
                   onClick={() => {
                     setEditingId(v.id);
                     setForm({ url: v.url, platform: v.platform, thumbnailUrl: v.thumbnailUrl || "", username: v.username || "heartprinted", views: v.views || "", likes: v.likes || "", comments: v.comments || "" });
+                    setThumbPreview(v.thumbnailUrl || null);
                   }}
                   className="text-xs font-medium text-primary hover:underline px-2"
                 >
@@ -1253,6 +1324,36 @@ function EventPacksAdminTab() {
   const [showForm, setShowForm] = useState(false);
   const emptyForm = { name: "", tagline: "", description: "", icon: "Heart", image: "", qty: "", pricePerUnit: "", totalPrice: "", savings: "", features: "", color: "from-pink to-pink-dark" };
   const [form, setForm] = useState(emptyForm);
+  const [eventDragOver, setEventDragOver] = useState(false);
+  const [eventImagePreview, setEventImagePreview] = useState<string | null>(null);
+
+  const processEventImage = useCallback((file: File) => {
+    if (!file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result as string;
+      setEventImagePreview(base64);
+      setForm((f) => ({ ...f, image: base64 }));
+    };
+    reader.readAsDataURL(file);
+  }, []);
+
+  const handleEventImageDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setEventDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file) processEventImage(file);
+  }, [processEventImage]);
+
+  const handleEventImageSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) processEventImage(file);
+  }, [processEventImage]);
+
+  const clearEventImage = useCallback(() => {
+    setEventImagePreview(null);
+    setForm((f) => ({ ...f, image: "" }));
+  }, []);
 
   const fetchPacks = useCallback(async () => {
     setLoading(true);
@@ -1268,6 +1369,7 @@ function EventPacksAdminTab() {
   const openAdd = () => {
     setEditing(null);
     setForm(emptyForm);
+    setEventImagePreview(null);
     setShowForm(true);
   };
 
@@ -1286,6 +1388,7 @@ function EventPacksAdminTab() {
       features: pack.features.join(", "),
       color: pack.color,
     });
+    setEventImagePreview(pack.image || null);
     setShowForm(true);
   };
 
@@ -1362,15 +1465,49 @@ function EventPacksAdminTab() {
               <textarea placeholder=" " rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="w-full px-4 py-3 rounded-xl bg-muted border border-border text-foreground text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/30" />
               <label>Description</label>
             </div>
-            <div className="floating-label-group col-span-2">
-              <input placeholder=" " value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} />
-              <label>Image URL *</label>
+            {/* Drag & Drop Event Image Upload */}
+            <div
+              className={`col-span-2 relative border-2 border-dashed rounded-2xl transition-all cursor-pointer ${eventDragOver
+                ? "border-primary bg-primary/5 scale-[1.01]"
+                : eventImagePreview
+                  ? "border-primary/30 bg-primary/5"
+                  : "border-border hover:border-primary/40 hover:bg-muted/30"
+              }`}
+              onDragOver={(e) => { e.preventDefault(); setEventDragOver(true); }}
+              onDragLeave={() => setEventDragOver(false)}
+              onDrop={handleEventImageDrop}
+              onClick={() => document.getElementById("event-image-input")?.click()}
+            >
+              <input
+                id="event-image-input"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleEventImageSelect}
+              />
+              {eventImagePreview ? (
+                <div className="relative p-3">
+                  <img src={eventImagePreview} alt="Preview" className="w-full aspect-video object-cover rounded-xl" />
+                  <motion.button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); clearEventImage(); }}
+                    className="absolute top-5 right-5 w-7 h-7 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </motion.button>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8 gap-2">
+                  <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+                    <Upload className="w-5 h-5 text-muted-foreground" />
+                  </div>
+                  <p className="text-sm font-medium text-foreground">Drop event image here</p>
+                  <p className="text-xs text-muted-foreground">or click to browse</p>
+                </div>
+              )}
             </div>
-            {form.image && (
-              <div className="col-span-2">
-                <img src={form.image} alt="Preview" className="h-32 rounded-xl object-cover" />
-              </div>
-            )}
             <div>
               <label className="text-xs font-medium text-muted-foreground mb-1 block">Icon</label>
               <div className="flex gap-2">
