@@ -1,15 +1,16 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Minus, Plus, Trash2, ArrowRight, Tag, Check, X, Image } from "lucide-react";
+import { Minus, Plus, Trash2, ArrowRight, Tag, Check, X, Image, Upload } from "lucide-react";
 import { useCartStore } from "@/stores/cartStore";
 import { useProductStore } from "@/stores/productStore";
 import { useSiteContentStore } from "@/stores/siteContentStore";
 import { usePhotoStore, buildFilterString } from "@/stores/photoStore";
 import { Navbar } from "@/components/Navbar";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import confetti from "canvas-confetti";
 import { Footer } from "@/components/Footer";
 import { LottieFromPath } from "@/components/LottieFromPath";
+import { useToast } from "@/hooks/use-toast";
 
 const Cart = () => {
   const { items, removeFromCart, updateQuantity, subtotal, discountAmount, total, clearCart, appliedPromo, applyPromo, removePromo } = useCartStore();
@@ -18,6 +19,8 @@ const Cart = () => {
   const globalMin = orderQuantity.min ?? 4;
   const globalMax = orderQuantity.max ?? 12;
   const { photos } = usePhotoStore();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [promoInput, setPromoInput] = useState("");
   const [promoError, setPromoError] = useState("");
   const [promoLoading, setPromoLoading] = useState(false);
@@ -78,13 +81,26 @@ const Cart = () => {
                     {(() => {
                       const minQty = item.product.minQuantity ?? globalMin;
                       const maxQty = item.product.maxQuantity ?? globalMax;
+                      const handleIncrease = () => {
+                        const newQty = Math.min(maxQty, item.quantity + 1);
+                        if (item.product.customizable && newQty > photos.length) {
+                          updateQuantity(item.product.id, newQty);
+                          toast({
+                            title: "Upload more photos",
+                            description: `You need ${newQty - photos.length} more photo${newQty - photos.length !== 1 ? "s" : ""}. Redirecting...`,
+                          });
+                          navigate(`/products/${item.product.id}`);
+                          return;
+                        }
+                        updateQuantity(item.product.id, newQty);
+                      };
                       return (
                         <div className="flex items-center gap-1 bg-muted rounded-lg">
                           <button onClick={() => updateQuantity(item.product.id, Math.max(minQty, item.quantity - 1))} className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50" disabled={item.quantity <= minQty}>
                             <Minus className="w-3.5 h-3.5" />
                           </button>
                           <span className="w-8 text-center text-sm font-medium text-foreground">{item.quantity}</span>
-                          <button onClick={() => updateQuantity(item.product.id, Math.min(maxQty, item.quantity + 1))} className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50" disabled={item.quantity >= maxQty}>
+                          <button onClick={handleIncrease} className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50" disabled={item.quantity >= maxQty}>
                             <Plus className="w-3.5 h-3.5" />
                           </button>
                         </div>
@@ -102,35 +118,67 @@ const Cart = () => {
             ))}
 
             {/* Read-only photo preview */}
-            {photos.length > 0 && (
-              <div className="bg-card border border-border rounded-2xl p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <Image className="w-4 h-4 text-primary" />
-                  <h3 className="text-sm font-medium text-foreground">Your Photos ({photos.length})</h3>
+            {(() => {
+              const customItem = items.find((i) => i.product.customizable);
+              const requiredQty = customItem ? customItem.quantity : 0;
+              const missing = requiredQty - photos.length;
+              if (photos.length === 0 && missing <= 0) return null;
+              return (
+                <div className="bg-card border border-border rounded-2xl p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <Image className="w-4 h-4 text-primary" />
+                      <h3 className="text-sm font-medium text-foreground">Your Photos ({photos.length}{requiredQty > 0 ? `/${requiredQty}` : ""})</h3>
+                    </div>
+                    {missing > 0 && customItem && (
+                      <button
+                        onClick={() => navigate(`/products/${customItem.product.id}`)}
+                        className="flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                      >
+                        <Upload className="w-3.5 h-3.5" />
+                        Upload {missing} more
+                      </button>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-6 gap-2">
+                    {photos.map((photo, i) => (
+                      <motion.div
+                        key={photo.id}
+                        className="aspect-square rounded-lg overflow-hidden border border-border relative"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: i * 0.03 }}
+                      >
+                        <img
+                          src={photo.preview}
+                          alt={photo.name}
+                          className="w-full h-full object-cover"
+                          style={{ filter: buildFilterString(photo.adjustments, photo.filter) }}
+                        />
+                        <span className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[8px] font-bold flex items-center justify-center">
+                          {i + 1}
+                        </span>
+                      </motion.div>
+                    ))}
+                    {Array.from({ length: Math.max(0, missing) }).map((_, i) => (
+                      <motion.div
+                        key={`empty-${i}`}
+                        className="aspect-square rounded-lg border-2 border-dashed border-primary/30 flex items-center justify-center bg-primary/5 cursor-pointer hover:border-primary/60 transition-colors"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: (photos.length + i) * 0.03 }}
+                        onClick={() => customItem && navigate(`/products/${customItem.product.id}`)}
+                      >
+                        <div className="text-center">
+                          <Upload className="w-4 h-4 text-primary/40 mx-auto" />
+                          <span className="text-[8px] text-primary/40 font-medium">{photos.length + i + 1}</span>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
                 </div>
-                <div className="grid grid-cols-6 gap-2">
-                  {photos.map((photo, i) => (
-                    <motion.div
-                      key={photo.id}
-                      className="aspect-square rounded-lg overflow-hidden border border-border relative"
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: i * 0.03 }}
-                    >
-                      <img
-                        src={photo.preview}
-                        alt={photo.name}
-                        className="w-full h-full object-cover"
-                        style={{ filter: buildFilterString(photo.adjustments, photo.filter) }}
-                      />
-                      <span className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[8px] font-bold flex items-center justify-center">
-                        {i + 1}
-                      </span>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-            )}
+              );
+            })()}
           </div>
 
           {/* Summary */}
@@ -257,15 +305,30 @@ const Cart = () => {
                 <span>Total</span><span className="font-display">Rs{total().toFixed(2)}</span>
               </div>
             </div>
-            <Link to="/address">
-              <motion.button
-                className="w-full py-3 rounded-xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm flex items-center justify-center gap-2 mt-2"
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.97 }}
-              >
-                Proceed to Checkout <ArrowRight className="w-4 h-4" />
-              </motion.button>
-            </Link>
+            {(() => {
+              const customItem = items.find((i) => i.product.customizable);
+              const photosMissing = customItem ? customItem.quantity - photos.length > 0 : false;
+              return photosMissing ? (
+                <motion.button
+                  onClick={() => customItem && navigate(`/products/${customItem.product.id}`)}
+                  className="w-full py-3 rounded-xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm flex items-center justify-center gap-2 mt-2"
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  <Upload className="w-4 h-4" /> Upload {customItem!.quantity - photos.length} Missing Photo{customItem!.quantity - photos.length !== 1 ? "s" : ""}
+                </motion.button>
+              ) : (
+                <Link to="/address">
+                  <motion.button
+                    className="w-full py-3 rounded-xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm flex items-center justify-center gap-2 mt-2"
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.97 }}
+                  >
+                    Proceed to Checkout <ArrowRight className="w-4 h-4" />
+                  </motion.button>
+                </Link>
+              );
+            })()}
           </div>
         </div>
       </main>

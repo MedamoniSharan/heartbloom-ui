@@ -71,6 +71,15 @@ const ProductDetail = () => {
   const maxQty = product?.maxQuantity ?? orderQuantity.max ?? 12;
   const [qty, setQty] = useState(minQty);
 
+  // Auto-open upload if user comes back from cart with photos that need more
+  const cartItem = useCartStore.getState().items.find((i) => i.product.id === id);
+  useEffect(() => {
+    if (cartItem && product?.customizable && photos.length > 0 && photos.length < cartItem.quantity) {
+      setQty(cartItem.quantity);
+      setShowUploadSection(true);
+    }
+  }, [id]);
+
   useEffect(() => {
     if (!id) return;
     setReviewsLoading(true);
@@ -182,9 +191,15 @@ const ProductDetail = () => {
       toast({ title: "Upload all images", description: `Please upload ${qty} image${qty !== 1 ? "s" : ""} before adding to cart.`, variant: "destructive" });
       return;
     }
-    addToCart(product, qty);
+    const existingCartItem = useCartStore.getState().items.find((i) => i.product.id === product.id);
+    if (existingCartItem) {
+      useCartStore.getState().updateQuantity(product.id, qty);
+    } else {
+      addToCart(product, qty);
+    }
     setShowUploadSection(false);
-    toast({ title: "Added to cart!", description: `${qty}× ${product.name} with your photos` });
+    toast({ title: existingCartItem ? "Cart updated!" : "Added to cart!", description: `${qty}× ${product.name} with your photos` });
+    navigate("/cart");
   };
 
   return (
@@ -439,7 +454,7 @@ const ProductDetail = () => {
               <AnimatePresence>
                 {product.customizable && showUploadSection && (
                   <motion.div
-                    className="fixed inset-0 z-[70] bg-background flex flex-col"
+                    className="fixed inset-0 z-[200] bg-background flex flex-col"
                     initial={{ opacity: 0, y: "100%" }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: "100%" }}

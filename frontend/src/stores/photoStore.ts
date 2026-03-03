@@ -100,7 +100,13 @@ export const usePhotoStore = create<PhotoStore>((set) => ({
 
   updatePhoto: (id, updates) =>
     set((state) => ({
-      photos: state.photos.map((p) => (p.id === id ? { ...p, ...updates } : p)),
+      photos: state.photos.map((p) => {
+        if (p.id !== id) return p;
+        if (updates.preview && updates.preview !== p.preview) {
+          URL.revokeObjectURL(p.preview);
+        }
+        return { ...p, ...updates };
+      }),
     })),
 
   reorderPhotos: (fromIndex, toIndex) =>

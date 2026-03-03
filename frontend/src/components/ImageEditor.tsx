@@ -130,14 +130,83 @@ export const ImageEditor = ({ photo, onSave, onClose }: ImageEditorProps) => {
   }, [rotation, flipH, flipV]);
 
   const handleSave = () => {
-    onSave({
-      adjustments: { ...adjustments },
-      filter: selectedFilter,
-      rotation,
-      flipH,
-      flipV,
-    });
-    onClose();
+    const img = imageRef.current;
+    const container = imageContainerRef.current;
+    if (!img || !container) {
+      onSave({ adjustments: { ...adjustments }, filter: selectedFilter, rotation, flipH, flipV });
+      onClose();
+      return;
+    }
+
+    const naturalW = img.naturalWidth;
+    const naturalH = img.naturalHeight;
+    const displayRect = img.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+
+    const imgDisplayX = displayRect.left - containerRect.left;
+    const imgDisplayY = displayRect.top - containerRect.top;
+    const imgDisplayW = displayRect.width;
+    const imgDisplayH = displayRect.height;
+
+    const scaleX = naturalW / imgDisplayW;
+    const scaleY = naturalH / imgDisplayH;
+
+    // First, draw the full image with filters/rotation/flip onto a temp canvas
+    const isRotated90 = rotation % 180 !== 0;
+    const fullW = isRotated90 ? naturalH : naturalW;
+    const fullH = isRotated90 ? naturalW : naturalH;
+    const fullCanvas = document.createElement("canvas");
+    fullCanvas.width = fullW;
+    fullCanvas.height = fullH;
+    const fullCtx = fullCanvas.getContext("2d")!;
+    fullCtx.filter = buildFilterString(adjustments, selectedFilter);
+    fullCtx.translate(fullW / 2, fullH / 2);
+    if (rotation) fullCtx.rotate((rotation * Math.PI) / 180);
+    if (flipH) fullCtx.scale(-1, 1);
+    if (flipV) fullCtx.scale(1, -1);
+    fullCtx.drawImage(img, -naturalW / 2, -naturalH / 2, naturalW, naturalH);
+
+    let outputCanvas: HTMLCanvasElement;
+
+    if (cropBox) {
+      // Convert crop box from display coordinates to natural image coordinates
+      const cropNatX = Math.max(0, (cropBox.x - imgDisplayX) * scaleX);
+      const cropNatY = Math.max(0, (cropBox.y - imgDisplayY) * scaleY);
+      const cropNatW = Math.min(fullW - cropNatX, cropBox.w * scaleX);
+      const cropNatH = Math.min(fullH - cropNatY, cropBox.h * scaleY);
+
+      outputCanvas = document.createElement("canvas");
+      outputCanvas.width = Math.round(cropNatW);
+      outputCanvas.height = Math.round(cropNatH);
+      const cropCtx = outputCanvas.getContext("2d")!;
+      cropCtx.drawImage(
+        fullCanvas,
+        Math.round(cropNatX), Math.round(cropNatY), Math.round(cropNatW), Math.round(cropNatH),
+        0, 0, Math.round(cropNatW), Math.round(cropNatH)
+      );
+    } else {
+      outputCanvas = fullCanvas;
+    }
+
+    outputCanvas.toBlob((blob) => {
+      if (blob) {
+        const newFile = new File([blob], photo.name, { type: "image/jpeg" });
+        const newPreview = URL.createObjectURL(blob);
+        onSave({
+          file: newFile,
+          preview: newPreview,
+          adjustments: { ...DEFAULT_ADJUSTMENTS },
+          filter: "",
+          rotation: 0,
+          flipH: false,
+          flipV: false,
+          crop: null,
+        });
+      } else {
+        onSave({ adjustments: { ...adjustments }, filter: selectedFilter, rotation, flipH, flipV });
+      }
+      onClose();
+    }, "image/jpeg", 0.92);
   };
 
   saveRef.current = handleSave;
@@ -262,7 +331,7 @@ export const ImageEditor = ({ photo, onSave, onClose }: ImageEditorProps) => {
 
   return (
     <motion.div
-      className="fixed inset-0 z-[100] flex flex-col bg-[hsl(var(--navy))]"
+      className="fixed inset-0 z-[300] flex flex-col bg-[hsl(var(--navy))]"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
