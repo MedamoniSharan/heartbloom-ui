@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Reveal } from "@/components/Reveal";
+import { siteConfig } from "@/lib/siteConfig";
 
 const SECTIONS = [
   {
@@ -25,7 +26,7 @@ const SECTIONS = [
   },
   {
     title: "Your Rights",
-    content: `You have the right to access, correct, or delete your personal information at any time. You can also opt out of promotional emails, request a copy of your data, or ask us to stop processing your information. Contact us at privacy@magneticbliss.in to exercise these rights.`,
+    content: `You have the right to access, correct, or delete your personal information at any time. You can also opt out of promotional emails, request a copy of your data, or ask us to stop processing your information. Contact us at ${siteConfig.email} to exercise these rights.`,
   },
   {
     title: "Data Security",
@@ -71,8 +72,8 @@ const Privacy = () => (
         <div className="mt-12 p-5 bg-card border border-border rounded-2xl">
           <p className="text-sm text-muted-foreground">
             <strong className="text-foreground">Questions?</strong> Contact our privacy team at{" "}
-            <a href="mailto:privacy@magneticbliss.in" className="text-primary hover:underline">
-              privacy@magneticbliss.in
+            <a href={`mailto:${siteConfig.email}`} className="text-primary hover:underline">
+              {siteConfig.email}
             </a>
           </p>
         </div>

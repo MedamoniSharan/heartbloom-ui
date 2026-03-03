@@ -16,7 +16,7 @@ export const siteConfig = {
   /** Main website. */
   website: "https://www.magneticbliss.in",
   /** Contact email (optional). */
-  email: "hello@magneticbliss.in",
+  email: "magneticblissin@gmail.com",
   /** Logo image URL – set when asset is available. */
   logoUrl: "" as string,
 } as const;

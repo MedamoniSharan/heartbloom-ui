@@ -4,6 +4,7 @@ import { ChevronDown, HelpCircle } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Reveal } from "@/components/Reveal";
+import { siteConfig } from "@/lib/siteConfig";
 
 const FAQS = [
   {
@@ -36,7 +37,7 @@ const FAQS = [
     category: "Account & Support",
     items: [
       { q: "How do I create an account?", a: "Click 'Sign In' in the top right corner and select 'Create Account'. You can sign up with your email address." },
-      { q: "How do I contact support?", a: "You can reach us through our Contact page, email us at hello@magneticbliss.in, or chat with us on WhatsApp during business hours." },
+      { q: "How do I contact support?", a: `You can reach us through our Contact page, email us at ${siteConfig.email}, or chat with us on WhatsApp during business hours.` },
       { q: "Can I edit my photos after uploading?", a: "Yes! Our built-in image editor lets you crop, rotate, adjust brightness/contrast, and apply filters before ordering." },
     ],
   },
