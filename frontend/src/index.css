@@ -343,6 +343,15 @@
   transform-origin: 0 0;
 }
 
+/* Hide scrollbar for carousel */
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* Screen reader only */
 .sr-only {
   position: absolute;

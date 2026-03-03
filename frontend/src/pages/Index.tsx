@@ -4,6 +4,7 @@ import { HeroSection } from "@/components/HeroSection";
 import { HowItWorks } from "@/components/HowItWorks";
 import { ProductPreview } from "@/components/ProductPreview";
 import { TestimonialsSection } from "@/components/TestimonialsSection";
+import { FollowMyJourney } from "@/components/FollowMyJourney";
 import { Footer } from "@/components/Footer";
 import { ScrollProgress } from "@/components/ScrollProgress";
 import { PageTransition } from "@/components/PageTransition";
@@ -25,6 +26,7 @@ const Index = () => {
           <HeroSection onUploadClick={() => setUploadOpen(true)} />
           <HowItWorks />
           <ProductPreview />
+          <FollowMyJourney />
           <TestimonialsSection />
         </main>
         <Footer />

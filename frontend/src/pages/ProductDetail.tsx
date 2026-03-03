@@ -1,13 +1,16 @@
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ShoppingCart, Heart, Star, ChevronLeft, Check, Minus, Plus, Box } from "lucide-react";
+import { ShoppingCart, Heart, Star, ChevronLeft, Check, Minus, Plus, Box, Upload } from "lucide-react";
 import { useProductStore, Product } from "@/stores/productStore";
 import { useCartStore } from "@/stores/cartStore";
 import { useWishlistStore } from "@/stores/wishlistStore";
+import { useSiteContentStore } from "@/stores/siteContentStore";
+import { usePhotoStore } from "@/stores/photoStore";
 import { useToast } from "@/hooks/use-toast";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { UploadModal } from "@/components/UploadModal";
 import { Reveal } from "@/components/Reveal";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { MagnetMockup3D } from "@/components/MagnetMockup3D";
@@ -15,13 +18,18 @@ import { MagnetMockup3D } from "@/components/MagnetMockup3D";
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { products } = useProductStore();
-  const { addToCart } = useCartStore();
+  const { addToCart, setSocialMediaConsent, socialMediaConsent } = useCartStore();
   const { toggle, isWishlisted } = useWishlistStore();
+  const { clearPhotos } = usePhotoStore();
+  const { orderQuantity } = useSiteContentStore();
+  const minQty = orderQuantity.min ?? 4;
+  const maxQty = orderQuantity.max ?? 12;
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [qty, setQty] = useState(1);
+  const [qty, setQty] = useState(minQty);
   const [selectedImage, setSelectedImage] = useState(0);
   const [show3D, setShow3D] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
   const product = products.find((p) => p.id === id);
 
@@ -37,7 +45,8 @@ const ProductDetail = () => {
     );
   }
 
-  const images = product.images?.length ? product.images : [product.image];
+  const referenceImages = [product.image, ...(product.images || [])].slice(0, 4);
+  const images = referenceImages.length ? referenceImages : [product.image];
 
   const related = products.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4);
 
@@ -49,6 +58,18 @@ const ProductDetail = () => {
   const handleBuyNow = () => {
     addToCart(product, qty);
     navigate("/cart");
+  };
+
+  const openUploadFlow = () => {
+    clearPhotos();
+    setShowUploadModal(true);
+  };
+
+  const handleAddToCartFromUpload = (socialMediaConsent: boolean) => {
+    setSocialMediaConsent(socialMediaConsent);
+    addToCart(product, qty);
+    setShowUploadModal(false);
+    toast({ title: "Added to cart!", description: `${qty}× ${product.name} with your photos` });
   };
 
   return (
@@ -141,7 +162,12 @@ const ProductDetail = () => {
               </Reveal>
 
               <Reveal delay={120}>
-                <p className="text-3xl font-bold text-foreground font-display">Rs{product.price}</p>
+                <div className="flex flex-wrap items-baseline gap-2">
+                  {product.originalPrice != null && product.originalPrice > product.price && (
+                    <span className="text-lg text-muted-foreground line-through font-display">Rs{product.originalPrice}</span>
+                  )}
+                  <p className="text-3xl font-bold text-foreground font-display">Rs{product.price}</p>
+                </div>
               </Reveal>
 
               <Reveal delay={160}>
@@ -155,7 +181,7 @@ const ProductDetail = () => {
                 <Reveal delay={180}>
                   <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-primary/10 border border-primary/20">
                     <Check className="w-4 h-4 text-primary" />
-                    <span className="text-sm text-foreground">Upload & edit your photos after adding to cart</span>
+                    <span className="text-sm text-foreground">Upload {qty} photo{qty !== 1 ? "s" : ""} for your magnets, then add to cart</span>
                   </div>
                 </Reveal>
               )}
@@ -165,39 +191,88 @@ const ProductDetail = () => {
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-medium text-foreground">Quantity:</span>
                   <div className="flex items-center gap-1 bg-muted rounded-lg">
-                    <button onClick={() => setQty(Math.max(1, qty - 1))} className="w-9 h-9 flex items-center justify-center text-muted-foreground hover:text-foreground">
+                    <button onClick={() => setQty(Math.max(minQty, qty - 1))} className="w-9 h-9 flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-50" disabled={qty <= minQty}>
                       <Minus className="w-4 h-4" />
                     </button>
                     <span className="w-10 text-center text-sm font-medium text-foreground">{qty}</span>
-                    <button onClick={() => setQty(qty + 1)} className="w-9 h-9 flex items-center justify-center text-muted-foreground hover:text-foreground">
+                    <button onClick={() => setQty(Math.min(maxQty, qty + 1))} className="w-9 h-9 flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-50" disabled={qty >= maxQty}>
                       <Plus className="w-4 h-4" />
                     </button>
                   </div>
+                  <span className="text-xs text-muted-foreground">(min {minQty}, max {maxQty})</span>
                 </div>
+              </Reveal>
+
+              {/* Social media consent — on every product */}
+              <Reveal delay={220}>
+                <label className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 border border-border cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={socialMediaConsent}
+                    onChange={(e) => setSocialMediaConsent(e.target.checked)}
+                    className="rounded border-border text-primary focus:ring-primary"
+                  />
+                  <span className="text-sm text-foreground">
+                    I agree to have my order featured in your social media content.
+                  </span>
+                </label>
               </Reveal>
 
               {/* Actions */}
               <Reveal delay={240}>
                 <div className="flex flex-col sm:flex-row gap-3">
-                  <motion.button
-                    onClick={handleAdd}
-                    disabled={!product.inStock}
-                    className="flex-1 py-3.5 rounded-2xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm flex items-center justify-center gap-2 disabled:opacity-50"
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.97 }}
-                  >
-                    <ShoppingCart className="w-4 h-4" /> Add to Cart
-                  </motion.button>
-                  <motion.button
-                    onClick={handleBuyNow}
-                    disabled={!product.inStock}
-                    className="flex-1 py-3.5 rounded-2xl border border-primary text-primary font-medium text-sm hover:bg-primary/5 transition-colors disabled:opacity-50"
-                    whileTap={{ scale: 0.97 }}
-                  >
-                    Buy Now
-                  </motion.button>
+                  {product.customizable ? (
+                    <>
+                      <motion.button
+                        onClick={openUploadFlow}
+                        disabled={!product.inStock}
+                        className="flex-1 py-3.5 rounded-2xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.97 }}
+                      >
+                        <Upload className="w-4 h-4" /> Upload pictures
+                      </motion.button>
+                      <motion.button
+                        onClick={handleBuyNow}
+                        disabled={!product.inStock}
+                        className="flex-1 py-3.5 rounded-2xl border border-primary text-primary font-medium text-sm hover:bg-primary/5 transition-colors disabled:opacity-50"
+                        whileTap={{ scale: 0.97 }}
+                      >
+                        Buy Now
+                      </motion.button>
+                    </>
+                  ) : (
+                    <>
+                      <motion.button
+                        onClick={handleAdd}
+                        disabled={!product.inStock}
+                        className="flex-1 py-3.5 rounded-2xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.97 }}
+                      >
+                        <ShoppingCart className="w-4 h-4" /> Add to Cart
+                      </motion.button>
+                      <motion.button
+                        onClick={handleBuyNow}
+                        disabled={!product.inStock}
+                        className="flex-1 py-3.5 rounded-2xl border border-primary text-primary font-medium text-sm hover:bg-primary/5 transition-colors disabled:opacity-50"
+                        whileTap={{ scale: 0.97 }}
+                      >
+                        Buy Now
+                      </motion.button>
+                    </>
+                  )}
                 </div>
               </Reveal>
+
+              {product.customizable && (
+                <UploadModal
+                  open={showUploadModal}
+                  onClose={() => setShowUploadModal(false)}
+                  requiredCount={qty}
+                  onAddToCart={handleAddToCartFromUpload}
+                />
+              )}
 
               {!product.inStock && (
                 <p className="text-destructive text-sm font-medium">Currently out of stock</p>
@@ -218,7 +293,12 @@ const ProductDetail = () => {
                       </div>
                       <div className="p-3">
                         <h3 className="text-sm font-display font-semibold text-foreground truncate">{p.name}</h3>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                        {p.originalPrice != null && p.originalPrice > p.price && (
+                          <span className="text-xs text-muted-foreground line-through">Rs{p.originalPrice}</span>
+                        )}
                         <p className="text-primary font-bold font-display mt-1">Rs{p.price}</p>
+                      </div>
                       </div>
                     </Link>
                   </Reveal>

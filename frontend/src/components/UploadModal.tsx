@@ -2,13 +2,17 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDropzone } from "react-dropzone";
 import {
-  Upload, X, Camera, Image, Link2, Check, AlertCircle, Plus,
+  Upload, X, Camera, Image, Link2, Check, AlertCircle, Plus, ShoppingCart,
 } from "lucide-react";
 import { usePhotoStore, MAX_PHOTOS, ACCEPTED_TYPES, MAX_FILE_SIZE } from "@/stores/photoStore";
 
 interface UploadModalProps {
   open: boolean;
   onClose: () => void;
+  /** When set, user must upload this many images; shows "Add to Cart" when met. */
+  requiredCount?: number;
+  /** Called when user clicks Add to Cart (only when requiredCount is set and met). Passes current social media consent. */
+  onAddToCart?: (socialMediaConsent: boolean) => void;
 }
 
 interface UploadingFile {
@@ -40,12 +44,16 @@ function validateFile(file: File): string | null {
   return null;
 }
 
-export const UploadModal = ({ open, onClose }: UploadModalProps) => {
+export const UploadModal = ({ open, onClose, requiredCount, onAddToCart }: UploadModalProps) => {
   const { photos, addPhotos } = usePhotoStore();
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
   const [urlInput, setUrlInput] = useState("");
   const [showUrlInput, setShowUrlInput] = useState(false);
-  const remaining = MAX_PHOTOS - photos.length;
+  const [socialMediaConsent, setSocialMediaConsent] = useState(false);
+  const remaining = requiredCount != null
+    ? Math.max(0, requiredCount - photos.length)
+    : MAX_PHOTOS - photos.length;
+  const canAddToCart = requiredCount != null && onAddToCart != null && photos.length >= requiredCount;
 
   const [showCamera, setShowCamera] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -231,8 +239,14 @@ export const UploadModal = ({ open, onClose }: UploadModalProps) => {
             {/* Header */}
             <div className="sticky top-0 z-10 flex items-center justify-between px-6 pt-6 pb-3 bg-card/95 backdrop-blur-sm">
               <div>
-                <h3 className="font-display text-h3 text-foreground">Upload Photos</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">{photos.length}/{MAX_PHOTOS} photos added</p>
+                <h3 className="font-display text-h3 text-foreground">
+                  {requiredCount != null ? "Upload images" : "Upload Photos"}
+                </h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {requiredCount != null
+                    ? `${photos.length}/${requiredCount} photos added`
+                    : `${photos.length}/${MAX_PHOTOS} photos added`}
+                </p>
               </div>
               <motion.button
                 onClick={onClose}
@@ -333,7 +347,9 @@ export const UploadModal = ({ open, onClose }: UploadModalProps) => {
                   <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
                     <Check className="w-6 h-6 text-primary" />
                   </div>
-                  <p className="text-sm font-medium text-foreground">All {MAX_PHOTOS} slots filled!</p>
+                  <p className="text-sm font-medium text-foreground">
+                    All {requiredCount ?? MAX_PHOTOS} slot{(requiredCount ?? MAX_PHOTOS) !== 1 ? "s" : ""} filled!
+                  </p>
                   <p className="text-xs text-muted-foreground mt-1">Remove a photo to add a different one</p>
                 </div>
               )}
@@ -423,8 +439,35 @@ export const UploadModal = ({ open, onClose }: UploadModalProps) => {
                 </div>
               )}
 
+              {/* Social media consent (when Add to Cart flow) */}
+              {canAddToCart && (
+                <label className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 border border-border cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={socialMediaConsent}
+                    onChange={(e) => setSocialMediaConsent(e.target.checked)}
+                    className="rounded border-border text-primary focus:ring-primary"
+                  />
+                  <span className="text-sm text-foreground">
+                    I agree to have my order featured in your social media content.
+                  </span>
+                </label>
+              )}
+
               {/* Action buttons */}
-              {photos.length > 0 && (
+              {canAddToCart ? (
+                <motion.button
+                  onClick={() => {
+                    onAddToCart?.(socialMediaConsent);
+                    onClose();
+                  }}
+                  className="w-full py-3 rounded-2xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm flex items-center justify-center gap-2"
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <ShoppingCart className="w-4 h-4" /> Add to Cart
+                </motion.button>
+              ) : photos.length > 0 && !requiredCount ? (
                 <motion.button
                   onClick={onClose}
                   className="w-full py-3 rounded-2xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm"
@@ -433,7 +476,7 @@ export const UploadModal = ({ open, onClose }: UploadModalProps) => {
                 >
                   Continue with {photos.length} photo{photos.length !== 1 ? "s" : ""}
                 </motion.button>
-              )}
+              ) : null}
             </div>
 
             {/* Camera Overlay */}

@@ -21,7 +21,7 @@ export const Navbar = () => {
 
   return (
     <motion.header
-      className={`fixed left-0 right-0 z-50 pl-0 pr-6 py-4 ${hasPromos ? "top-8" : "top-0"}`}
+      className={`fixed left-0 right-0 z-50 pl-2 pr-6 py-4 ${hasPromos ? "top-8" : "top-0"}`}
       style={{
         backgroundColor: `hsl(var(--background) / ${bgOpacity})`,
         backdropFilter: "blur(20px)",
@@ -32,8 +32,8 @@ export const Navbar = () => {
         className="absolute bottom-0 left-0 right-0 h-px bg-border"
         style={{ opacity: borderOpacity }}
       />
-      <nav className="max-w-6xl mx-auto flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2 group">
+      <nav className="w-full flex items-center justify-between gap-4">
+        <Link to="/" className="flex items-center gap-2 group flex-shrink-0 min-w-0">
           {siteConfig.logoUrl ? (
             <img src={siteConfig.logoUrl} alt="Magnetic Bliss India" className="h-8 w-auto object-contain group-hover:scale-110 transition-transform" />
           ) : (
@@ -42,7 +42,7 @@ export const Navbar = () => {
           <span className="font-display text-xl font-bold text-foreground">Magnetic Bliss India</span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
+        <div className="hidden md:flex items-center gap-6 text-sm text-muted-foreground flex-1 justify-center min-w-0">
           <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
           <Link to="/products" className="hover:text-foreground transition-colors">Order Magnet</Link>
           <Link to="/bulk-orders" className="hover:text-foreground transition-colors">Bulk Orders</Link>
@@ -56,7 +56,7 @@ export const Navbar = () => {
         </div>
 
         <TooltipProvider delayDuration={150}>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <Tooltip>
               <TooltipTrigger asChild>
                 <button

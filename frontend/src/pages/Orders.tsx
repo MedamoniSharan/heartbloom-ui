@@ -121,6 +121,9 @@ const Orders = () => {
                       <img key={item.product.id} src={item.product.image} alt={item.product.name} className="w-14 h-14 rounded-lg object-cover flex-shrink-0" />
                     ))}
                   </div>
+                  {order.allowSocialMediaFeature && (
+                    <p className="text-xs text-primary font-medium mt-2">✓ OK to feature on social media</p>
+                  )}
                   <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
                     <span className="text-xs text-muted-foreground">{order.items.length} item{order.items.length > 1 ? "s" : ""}</span>
                     <span className="font-display font-bold text-foreground">Rs{order.total.toFixed(2)}</span>

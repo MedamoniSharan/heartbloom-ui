@@ -158,7 +158,12 @@ const Products = () => {
                         <span className="text-xs text-muted-foreground">({product.reviews})</span>
                       </div>
                       <div className="flex items-center justify-between pt-1">
-                        <span className="text-lg font-bold text-foreground font-display">Rs{product.price}</span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {product.originalPrice != null && product.originalPrice > product.price && (
+                            <span className="text-sm text-muted-foreground line-through">Rs{product.originalPrice}</span>
+                          )}
+                          <span className="text-lg font-bold text-foreground font-display">Rs{product.price}</span>
+                        </div>
                       </div>
                     </div>
                   </Link>

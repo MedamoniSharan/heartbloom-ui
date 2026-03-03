@@ -7,6 +7,7 @@ import orderRoutes from "./routes/orders.js";
 import promoRoutes from "./routes/promos.js";
 import wishlistRoutes from "./routes/wishlist.js";
 import contactRoutes from "./routes/contact.js";
+import journeyVideosRoutes from "./routes/journeyVideos.js";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -45,6 +46,7 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/promos", promoRoutes);
 app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/contact", contactRoutes);
+app.use("/api/journey-videos", journeyVideosRoutes);
 
 app.get("/api/health", (req, res) => res.json({ ok: true }));
 

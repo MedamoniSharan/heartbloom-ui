@@ -12,7 +12,7 @@ import { siteConfig } from "@/lib/siteConfig";
 
 const Address = () => {
   const navigate = useNavigate();
-  const { items, total, clearCart } = useCartStore();
+  const { items, total, clearCart, socialMediaConsent, setSocialMediaConsent } = useCartStore();
   const { user } = useAuthStore();
   const { addOrder } = useProductStore();
   const { toast } = useToast();
@@ -44,6 +44,7 @@ const Address = () => {
       total: total(),
       status: "pending",
       address: form,
+      allowSocialMediaFeature: socialMediaConsent,
     });
     if (!ok) {
       toast({ title: "Order failed", description: "Could not place order. Please try again.", variant: "destructive" });
@@ -103,6 +104,16 @@ const Address = () => {
                 <label>Country</label>
               </div>
             </div>
+
+            <label className="flex items-center gap-3 p-4 rounded-xl bg-muted/30 border border-border cursor-pointer">
+              <input
+                type="checkbox"
+                checked={socialMediaConsent}
+                onChange={(e) => setSocialMediaConsent(e.target.checked)}
+                className="rounded border-border text-primary focus:ring-primary"
+              />
+              <span className="text-sm text-foreground">I agree to have my order featured in your social media content.</span>
+            </label>
 
             <motion.button
               type="submit"

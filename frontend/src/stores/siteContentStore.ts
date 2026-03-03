@@ -19,6 +19,11 @@ export interface CoursesConfig {
   bookGroupUrl: string;
 }
 
+export interface OrderQuantityConfig {
+  min: number;
+  max: number;
+}
+
 const defaultBulk: BulkOrderConfig = {
   title: "Wholesale Orders",
   subtitle: "Interested in bulk orders?",
@@ -37,11 +42,18 @@ const defaultCourses: CoursesConfig = {
   bookGroupUrl: "https://calendly.com",
 };
 
+const defaultOrderQuantity: OrderQuantityConfig = {
+  min: 4,
+  max: 12,
+};
+
 interface SiteContentState {
   bulkOrder: BulkOrderConfig;
   courses: CoursesConfig;
+  orderQuantity: OrderQuantityConfig;
   setBulkOrder: (config: Partial<BulkOrderConfig>) => void;
   setCourses: (config: Partial<CoursesConfig>) => void;
+  setOrderQuantity: (config: Partial<OrderQuantityConfig>) => void;
 }
 
 export const useSiteContentStore = create<SiteContentState>()(
@@ -49,10 +61,13 @@ export const useSiteContentStore = create<SiteContentState>()(
     (set) => ({
       bulkOrder: defaultBulk,
       courses: defaultCourses,
+      orderQuantity: defaultOrderQuantity,
       setBulkOrder: (config) =>
         set((s) => ({ bulkOrder: { ...s.bulkOrder, ...config } })),
       setCourses: (config) =>
         set((s) => ({ courses: { ...s.courses, ...config } })),
+      setOrderQuantity: (config) =>
+        set((s) => ({ orderQuantity: { ...s.orderQuantity, ...config } })),
     }),
     { name: "magnetic-bliss-site-content" }
   )

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Upload, X, Tag, Check } from "lucide-react";
 import { useCartStore } from "@/stores/cartStore";
 import { useProductStore } from "@/stores/productStore";
+import { useSiteContentStore } from "@/stores/siteContentStore";
 import { usePhotoStore, MAX_PHOTOS, buildFilterString } from "@/stores/photoStore";
 import { Navbar } from "@/components/Navbar";
 import { Link } from "react-router-dom";
@@ -16,6 +17,9 @@ import { LottieFromPath } from "@/components/LottieFromPath";
 const Cart = () => {
   const { items, removeFromCart, updateQuantity, subtotal, discountAmount, total, clearCart, appliedPromo, applyPromo, removePromo } = useCartStore();
   const { validatePromo } = useProductStore();
+  const { orderQuantity } = useSiteContentStore();
+  const minQty = orderQuantity.min ?? 4;
+  const maxQty = orderQuantity.max ?? 12;
   const { photos, removePhoto, updatePhoto } = usePhotoStore();
   const [uploadOpen, setUploadOpen] = useState(false);
   const [editingPhotoId, setEditingPhotoId] = useState<string | null>(null);
@@ -77,7 +81,7 @@ const Cart = () => {
                   <img src={item.product.image} alt={item.product.name} className="w-20 h-20 rounded-xl object-cover flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <h3 className="font-display font-semibold text-foreground text-sm truncate">{item.product.name}</h3>
-                    <p className="text-muted-foreground text-xs mt-1">${item.product.price} each</p>
+                    <p className="text-muted-foreground text-xs mt-1">Rs{item.product.price} each</p>
 
                     {/* Edit pictures button for customizable products */}
                     {item.product.customizable && (
@@ -92,11 +96,11 @@ const Cart = () => {
 
                     <div className="flex items-center gap-3 mt-3">
                       <div className="flex items-center gap-1 bg-muted rounded-lg">
-                        <button onClick={() => updateQuantity(item.product.id, item.quantity - 1)} className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+                        <button onClick={() => updateQuantity(item.product.id, Math.max(minQty, item.quantity - 1))} className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50" disabled={item.quantity <= minQty}>
                           <Minus className="w-3.5 h-3.5" />
                         </button>
                         <span className="w-8 text-center text-sm font-medium text-foreground">{item.quantity}</span>
-                        <button onClick={() => updateQuantity(item.product.id, item.quantity + 1)} className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+                        <button onClick={() => updateQuantity(item.product.id, Math.min(maxQty, item.quantity + 1))} className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50" disabled={item.quantity >= maxQty}>
                           <Plus className="w-3.5 h-3.5" />
                         </button>
                       </div>
@@ -106,7 +110,7 @@ const Cart = () => {
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="font-display font-bold text-foreground">${(item.product.price * item.quantity).toFixed(2)}</span>
+                    <span className="font-display font-bold text-foreground">Rs{(item.product.price * item.quantity).toFixed(2)}</span>
                   </div>
                 </motion.div>
               ))}

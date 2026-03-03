@@ -8,6 +8,7 @@ import {
 import { useProductStore, Product, Order, PromoCode } from "@/stores/productStore";
 import { useSiteContentStore } from "@/stores/siteContentStore";
 import { useAuthStore } from "@/stores/authStore";
+import { journeyVideosApi, type ApiJourneyVideo } from "@/lib/api";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
@@ -187,7 +188,7 @@ const Admin = () => {
   const { user } = useAuthStore();
   const { products, orders, promoCodes, fetchOrders, fetchPromos, addProduct, removeProduct, updateOrderStatus, addPromoCode, removePromoCode, togglePromoCode, updatePromoCode } = useProductStore();
   const { toast } = useToast();
-  const [tab, setTab] = useState<"dashboard" | "analytics" | "orders" | "products" | "add" | "promos" | "bulk" | "courses">("dashboard");
+  const [tab, setTab] = useState<"dashboard" | "analytics" | "orders" | "products" | "add" | "promos" | "bulk" | "courses" | "journey" | "settings">("dashboard");
   const [newPromo, setNewPromo] = useState({ code: "", discount: "", description: "", expiresAt: "" });
   const [editingPromoId, setEditingPromoId] = useState<string | null>(null);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
@@ -200,7 +201,16 @@ const Admin = () => {
   }, [user?.role, fetchOrders, fetchPromos]);
 
   const SIZE_OPTIONS = ["2.5 x 2.5", "2 x 2", "Upload"] as const;
-  const [newProduct, setNewProduct] = useState({ name: "", description: "", price: "", image: "", category: "2.5 x 2.5" });
+  const REFERENCE_IMAGE_COUNT = 4;
+  const [newProduct, setNewProduct] = useState<{
+    name: string;
+    description: string;
+    price: string;
+    originalPrice: string;
+    image: string;
+    category: string;
+    images: string[];
+  }>({ name: "", description: "", price: "", originalPrice: "", image: "", category: "2.5 x 2.5", images: [] });
   const [dragOver, setDragOver] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
@@ -239,12 +249,14 @@ const Admin = () => {
         name: newProduct.name,
         description: newProduct.description,
         price: parseFloat(newProduct.price),
+        originalPrice: newProduct.originalPrice ? parseFloat(newProduct.originalPrice) : undefined,
         image: newProduct.image,
+        images: newProduct.images?.slice(0, REFERENCE_IMAGE_COUNT).filter(Boolean) || [],
         category: newProduct.category,
       });
       if (ok) {
         toast({ title: "Product updated!" });
-        setNewProduct({ name: "", description: "", price: "", image: "", category: "2.5 x 2.5" });
+        setNewProduct({ name: "", description: "", price: "", originalPrice: "", image: "", category: "2.5 x 2.5", images: [] });
         clearImage();
         setEditingProductId(null);
         setTab("products");
@@ -256,7 +268,9 @@ const Admin = () => {
         name: newProduct.name,
         description: newProduct.description,
         price: parseFloat(newProduct.price),
+        originalPrice: newProduct.originalPrice ? parseFloat(newProduct.originalPrice) : undefined,
         image: newProduct.image || "https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?w=400&h=400&fit=crop",
+        images: newProduct.images?.slice(0, REFERENCE_IMAGE_COUNT).filter(Boolean) || [],
         category: newProduct.category,
         rating: 4.5,
         reviews: 0,
@@ -264,7 +278,7 @@ const Admin = () => {
       });
       if (ok) {
         toast({ title: "Product added!" });
-        setNewProduct({ name: "", description: "", price: "", image: "", category: "2.5 x 2.5" });
+        setNewProduct({ name: "", description: "", price: "", originalPrice: "", image: "", category: "2.5 x 2.5", images: [] });
         clearImage();
         setTab("products");
       } else {
@@ -304,8 +318,8 @@ const Admin = () => {
 
         {/* Tabs */}
         <div className="flex gap-2 mb-6 border-b border-border pb-3 overflow-x-auto">
-          {(["dashboard", "analytics", "orders", "products", "add", "promos", "bulk", "courses"] as const).map((t) => {
-            const labels: Record<string, string> = { dashboard: "Dashboard", analytics: "Analytics", orders: "Orders", products: "Products", add: "Add Product", promos: "Promo Codes", bulk: "Bulk Orders", courses: "Courses" };
+          {(["dashboard", "analytics", "orders", "products", "add", "promos", "bulk", "courses", "journey", "settings"] as const).map((t) => {
+            const labels: Record<string, string> = { dashboard: "Dashboard", analytics: "Analytics", orders: "Orders", products: "Products", add: "Add Product", promos: "Promo Codes", bulk: "Bulk Orders", courses: "Courses", journey: "Follow My Journey", settings: "Settings" };
             return (
               <button
                 key={t}
@@ -335,6 +349,9 @@ const Admin = () => {
                     <span className="font-display font-bold text-foreground">{order.id}</span>
                     <p className="text-xs text-muted-foreground">{order.userName} · {new Date(order.createdAt).toLocaleDateString()}</p>
                     <p className="text-xs text-muted-foreground mt-1">{order.address.street}, {order.address.city}</p>
+                    {order.allowSocialMediaFeature && (
+                      <p className="text-xs text-primary font-medium mt-1.5">✓ OK to feature on social media</p>
+                    )}
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="font-display font-bold text-foreground">Rs{order.total.toFixed(2)}</span>
@@ -375,7 +392,7 @@ const Admin = () => {
                     <button
                       onClick={() => {
                         setEditingProductId(p.id);
-                        setNewProduct({ name: p.name, description: p.description, price: p.price.toString(), image: p.image, category: SIZE_OPTIONS.includes(p.category as any) ? p.category : "2.5 x 2.5" });
+                        setNewProduct({ name: p.name, description: p.description, price: p.price.toString(), originalPrice: p.originalPrice != null ? p.originalPrice.toString() : "", image: p.image, category: SIZE_OPTIONS.includes(p.category as any) ? p.category : "2.5 x 2.5", images: (p.images || []).slice(0, REFERENCE_IMAGE_COUNT) });
                         setImagePreview(p.image);
                         setTab("add");
                         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -406,7 +423,7 @@ const Admin = () => {
                 type="button"
                 onClick={() => {
                   setEditingProductId(null);
-                  setNewProduct({ name: "", description: "", price: "", image: "", category: "2.5 x 2.5" });
+                  setNewProduct({ name: "", description: "", price: "", originalPrice: "", image: "", category: "2.5 x 2.5", images: [] });
                   clearImage();
                   setTab("products");
                 }}
@@ -428,7 +445,11 @@ const Admin = () => {
             </div>
             <div className="floating-label-group">
               <input type="number" step="0.01" placeholder=" " value={newProduct.price} onChange={(e) => setNewProduct((p) => ({ ...p, price: e.target.value }))} required />
-              <label>Price (Rs)</label>
+              <label>Price (Rs) — sale price</label>
+            </div>
+            <div className="floating-label-group">
+              <input type="number" step="0.01" placeholder=" " value={newProduct.originalPrice} onChange={(e) => setNewProduct((p) => ({ ...p, originalPrice: e.target.value }))} />
+              <label>Original price (Rs) — optional, for showing discount</label>
             </div>
             {/* Drag & Drop Image Upload */}
             <div
@@ -480,6 +501,27 @@ const Admin = () => {
                   <p className="text-xs text-muted-foreground">or click to browse · PNG, JPG, WebP</p>
                 </div>
               )}
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Reference images (up to 4) — optional URLs</label>
+              <p className="text-xs text-muted-foreground">These show on the product page as reference. Main image above is always first.</p>
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i} className="flex gap-2 items-center">
+                  <span className="text-xs text-muted-foreground w-6">#{i + 1}</span>
+                  <input
+                    type="url"
+                    placeholder={`Reference image ${i + 1} URL`}
+                    value={newProduct.images?.[i] ?? ""}
+                    onChange={(e) => {
+                      const next = [...(newProduct.images || [])];
+                      while (next.length <= i) next.push("");
+                      next[i] = e.target.value;
+                      setNewProduct((p) => ({ ...p, images: next.slice(0, REFERENCE_IMAGE_COUNT) }));
+                    }}
+                    className="flex-1 rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+                  />
+                </div>
+              ))}
             </div>
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground">Size / Subcategory</label>
@@ -628,6 +670,15 @@ const Admin = () => {
         {tab === "courses" && (
           <CoursesAdminTab />
         )}
+
+        {/* Follow My Journey Tab */}
+        {tab === "journey" && (
+          <JourneyAdminTab toast={toast} />
+        )}
+
+        {tab === "settings" && (
+          <OrderQuantityAdminTab />
+        )}
       </main>
       <Footer />
     </div>
@@ -772,6 +823,181 @@ function CoursesAdminTab() {
         </div>
         <motion.button type="button" onClick={save} className="w-full py-3 rounded-xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.97 }}>
           Save Courses content
+        </motion.button>
+      </div>
+    </div>
+  );
+}
+
+function JourneyAdminTab({ toast }: { toast: (t: { title: string; description?: string; variant?: "destructive" }) => void }) {
+  const [videos, setVideos] = useState<ApiJourneyVideo[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [form, setForm] = useState({
+    url: "",
+    platform: "instagram" as "instagram" | "facebook",
+    thumbnailUrl: "",
+    username: "heartprinted",
+    views: "",
+    likes: "",
+    comments: "",
+  });
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  const fetchVideos = useCallback(() => {
+    setLoading(true);
+    journeyVideosApi.getAll().then(setVideos).catch(() => setVideos([])).finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    fetchVideos();
+  }, [fetchVideos]);
+
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.url.trim()) {
+      toast({ title: "URL is required", variant: "destructive" });
+      return;
+    }
+    try {
+      if (editingId) {
+        await journeyVideosApi.update(editingId, form);
+        toast({ title: "Video updated!" });
+        setEditingId(null);
+      } else {
+        await journeyVideosApi.create(form);
+        toast({ title: "Video added!" });
+      }
+      setForm({ url: "", platform: "instagram", thumbnailUrl: "", username: "heartprinted", views: "", likes: "", comments: "" });
+      fetchVideos();
+    } catch {
+      toast({ title: "Failed to save", variant: "destructive" });
+    }
+  };
+
+  const remove = async (id: string) => {
+    try {
+      await journeyVideosApi.delete(id);
+      toast({ title: "Video removed" });
+      fetchVideos();
+    } catch {
+      toast({ title: "Failed to remove", variant: "destructive" });
+    }
+  };
+
+  return (
+    <div className="max-w-2xl space-y-6">
+      <h3 className="font-display font-semibold text-foreground">Follow My Journey videos</h3>
+      <p className="text-xs text-muted-foreground">Instagram or Facebook video URLs. They appear in the carousel on the home page. Add thumbnail URL and engagement stats (views, likes, comments) for display.</p>
+      <form onSubmit={save} className="bg-card border border-border rounded-2xl p-6 shadow-card space-y-4">
+        <div className="floating-label-group">
+          <input type="url" placeholder=" " value={form.url} onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))} required />
+          <label>Video URL (Instagram Reel or Facebook Reel)</label>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs font-medium text-muted-foreground block mb-1.5">Platform</label>
+            <select value={form.platform} onChange={(e) => setForm((f) => ({ ...f, platform: e.target.value as "instagram" | "facebook" }))} className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground">
+              <option value="instagram">Instagram</option>
+              <option value="facebook">Facebook</option>
+            </select>
+          </div>
+          <div className="floating-label-group">
+            <input type="text" placeholder=" " value={form.username} onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))} />
+            <label>Username (e.g. heartprinted)</label>
+          </div>
+        </div>
+        <div className="floating-label-group">
+          <input type="url" placeholder=" " value={form.thumbnailUrl} onChange={(e) => setForm((f) => ({ ...f, thumbnailUrl: e.target.value }))} />
+          <label>Thumbnail image URL (optional)</label>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="floating-label-group">
+            <input type="text" placeholder=" " value={form.views} onChange={(e) => setForm((f) => ({ ...f, views: e.target.value }))} />
+            <label>Views (e.g. 27m)</label>
+          </div>
+          <div className="floating-label-group">
+            <input type="text" placeholder=" " value={form.likes} onChange={(e) => setForm((f) => ({ ...f, likes: e.target.value }))} />
+            <label>Likes (e.g. 605k)</label>
+          </div>
+          <div className="floating-label-group">
+            <input type="text" placeholder=" " value={form.comments} onChange={(e) => setForm((f) => ({ ...f, comments: e.target.value }))} />
+            <label>Comments</label>
+          </div>
+        </div>
+        <motion.button type="submit" className="w-full py-3 rounded-xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm flex items-center justify-center gap-2" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.97 }}>
+          {editingId ? "Save Changes" : <><Plus className="w-4 h-4" /> Add Video</>}
+        </motion.button>
+      </form>
+      <div className="space-y-3">
+        <h4 className="text-sm font-medium text-foreground">Videos on home page ({videos.length})</h4>
+        {loading ? (
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        ) : videos.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No videos yet. Add one above.</p>
+        ) : (
+          videos.map((v) => (
+            <div key={v.id} className="flex items-center justify-between gap-4 bg-card border border-border rounded-2xl p-4 shadow-card">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-foreground truncate">{v.url}</p>
+                <p className="text-xs text-muted-foreground">{v.platform} · @{v.username} {v.views && `· ${v.views} views`}</p>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingId(v.id);
+                    setForm({ url: v.url, platform: v.platform, thumbnailUrl: v.thumbnailUrl || "", username: v.username || "heartprinted", views: v.views || "", likes: v.likes || "", comments: v.comments || "" });
+                  }}
+                  className="text-xs font-medium text-primary hover:underline px-2"
+                >
+                  Edit
+                </button>
+                <button type="button" onClick={() => remove(v.id)} className="text-destructive hover:bg-destructive/10 rounded-lg p-1.5 transition-colors">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+function OrderQuantityAdminTab() {
+  const { orderQuantity, setOrderQuantity } = useSiteContentStore();
+  const { toast } = useToast();
+  const [min, setMin] = useState(() => orderQuantity.min.toString());
+  const [max, setMax] = useState(() => orderQuantity.max.toString());
+
+  const save = () => {
+    const minN = parseInt(min, 10);
+    const maxN = parseInt(max, 10);
+    if (isNaN(minN) || isNaN(maxN) || minN < 1 || maxN < minN) {
+      toast({ title: "Invalid values", description: "Min must be ≥ 1, max must be ≥ min.", variant: "destructive" });
+      return;
+    }
+    setOrderQuantity({ min: minN, max: maxN });
+    toast({ title: "Order quantity limits saved!" });
+  };
+
+  return (
+    <div className="max-w-xl space-y-4">
+      <h3 className="font-display font-semibold text-foreground">Order quantity limits</h3>
+      <p className="text-xs text-muted-foreground">Minimum and maximum quantity per product on product detail and in cart. Default: min 4, max 12.</p>
+      <div className="bg-card border border-border rounded-2xl p-6 shadow-card space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="floating-label-group">
+            <input type="number" min={1} placeholder=" " value={min} onChange={(e) => setMin(e.target.value)} />
+            <label>Minimum quantity</label>
+          </div>
+          <div className="floating-label-group">
+            <input type="number" min={1} placeholder=" " value={max} onChange={(e) => setMax(e.target.value)} />
+            <label>Maximum quantity</label>
+          </div>
+        </div>
+        <motion.button type="button" onClick={save} className="w-full py-3 rounded-xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.97 }}>
+          Save quantity limits
         </motion.button>
       </div>
     </div>

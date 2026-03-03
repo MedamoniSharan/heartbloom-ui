@@ -9,10 +9,13 @@ export interface CartItem {
 interface CartState {
   items: CartItem[];
   appliedPromo: { code: string; discount: number } | null;
+  /** Customer consent to feature this order on social media; sent with order for admin. */
+  socialMediaConsent: boolean;
   addToCart: (product: Product, qty?: number) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, qty: number) => void;
   clearCart: () => void;
+  setSocialMediaConsent: (value: boolean) => void;
   applyPromo: (code: string, discount: number) => void;
   removePromo: () => void;
   subtotal: () => number;
@@ -24,6 +27,7 @@ interface CartState {
 export const useCartStore = create<CartState>((set, get) => ({
   items: [],
   appliedPromo: null,
+  socialMediaConsent: false,
   addToCart: (product, qty = 1) => {
     set((state) => {
       const existing = state.items.find((i) => i.product.id === product.id);
@@ -38,7 +42,8 @@ export const useCartStore = create<CartState>((set, get) => ({
     if (qty <= 0) { get().removeFromCart(productId); return; }
     set((state) => ({ items: state.items.map((i) => i.product.id === productId ? { ...i, quantity: qty } : i) }));
   },
-  clearCart: () => set({ items: [], appliedPromo: null }),
+  clearCart: () => set({ items: [], appliedPromo: null, socialMediaConsent: false }),
+  setSocialMediaConsent: (value) => set({ socialMediaConsent: value }),
   applyPromo: (code, discount) => set({ appliedPromo: { code, discount } }),
   removePromo: () => set({ appliedPromo: null }),
   subtotal: () => get().items.reduce((sum, i) => sum + i.product.price * i.quantity, 0),

@@ -59,6 +59,7 @@ export interface ApiProduct {
   description: string;
   longDescription?: string;
   price: number;
+  originalPrice?: number;
   image: string;
   images?: string[];
   category: string;
@@ -107,13 +108,14 @@ export interface ApiOrder {
   total: number;
   status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
   address: ApiAddress;
+  allowSocialMediaFeature?: boolean;
   createdAt: string;
 }
 
 export const ordersApi = {
   getMine: () => request<ApiOrder[]>("/api/orders"),
   getAll: () => request<ApiOrder[]>("/api/orders/all"),
-  create: (body: { items: { product: ApiProduct; quantity: number }[]; total: number; address: ApiAddress }) =>
+  create: (body: { items: { product: ApiProduct; quantity: number }[]; total: number; address: ApiAddress; allowSocialMediaFeature?: boolean }) =>
     request<ApiOrder>("/api/orders", {
       method: "POST",
       body: JSON.stringify({
@@ -124,6 +126,7 @@ export const ordersApi = {
         })),
         total: body.total,
         address: body.address,
+        allowSocialMediaFeature: body.allowSocialMediaFeature === true,
       }),
     }),
   updateStatus: (orderId: string, status: ApiOrder["status"]) =>
@@ -175,4 +178,27 @@ export const contactApi = {
       method: "POST",
       body: JSON.stringify(body),
     }),
+};
+
+// Journey videos (Follow My Journey)
+export interface ApiJourneyVideo {
+  id: string;
+  url: string;
+  platform: "instagram" | "facebook";
+  thumbnailUrl: string;
+  username: string;
+  views: string;
+  likes: string;
+  comments: string;
+  order: number;
+}
+
+export const journeyVideosApi = {
+  getAll: () => request<ApiJourneyVideo[]>("/api/journey-videos"),
+  create: (body: { url: string; platform?: "instagram" | "facebook"; thumbnailUrl?: string; username?: string; views?: string; likes?: string; comments?: string; order?: number }) =>
+    request<ApiJourneyVideo>("/api/journey-videos", { method: "POST", body: JSON.stringify(body) }),
+  update: (id: string, body: Partial<ApiJourneyVideo>) =>
+    request<ApiJourneyVideo>(`/api/journey-videos/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+  delete: (id: string) =>
+    request<{ message: string }>(`/api/journey-videos/${id}`, { method: "DELETE" }),
 };

@@ -38,6 +38,7 @@ const orderSchema = new mongoose.Schema(
       default: "pending",
     },
     address: { type: addressSchema, required: true },
+    allowSocialMediaFeature: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

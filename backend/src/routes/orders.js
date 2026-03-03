@@ -24,6 +24,7 @@ function toOrderResponse(doc) {
     total: o.total,
     status: o.status,
     address: o.address,
+    allowSocialMediaFeature: o.allowSocialMediaFeature === true,
     createdAt: o.createdAt,
   };
 }
@@ -54,7 +55,7 @@ router.get("/all", authenticate, requireAdmin, async (req, res, next) => {
 
 router.post("/", authenticate, async (req, res, next) => {
   try {
-    const { items, total, address } = req.body;
+    const { items, total, address, allowSocialMediaFeature } = req.body;
     if (!items?.length || total == null || !address) {
       return res.status(400).json({ message: "items, total and address required" });
     }
@@ -76,6 +77,7 @@ router.post("/", authenticate, async (req, res, next) => {
       items: orderItems,
       total,
       address,
+      allowSocialMediaFeature: allowSocialMediaFeature === true,
     });
     const populated = await Order.findById(order._id).populate("items.product").lean();
     res.status(201).json(toOrderResponse(populated));

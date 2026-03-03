@@ -12,6 +12,7 @@ function toProductResponse(doc) {
     description: o.description,
     longDescription: o.longDescription,
     price: o.price,
+    originalPrice: o.originalPrice ?? undefined,
     image: o.image,
     images: o.images,
     category: o.category,

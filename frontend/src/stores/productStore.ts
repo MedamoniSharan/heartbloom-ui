@@ -7,6 +7,7 @@ export interface Product {
   description: string;
   longDescription?: string;
   price: number;
+  originalPrice?: number;
   image: string;
   images?: string[];
   category: string;
@@ -26,6 +27,7 @@ export interface Order {
   total: number;
   status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
   address: Address;
+  allowSocialMediaFeature?: boolean;
   createdAt: string;
 }
 
@@ -56,6 +58,7 @@ const mapProduct = (p: ApiProduct): Product => ({
   description: p.description,
   longDescription: p.longDescription,
   price: p.price,
+  originalPrice: p.originalPrice,
   image: p.image,
   images: p.images,
   category: p.category,
@@ -88,6 +91,7 @@ const mapOrder = (o: ApiOrder): Order => ({
   total: o.total,
   status: o.status,
   address: o.address,
+  allowSocialMediaFeature: o.allowSocialMediaFeature,
   createdAt: o.createdAt,
 });
 
@@ -178,6 +182,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
         longDescription: product.longDescription,
         price: product.price,
         image: product.image,
+        images: product.images?.slice(0, 4),
         category: product.category,
         rating: product.rating ?? 4.5,
         reviews: product.reviews ?? 0,
@@ -219,6 +224,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
         items: order.items,
         total: order.total,
         address: order.address,
+        allowSocialMediaFeature: order.allowSocialMediaFeature,
       });
       set((s) => ({ orders: [mapOrder(created), ...s.orders] }));
       return true;
