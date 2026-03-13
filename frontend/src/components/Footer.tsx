@@ -9,6 +9,8 @@ const quickLinks = [
   { to: "/contact", label: "Contact" },
   { to: "/products", label: "Products" },
   { to: "/privacy", label: "Privacy" },
+  { to: "/refunds", label: "Refunds" },
+  { to: "/terms", label: "Terms" },
 ] as const;
 
 export const Footer = () => (

@@ -18,7 +18,7 @@ const SECTIONS = [
   },
   {
     title: "Sharing Your Information",
-    content: `We share your information only with trusted service providers who assist in operating our business: payment processors (Stripe), shipping carriers, and cloud hosting providers. We never sell your personal information to third parties.`,
+    content: `We share your information only with trusted service providers who assist in operating our business: payment processors (including Razorpay for secure payment processing), shipping carriers, and cloud hosting providers. We never sell your personal information to third parties.`,
   },
   {
     title: "Cookies & Tracking",

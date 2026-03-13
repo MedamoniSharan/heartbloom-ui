@@ -30,6 +30,8 @@ import Gallery from "./pages/Gallery";
 import About from "./pages/About";
 import FAQ from "./pages/FAQ";
 import Privacy from "./pages/Privacy";
+import Refunds from "./pages/Refunds";
+import Terms from "./pages/Terms";
 const queryClient = new QueryClient();
 
 const App = () => {
@@ -81,6 +83,8 @@ const App = () => {
             <Route path="/about" element={<About />} />
             <Route path="/faq" element={<FAQ />} />
             <Route path="/privacy" element={<Privacy />} />
+            <Route path="/refunds" element={<Refunds />} />
+            <Route path="/terms" element={<Terms />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
