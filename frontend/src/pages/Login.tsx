@@ -5,6 +5,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { LottieFromPath } from "@/components/LottieFromPath";
+import { siteConfig } from "@/lib/siteConfig";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -56,7 +57,11 @@ const Login = () => {
       >
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 mb-6">
-            <Heart className="w-8 h-8 text-primary fill-primary" />
+            {siteConfig.logoUrl ? (
+              <img src={siteConfig.logoUrl} alt="Magnetic Bliss India" className="h-10 w-auto object-contain" />
+            ) : (
+              <Heart className="w-8 h-8 text-primary fill-primary" />
+            )}
             <span className="font-display text-2xl font-bold text-foreground">Magnetic Bliss India</span>
           </Link>
           <h1 className="text-h2 text-foreground">Welcome Back</h1>

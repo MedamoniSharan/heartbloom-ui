@@ -5,6 +5,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { useNavigate, Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { LottieFromPath } from "@/components/LottieFromPath";
+import { siteConfig } from "@/lib/siteConfig";
 
 const Signup = () => {
   const [name, setName] = useState("");
@@ -35,7 +36,11 @@ const Signup = () => {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 mb-6">
-            <Heart className="w-8 h-8 text-primary fill-primary" />
+            {siteConfig.logoUrl ? (
+              <img src={siteConfig.logoUrl} alt="Magnetic Bliss India" className="h-10 w-auto object-contain" />
+            ) : (
+              <Heart className="w-8 h-8 text-primary fill-primary" />
+            )}
             <span className="font-display text-2xl font-bold text-foreground">Magnetic Bliss India</span>
           </Link>
           <h1 className="text-h2 text-foreground">Create Account</h1>
