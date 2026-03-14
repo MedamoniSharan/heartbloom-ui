@@ -27,10 +27,11 @@ const Products = () => {
   const [search, setSearch] = useState("");
   const [sizeFilter, setSizeFilter] = useState("All");
 
-  const sizeOptions = ["All", ...new Set(products.map((p) => p.category).filter(Boolean))];
+  const sizeOptions = ["All", ...new Set(products.map((p) => p.category).filter(Boolean))].filter((s) => s !== "Upload");
+  const activeFilter = sizeFilter === "Upload" ? "All" : sizeFilter;
   const filtered = products.filter((p) => {
     const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
-    const matchSize = sizeFilter === "All" || p.category === sizeFilter;
+    const matchSize = activeFilter === "All" || p.category === activeFilter;
     return matchSearch && matchSize;
   });
 
@@ -69,13 +70,13 @@ const Products = () => {
                   <motion.button
                     key={size}
                     onClick={() => setSizeFilter(size)}
-                    className={`relative px-4 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-200 ${sizeFilter === size
+                    className={`relative px-4 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-200 ${activeFilter === size
                       ? "text-primary-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted"
                       }`}
                     whileTap={{ scale: 0.95 }}
                   >
-                    {sizeFilter === size && (
+                    {activeFilter === size && (
                       <motion.div
                         layoutId="activeFilter"
                         className="absolute inset-0 bg-primary rounded-lg"

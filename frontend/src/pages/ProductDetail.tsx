@@ -505,7 +505,7 @@ const ProductDetail = () => {
                         <div className="px-6 pt-6 max-w-4xl mx-auto">
                           <div
                             {...uploadDropzone.getRootProps()}
-                            className={`rounded-2xl border-2 border-dashed px-6 py-6 text-center cursor-pointer transition-all ${
+                            className={`rounded-none border-2 border-dashed px-6 py-6 text-center cursor-pointer transition-all ${
                               uploadDropzone.isDragActive ? "border-primary bg-primary/5" : "border-border hover:border-primary/40 hover:bg-muted/20"
                             }`}
                           >
@@ -525,7 +525,7 @@ const ProductDetail = () => {
                             return (
                               <motion.div
                                 key={idx}
-                                className={`relative aspect-square rounded-2xl overflow-hidden transition-all ${
+                                className={`relative aspect-square rounded-none overflow-hidden transition-all ${
                                   photo ? "ring-2 ring-primary/30 shadow-lg" : "border-2 border-dashed border-border hover:border-primary/30 bg-muted/5"
                                 }`}
                                 initial={{ opacity: 0, scale: 0.9 }}

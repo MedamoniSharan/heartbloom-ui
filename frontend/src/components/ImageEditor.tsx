@@ -41,13 +41,7 @@ const SLIDER_CONFIG: { key: keyof Adjustments; label: string; min: number; max: 
   { key: "enhance", label: "Enhance", min: 0, max: 1, step: 0.01, defaultVal: 0 },
 ];
 
-const ASPECT_RATIOS = [
-  { label: "Free", ratio: null },
-  { label: "1:1", ratio: 1 },
-  { label: "4:3", ratio: 4 / 3 },
-  { label: "3:2", ratio: 3 / 2 },
-  { label: "16:9", ratio: 16 / 9 },
-] as const;
+const ASPECT_RATIOS = [{ label: "1:1", ratio: 1 }] as const;
 
 export const ImageEditor = ({ photo, onSave, onClose }: ImageEditorProps) => {
   const [tab, setTab] = useState<EditorTab>("adjust");
@@ -57,7 +51,7 @@ export const ImageEditor = ({ photo, onSave, onClose }: ImageEditorProps) => {
   const [flipH, setFlipH] = useState(photo.flipH);
   const [flipV, setFlipV] = useState(photo.flipV);
   const [cropBox, setCropBox] = useState<CropBox | null>(null);
-  const [aspectRatio, setAspectRatio] = useState<number | null>(null);
+  const [aspectRatio, setAspectRatio] = useState<number | null>(1);
   const [dragging, setDragging] = useState<string | null>(null);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [cropStart, setCropStart] = useState<CropBox>({ x: 0, y: 0, w: 0, h: 0 });
@@ -70,14 +64,18 @@ export const ImageEditor = ({ photo, onSave, onClose }: ImageEditorProps) => {
   ]);
   const [historyIndex, setHistoryIndex] = useState(0);
 
-  // Initialize crop box when switching to crop tab
+  // Initialize crop box when switching to crop tab (1:1 square)
   useEffect(() => {
     if (tab === "crop" && !cropBox && imageRef.current && imageContainerRef.current) {
       const container = imageContainerRef.current.getBoundingClientRect();
       const img = imageRef.current.getBoundingClientRect();
       const relX = img.left - container.left;
       const relY = img.top - container.top;
-      setCropBox({ x: relX + 20, y: relY + 20, w: img.width - 40, h: img.height - 40 });
+      const maxSide = Math.min(img.width - 40, img.height - 40, container.width - 40, container.height - 40);
+      const size = Math.max(80, Math.min(maxSide, img.width - 40, img.height - 40));
+      const x = relX + (img.width - size) / 2;
+      const y = relY + (img.height - size) / 2;
+      setCropBox({ x, y, w: size, h: size });
     }
   }, [tab, cropBox]);
 

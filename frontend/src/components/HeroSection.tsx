@@ -3,7 +3,6 @@ import { Heart, ArrowRight } from "lucide-react";
 import { StatCounter } from "./StatCounter";
 import { Reveal } from "./Reveal";
 import { useSiteContentStore } from "@/stores/siteContentStore";
-import { siteConfig } from "@/lib/siteConfig";
 import heroImage from "@/assets/hero-magnets.jpg";
 
 const stagger = {
@@ -53,13 +52,6 @@ export const HeroSection = ({ onUploadClick }: HeroSectionProps) => {
             initial="hidden"
             animate="visible"
           >
-            {/* Logo */}
-            {siteConfig.logoUrl && (
-              <motion.div variants={fadeUp} className="mb-6">
-                <img src={siteConfig.logoUrl} alt="Magnetic Bliss India" className="h-14 w-auto object-contain max-w-[200px]" />
-              </motion.div>
-            )}
-
             {/* Badge */}
             <motion.div variants={fadeUp} className="mb-6">
               <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium">
