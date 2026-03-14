@@ -99,7 +99,7 @@ router.post("/", async (req, res, next) => {
       total,
       address,
       allowSocialMediaFeature: allowSocialMediaFeature === true,
-      customerPhotos: Array.isArray(customerPhotos) ? customerPhotos.slice(0, 12) : [],
+      customerPhotos: Array.isArray(customerPhotos) ? customerPhotos.slice(0, 20) : [],
     });
     const populated = await Order.findById(order._id).populate("items.product").lean();
     res.status(201).json(toOrderResponse(populated));

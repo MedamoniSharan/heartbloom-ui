@@ -47,7 +47,7 @@ export const DEFAULT_ADJUSTMENTS: Adjustments = {
   enhance: 0,
 };
 
-export const MAX_PHOTOS = 9;
+export const MAX_PHOTOS = 15;
 
 export const ACCEPTED_TYPES = [
   "image/jpeg",

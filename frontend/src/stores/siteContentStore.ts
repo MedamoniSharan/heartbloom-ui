@@ -50,7 +50,7 @@ const defaultCourses: CoursesConfig = {
 
 const defaultOrderQuantity: OrderQuantityConfig = {
   min: 4,
-  max: 12,
+  max: 15,
 };
 
 const defaultHeroStats: HeroStatsConfig = {
