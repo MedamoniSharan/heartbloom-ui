@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Plus, Trash2, Settings, ImageIcon, ChevronRight,
+  Plus, Trash2, Settings, ImageIcon,
   Shield, Truck, Heart, Lock, Check,
 } from "lucide-react";
 import { usePhotoStore, MAX_PHOTOS, buildFilterString } from "@/stores/photoStore";
@@ -21,14 +21,11 @@ export const ProductPreview = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editorTab, setEditorTab] = useState<"crop" | "filters">("crop");
   const [uploadOpen, setUploadOpen] = useState(false);
-  const [isSubscription, setIsSubscription] = useState(false);
 
   const editingPhoto = photos.find((p) => p.id === editingId);
   const filled = photos.length;
   const progress = (filled / MAX_PHOTOS) * 100;
   const remaining = MAX_PHOTOS - filled;
-
-  const price = isSubscription ? 21.99 : 24.99;
 
   // Generate 9 slots — filled from photos, rest empty
   const slots = Array.from({ length: MAX_PHOTOS }, (_, i) => photos[i] || null);
@@ -164,61 +161,6 @@ export const ProductPreview = () => {
                   All {MAX_PHOTOS} slots filled!
                 </div>
               )}
-            </div>
-
-            {/* Pricing */}
-            <div className="p-5 rounded-2xl bg-card shadow-card border border-border space-y-4">
-              {/* Subscription toggle */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-foreground">
-                    {isSubscription ? "Monthly Subscription" : "One-time Purchase"}
-                  </p>
-                  {isSubscription && (
-                    <p className="text-xs text-primary">Save $3.00/month</p>
-                  )}
-                </div>
-                <button
-                  onClick={() => setIsSubscription(!isSubscription)}
-                  className={`relative w-12 h-7 rounded-full transition-colors ${
-                    isSubscription ? "bg-primary" : "bg-border"
-                  }`}
-                  role="switch"
-                  aria-checked={isSubscription}
-                >
-                  <motion.div
-                    className="absolute top-0.5 left-0.5 w-6 h-6 rounded-full bg-primary-foreground shadow-sm"
-                    animate={{ x: isSubscription ? 20 : 0 }}
-                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                  />
-                </button>
-              </div>
-
-              <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-bold text-foreground font-display">
-                  ${price.toFixed(2)}
-                </span>
-                {isSubscription && (
-                  <span className="text-xs text-muted-foreground">/month</span>
-                )}
-              </div>
-
-              {/* Checkout button */}
-              <motion.button
-                className="w-full py-3.5 rounded-2xl bg-gradient-pink-animated text-primary-foreground font-medium text-sm glow-pink-sm flex items-center justify-center gap-2"
-                whileHover={{ scale: 1.01, y: -1 }}
-                whileTap={{ scale: 0.97 }}
-                disabled={filled === 0}
-              >
-                {filled > 0 ? (
-                  <>
-                    Proceed to Checkout
-                    <ChevronRight className="w-4 h-4" />
-                  </>
-                ) : (
-                  "Add photos to continue"
-                )}
-              </motion.button>
             </div>
 
             {/* Trust badges */}
