@@ -7,13 +7,6 @@ import { Reveal } from "@/components/Reveal";
 import { useProductStore } from "@/stores/productStore";
 import { useCartStore } from "@/stores/cartStore";
 import { useToast } from "@/hooks/use-toast";
-import logoMpro from "@/assets/logo-mpro.png";
-import logoTitan from "@/assets/logo-titan.png";
-
-const logos: Record<string, string> = {
-  eq1: logoMpro,
-  eq2: logoTitan,
-};
 
 const specData: Record<string, { label: string; value: string }[]> = {
   eq1: [
@@ -63,13 +56,6 @@ const Equipment = () => {
                   whileHover={{ y: -4 }}
                   transition={{ type: "spring", stiffness: 300, damping: 25 }}
                 >
-                  {/* Brand Logo */}
-                  {logos[eqKey] && (
-                    <div className="flex items-center justify-center py-5 border-b border-border bg-muted/30">
-                      <img src={logos[eqKey]} alt={item.name + " logo"} className="h-8 object-contain" />
-                    </div>
-                  )}
-
                   {/* Product Image — links to detail */}
                   <Link to={`/products/${item.id}`} className="block">
                     <div className="aspect-[5/4] overflow-hidden bg-muted relative">

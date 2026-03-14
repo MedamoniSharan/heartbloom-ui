@@ -67,8 +67,9 @@ const ProductDetail = () => {
   const [submitting, setSubmitting] = useState(false);
 
   const product = products.find((p) => p.id === id);
-  const minQty = product?.minQuantity ?? orderQuantity.min ?? 4;
-  const maxQty = product?.maxQuantity ?? orderQuantity.max ?? 12;
+  const isEquipment = product?.category === "Equipment";
+  const minQty = isEquipment ? 1 : (product?.minQuantity ?? orderQuantity.min ?? 4);
+  const maxQty = isEquipment ? 999 : (product?.maxQuantity ?? orderQuantity.max ?? 12);
   const [qty, setQty] = useState(minQty);
 
   // Auto-open upload if user comes back from cart with photos that need more
@@ -342,22 +343,26 @@ const ProductDetail = () => {
                       <Plus className="w-4 h-4" />
                     </button>
                   </div>
-                  <span className="text-xs text-muted-foreground">(min {minQty}, max {maxQty})</span>
+                  {!isEquipment && (
+                    <span className="text-xs text-muted-foreground">(min {minQty}, max {maxQty})</span>
+                  )}
                 </div>
               </Reveal>
 
-              {/* Social media consent — on every product */}
-              <Reveal delay={220}>
-                <label className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 border border-border cursor-pointer">
-                  <Switch
-                    checked={socialMediaConsent}
-                    onCheckedChange={setSocialMediaConsent}
-                  />
-                  <span className="text-sm text-foreground">
-                    I agree to have my order featured in your social media content.
-                  </span>
-                </label>
-              </Reveal>
+              {/* Social media consent — not shown for Equipment / machine products */}
+              {product.category !== "Equipment" && (
+                <Reveal delay={220}>
+                  <label className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 border border-border cursor-pointer">
+                    <Switch
+                      checked={socialMediaConsent}
+                      onCheckedChange={setSocialMediaConsent}
+                    />
+                    <span className="text-sm text-foreground">
+                      I agree to have my order featured in your social media content.
+                    </span>
+                  </label>
+                </Reveal>
+              )}
 
               {/* Actions */}
               <Reveal delay={240}>
