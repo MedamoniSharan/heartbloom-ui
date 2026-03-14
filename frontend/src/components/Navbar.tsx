@@ -48,7 +48,7 @@ export const Navbar = () => {
           <Link to="/bulk-orders" className="hover:text-foreground transition-colors">Bulk Orders</Link>
           <Link to="/courses" className="hover:text-foreground transition-colors">Courses</Link>
           <Link to="/events" className="hover:text-foreground transition-colors">Events</Link>
-          <Link to="/gallery" className="hover:text-foreground transition-colors">Gallery</Link>
+          <Link to="/gallery" className="hover:text-foreground transition-colors">Reviews</Link>
           <Link to="/equipment" className="hover:text-foreground transition-colors">Machines</Link>
           <Link to="/contact" className="hover:text-foreground transition-colors">Contact</Link>
           {isAuthenticated && <Link to="/orders" className="hover:text-foreground transition-colors">Orders</Link>}
