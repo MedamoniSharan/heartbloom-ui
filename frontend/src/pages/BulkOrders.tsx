@@ -70,7 +70,7 @@ const BulkOrders = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="pt-32 px-6 pb-16 max-w-3xl mx-auto">
+      <main className="pt-24 px-4 sm:pt-32 sm:px-6 pb-12 sm:pb-16 max-w-3xl mx-auto">
         <Reveal>
           <h1 className="text-h1 text-foreground mb-2">{bulkOrder.title || "Wholesale Orders"}</h1>
         </Reveal>

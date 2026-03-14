@@ -18,7 +18,7 @@ const Courses = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="pt-32 px-6 pb-16">
+      <main className="pt-24 px-4 sm:pt-32 sm:px-6 pb-12 sm:pb-16">
         {/* Hero Section */}
         <div className="max-w-4xl mx-auto text-center mb-12">
           <Reveal>

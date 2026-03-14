@@ -101,7 +101,7 @@ const Address = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="pt-32 px-6 pb-16 max-w-5xl mx-auto">
+      <main className="pt-24 px-4 sm:pt-32 sm:px-6 pb-12 sm:pb-16 max-w-5xl mx-auto">
         <h1 className="text-h1 text-foreground mb-2">Shipping Address</h1>
         <p className="text-muted-foreground mb-8 text-sm">Where should we deliver your magnets?</p>
 

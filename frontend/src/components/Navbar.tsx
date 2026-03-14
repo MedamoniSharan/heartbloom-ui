@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { Heart, LogOut, Shield, ShoppingCart, RefreshCw } from "lucide-react";
+import { Heart, LogOut, Shield, ShoppingCart, RefreshCw, Menu } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import { useAuthStore } from "@/stores/authStore";
 import { useProductStore } from "@/stores/productStore";
 import { useCartStore } from "@/stores/cartStore";
@@ -9,7 +11,19 @@ import { useWishlistStore } from "@/stores/wishlistStore";
 import { Link, useNavigate } from "react-router-dom";
 import { siteConfig } from "@/lib/siteConfig";
 
+const navLinks = [
+  { to: "/", label: "Home" },
+  { to: "/products", label: "Order Magnet" },
+  { to: "/bulk-orders", label: "Bulk Orders" },
+  { to: "/courses", label: "Courses" },
+  { to: "/events", label: "Events" },
+  { to: "/gallery", label: "Reviews" },
+  { to: "/equipment", label: "Machines" },
+  { to: "/contact", label: "Contact" },
+];
+
 export const Navbar = () => {
+  const [mobileOpen, setMobileOpen] = useState(false);
   const { scrollY } = useScroll();
   const bgOpacity = useTransform(scrollY, [0, 80], [0, 1]);
   const borderOpacity = useTransform(scrollY, [0, 80], [0, 1]);
@@ -21,7 +35,7 @@ export const Navbar = () => {
 
   return (
     <motion.header
-      className={`fixed left-0 right-0 z-50 pl-2 pr-6 py-4 ${hasPromos ? "top-8" : "top-0"}`}
+      className={`fixed left-0 right-0 z-50 px-4 sm:pl-2 sm:pr-6 py-4 ${hasPromos ? "top-8" : "top-0"}`}
       style={{
         backgroundColor: `hsl(var(--background) / ${bgOpacity})`,
         backdropFilter: "blur(20px)",
@@ -32,28 +46,60 @@ export const Navbar = () => {
         className="absolute bottom-0 left-0 right-0 h-px bg-border"
         style={{ opacity: borderOpacity }}
       />
-      <nav className="w-full flex items-center justify-between gap-4">
+      <nav className="w-full flex items-center justify-between gap-2 sm:gap-4">
         <Link to="/" className="flex items-center gap-2 group flex-shrink-0 min-w-0">
           {siteConfig.logoUrl ? (
-            <img src={siteConfig.logoUrl} alt="Magnetic Bliss India" className="h-8 w-auto object-contain group-hover:scale-110 transition-transform" />
+            <img src={siteConfig.logoUrl} alt="Magnetic Bliss India" className="h-7 w-auto sm:h-8 object-contain group-hover:scale-110 transition-transform flex-shrink-0" />
           ) : (
-            <Heart className="w-6 h-6 text-primary fill-primary group-hover:scale-110 transition-transform" />
+            <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-primary fill-primary group-hover:scale-110 transition-transform flex-shrink-0" />
           )}
-          <span className="font-display text-xl font-bold text-foreground">Magnetic Bliss India</span>
+          <span className="font-display text-base sm:text-xl font-bold text-foreground truncate max-w-[140px] sm:max-w-none">Magnetic Bliss India</span>
         </Link>
 
         <div className="hidden md:flex items-center gap-6 text-sm text-muted-foreground flex-1 justify-center min-w-0">
-          <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
-          <Link to="/products" className="hover:text-foreground transition-colors">Order Magnet</Link>
-          <Link to="/bulk-orders" className="hover:text-foreground transition-colors">Bulk Orders</Link>
-          <Link to="/courses" className="hover:text-foreground transition-colors">Courses</Link>
-          <Link to="/events" className="hover:text-foreground transition-colors">Events</Link>
-          <Link to="/gallery" className="hover:text-foreground transition-colors">Reviews</Link>
-          <Link to="/equipment" className="hover:text-foreground transition-colors">Machines</Link>
-          <Link to="/contact" className="hover:text-foreground transition-colors">Contact</Link>
+          {navLinks.map(({ to, label }) => (
+            <Link key={to} to={to} className="hover:text-foreground transition-colors whitespace-nowrap">{label}</Link>
+          ))}
           {isAuthenticated && <Link to="/orders" className="hover:text-foreground transition-colors">Orders</Link>}
           {user?.role === "admin" && <Link to="/admin" className="hover:text-foreground transition-colors flex items-center gap-1"><Shield className="w-3.5 h-3.5" /> Admin</Link>}
         </div>
+
+        <div className="flex items-center gap-1 sm:gap-2">
+          {/* Mobile menu */}
+          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+            <SheetTrigger asChild>
+              <button
+                className="md:hidden w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                aria-label="Open menu"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[min(320px,100vw-2rem)] pt-12">
+              <div className="flex flex-col gap-1">
+                {navLinks.map(({ to, label }) => (
+                  <Link
+                    key={to}
+                    to={to}
+                    onClick={() => setMobileOpen(false)}
+                    className="px-4 py-3 rounded-xl text-foreground font-medium hover:bg-muted transition-colors"
+                  >
+                    {label}
+                  </Link>
+                ))}
+                {isAuthenticated && (
+                  <Link to="/orders" onClick={() => setMobileOpen(false)} className="px-4 py-3 rounded-xl text-foreground font-medium hover:bg-muted transition-colors">
+                    Orders
+                  </Link>
+                )}
+                {user?.role === "admin" && (
+                  <Link to="/admin" onClick={() => setMobileOpen(false)} className="px-4 py-3 rounded-xl text-foreground font-medium hover:bg-muted transition-colors flex items-center gap-2">
+                    <Shield className="w-4 h-4" /> Admin
+                  </Link>
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
 
         <TooltipProvider delayDuration={150}>
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -119,7 +165,7 @@ export const Navbar = () => {
             ) : (
               <Link to="/login">
                 <motion.button
-                  className="px-5 py-2.5 rounded-xl bg-gradient-pink text-primary-foreground text-sm font-medium glow-pink-sm"
+                  className="px-3 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-gradient-pink text-primary-foreground text-xs sm:text-sm font-medium glow-pink-sm"
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
                 >
@@ -129,6 +175,7 @@ export const Navbar = () => {
             )}
           </div>
         </TooltipProvider>
+        </div>
       </nav>
     </motion.header>
   );

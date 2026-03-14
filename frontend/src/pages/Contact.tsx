@@ -33,7 +33,7 @@ const Contact = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="pt-32 px-6 pb-16 max-w-6xl mx-auto">
+      <main className="pt-24 px-4 sm:pt-32 sm:px-6 pb-12 sm:pb-16 max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
           <Reveal>

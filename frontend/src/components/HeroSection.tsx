@@ -43,7 +43,7 @@ export const HeroSection = ({ onUploadClick }: HeroSectionProps) => {
         style={{ y: useTransform(scrollY, [0, 600], [0, 40]) }}
       />
 
-      <div className="relative z-10 w-full max-w-6xl mx-auto px-6 py-24">
+      <div className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left: Text content */}
           <motion.div
@@ -81,7 +81,7 @@ export const HeroSection = ({ onUploadClick }: HeroSectionProps) => {
             </motion.p>
 
             {/* Stats */}
-            <motion.div variants={fadeUp} className="flex gap-8 mb-10">
+            <motion.div variants={fadeUp} className="flex flex-wrap gap-4 sm:gap-8 mb-8 sm:mb-10">
               <StatCounter target={heroStats.happyCustomers} suffix="+" label="Happy Customers" />
               <StatCounter target={heroStats.magnetsPrinted} suffix="+" label="Magnets Printed" />
               <StatCounter target={heroStats.avgRating} suffix="" label="Average Rating" />
@@ -90,10 +90,10 @@ export const HeroSection = ({ onUploadClick }: HeroSectionProps) => {
             {/* CTA */}
             <motion.div
               variants={fadeUp}
-              className="flex flex-wrap gap-4"
+              className="flex flex-wrap gap-3 sm:gap-4"
             >
               <motion.button
-                className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-gradient-pink text-primary-foreground font-medium text-base glow-pink"
+                className="inline-flex items-center gap-2 px-5 py-3 sm:px-8 sm:py-4 rounded-2xl bg-gradient-pink text-primary-foreground font-medium text-sm sm:text-base glow-pink"
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.97 }}
                 transition={{ type: "spring", stiffness: 400, damping: 20 }}
@@ -104,7 +104,7 @@ export const HeroSection = ({ onUploadClick }: HeroSectionProps) => {
                 <ArrowRight className="w-4 h-4" />
               </motion.button>
               <motion.button
-                className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl border border-border text-foreground font-medium text-base hover:bg-muted transition-colors"
+                className="inline-flex items-center gap-2 px-5 py-3 sm:px-8 sm:py-4 rounded-2xl border border-border text-foreground font-medium text-sm sm:text-base hover:bg-muted transition-colors"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.97 }}
               >

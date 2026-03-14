@@ -15,7 +15,7 @@ const quickLinks = [
 
 export const Footer = () => (
   <footer className="bg-card border-t border-border">
-    <div className="max-w-6xl mx-auto px-6 py-14">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
       {/* Main grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12 mb-12">
         {/* Brand */}

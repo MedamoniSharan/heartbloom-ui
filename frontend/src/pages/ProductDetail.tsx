@@ -158,7 +158,7 @@ const ProductDetail = () => {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <main className="pt-32 px-6 text-center">
+        <main className="pt-24 px-4 sm:pt-32 sm:px-6 text-center">
           <h1 className="text-h2 text-foreground mb-4">Product Not Found</h1>
           <Link to="/products" className="text-primary hover:underline">← Back to Products</Link>
         </main>
@@ -206,7 +206,7 @@ const ProductDetail = () => {
     <TooltipProvider delayDuration={150}>
       <div className="min-h-screen bg-background">
         <Navbar />
-        <main className="pt-32 px-6 pb-16 max-w-6xl mx-auto">
+        <main className="pt-24 px-4 sm:pt-32 sm:px-6 pb-12 sm:pb-16 max-w-6xl mx-auto">
           {/* Breadcrumb */}
           <Reveal>
             <Link to="/products" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6">
@@ -469,7 +469,7 @@ const ProductDetail = () => {
                     ref={(el) => el?.focus()}
                   >
                     {/* Top bar */}
-                    <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-card shrink-0">
+                    <div className="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-6 py-4 border-b border-border bg-card shrink-0">
                       <div className="flex items-center gap-4">
                         <motion.button
                           onClick={() => { clearPhotos(); setShowUploadSection(false); }}
@@ -502,7 +502,7 @@ const ProductDetail = () => {
                     <div className="flex-1 overflow-y-auto">
                       {/* Drop zone */}
                       {photos.length < qty && (
-                        <div className="px-6 pt-6 max-w-4xl mx-auto">
+                        <div className="px-4 sm:px-6 pt-4 sm:pt-6 max-w-4xl mx-auto">
                           <div
                             {...uploadDropzone.getRootProps()}
                             className={`rounded-none border-2 border-dashed px-6 py-6 text-center cursor-pointer transition-all ${
@@ -518,7 +518,7 @@ const ProductDetail = () => {
                       )}
 
                       {/* Preview grid */}
-                      <div className="px-6 py-6 max-w-4xl mx-auto">
+                      <div className="px-4 sm:px-6 py-4 sm:py-6 max-w-4xl mx-auto">
                         <div className={`grid gap-4 ${qty <= 2 ? "grid-cols-2" : qty <= 4 ? "grid-cols-2 sm:grid-cols-4" : qty <= 6 ? "grid-cols-2 sm:grid-cols-3" : "grid-cols-2 sm:grid-cols-4"}`}>
                           {Array.from({ length: qty }).map((_, idx) => {
                             const photo = photos[idx];

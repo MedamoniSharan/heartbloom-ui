@@ -31,7 +31,7 @@ export const ProductPreview = () => {
   const slots = Array.from({ length: MAX_PHOTOS }, (_, i) => photos[i] || null);
 
   return (
-    <section className="py-24 px-6 bg-background" id="preview">
+    <section className="py-16 px-4 sm:py-24 sm:px-6 bg-background" id="preview">
       <div className="max-w-5xl mx-auto">
         <Reveal>
           <h2 className="text-h1 text-center text-foreground mb-4">Your Magnet Collection</h2>

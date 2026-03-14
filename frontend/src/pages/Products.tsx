@@ -44,7 +44,7 @@ const Products = () => {
     <TooltipProvider delayDuration={150}>
       <div className="min-h-screen bg-background">
         <Navbar />
-        <main className="pt-32 px-6 pb-16 max-w-6xl mx-auto">
+        <main className="pt-24 px-4 sm:pt-32 sm:px-6 pb-12 sm:pb-16 max-w-6xl mx-auto">
           <Reveal><h1 className="text-h1 text-foreground mb-2">Order Magnet</h1></Reveal>
           <Reveal delay={100}><p className="text-muted-foreground mb-6">Choose size: 2.5 x 2.5, 2 x 2, or upload your design</p></Reveal>
 
