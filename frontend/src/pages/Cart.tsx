@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Minus, Plus, Trash2, ArrowRight, Tag, Check, X, Image, Upload } from "lucide-react";
 import { useCartStore } from "@/stores/cartStore";
 import { useProductStore } from "@/stores/productStore";
 import { useSiteContentStore } from "@/stores/siteContentStore";
-import { usePhotoStore, buildFilterString } from "@/stores/photoStore";
+import { buildFilterString } from "@/stores/photoStore";
 import { Navbar } from "@/components/Navbar";
 import { Link, useNavigate } from "react-router-dom";
 import confetti from "canvas-confetti";
@@ -13,12 +13,11 @@ import { LottieFromPath } from "@/components/LottieFromPath";
 import { useToast } from "@/hooks/use-toast";
 
 const Cart = () => {
-  const { items, removeFromCart, updateQuantity, subtotal, discountAmount, total, clearCart, appliedPromo, applyPromo, removePromo } = useCartStore();
+  const { items, removeFromCart, updateQuantity, removePhotoFromItem, subtotal, discountAmount, total, clearCart, appliedPromo, applyPromo, removePromo } = useCartStore();
   const { validatePromo } = useProductStore();
   const { orderQuantity } = useSiteContentStore();
   const globalMin = orderQuantity.min ?? 4;
   const globalMax = orderQuantity.max ?? 12;
-  const { photos } = usePhotoStore();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [promoInput, setPromoInput] = useState("");
@@ -64,8 +63,8 @@ const Cart = () => {
         <div className="grid lg:grid-cols-[1fr,320px] gap-8">
           <div className="space-y-3">
             {items.map((item) => (
+              <Fragment key={item.product.id}>
               <motion.div
-                key={item.product.id}
                 layout
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -81,13 +80,14 @@ const Cart = () => {
                     {(() => {
                       const minQty = item.product.minQuantity ?? globalMin;
                       const maxQty = item.product.maxQuantity ?? globalMax;
+                      const itemPhotos = item.photos ?? [];
                       const handleIncrease = () => {
                         const newQty = Math.min(maxQty, item.quantity + 1);
-                        if (item.product.customizable && newQty > photos.length) {
+                        if (item.product.customizable && newQty > itemPhotos.length) {
                           updateQuantity(item.product.id, newQty);
                           toast({
                             title: "Upload more photos",
-                            description: `You need ${newQty - photos.length} more photo${newQty - photos.length !== 1 ? "s" : ""}. Redirecting...`,
+                            description: `You need ${newQty - itemPhotos.length} more photo${newQty - itemPhotos.length !== 1 ? "s" : ""}. Redirecting...`,
                           });
                           navigate(`/products/${item.product.id}`);
                           return;
@@ -115,36 +115,32 @@ const Cart = () => {
                   <span className="font-display font-bold text-foreground">Rs{(item.product.price * item.quantity).toFixed(2)}</span>
                 </div>
               </motion.div>
-            ))}
 
-            {/* Read-only photo preview */}
-            {(() => {
-              const customItem = items.find((i) => i.product.customizable);
-              const requiredQty = customItem ? customItem.quantity : 0;
-              const missing = requiredQty - photos.length;
-              if (photos.length === 0 && missing <= 0) return null;
-              return (
-                <div className="bg-card border border-border rounded-2xl p-4">
+              {/* Photo grid for this product only (customizable items) */}
+              {item.product.customizable && (
+                <div className="bg-card border border-border rounded-2xl p-4 -mt-1">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <Image className="w-4 h-4 text-primary" />
-                      <h3 className="text-sm font-medium text-foreground">Your Photos ({photos.length}{requiredQty > 0 ? `/${requiredQty}` : ""})</h3>
+                      <h3 className="text-sm font-medium text-foreground">
+                        Your Photos ({(item.photos ?? []).length}/{item.quantity})
+                      </h3>
                     </div>
-                    {missing > 0 && customItem && (
+                    {(item.photos ?? []).length < item.quantity && (
                       <button
-                        onClick={() => navigate(`/products/${customItem.product.id}`)}
+                        onClick={() => navigate(`/products/${item.product.id}`)}
                         className="flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
                       >
                         <Upload className="w-3.5 h-3.5" />
-                        Upload {missing} more
+                        Upload {item.quantity - (item.photos ?? []).length} more
                       </button>
                     )}
                   </div>
-                  <div className="grid grid-cols-6 gap-2">
-                    {photos.map((photo, i) => (
+                  <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                    {(item.photos ?? []).map((photo, i) => (
                       <motion.div
                         key={photo.id}
-                        className="aspect-square rounded-lg overflow-hidden border border-border relative"
+                        className="aspect-square rounded-lg overflow-hidden border border-border relative group"
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: i * 0.03 }}
@@ -158,27 +154,36 @@ const Cart = () => {
                         <span className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[8px] font-bold flex items-center justify-center">
                           {i + 1}
                         </span>
+                        <button
+                          type="button"
+                          onClick={() => removePhotoFromItem(item.product.id, photo.id)}
+                          className="absolute top-0.5 right-0.5 w-6 h-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-90 hover:opacity-100 transition-opacity shadow-sm"
+                          aria-label="Remove photo"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
                       </motion.div>
                     ))}
-                    {Array.from({ length: Math.max(0, missing) }).map((_, i) => (
+                    {Array.from({ length: Math.max(0, item.quantity - (item.photos ?? []).length) }).map((_, i) => (
                       <motion.div
-                        key={`empty-${i}`}
+                        key={`empty-${item.product.id}-${i}`}
                         className="aspect-square rounded-lg border-2 border-dashed border-primary/30 flex items-center justify-center bg-primary/5 cursor-pointer hover:border-primary/60 transition-colors"
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: (photos.length + i) * 0.03 }}
-                        onClick={() => customItem && navigate(`/products/${customItem.product.id}`)}
+                        transition={{ delay: ((item.photos ?? []).length + i) * 0.03 }}
+                        onClick={() => navigate(`/products/${item.product.id}`)}
                       >
                         <div className="text-center">
                           <Upload className="w-4 h-4 text-primary/40 mx-auto" />
-                          <span className="text-[8px] text-primary/40 font-medium">{photos.length + i + 1}</span>
+                          <span className="text-[8px] text-primary/40 font-medium">{(item.photos ?? []).length + i + 1}</span>
                         </div>
                       </motion.div>
                     ))}
                   </div>
                 </div>
-              );
-            })()}
+              )}
+              </Fragment>
+            ))}
           </div>
 
           {/* Summary */}
@@ -306,16 +311,16 @@ const Cart = () => {
               </div>
             </div>
             {(() => {
-              const customItem = items.find((i) => i.product.customizable);
-              const photosMissing = customItem ? customItem.quantity - photos.length > 0 : false;
-              return photosMissing ? (
+              const customItemNeedingPhotos = items.find((i) => i.product.customizable && ((i.photos?.length ?? 0) < i.quantity));
+              const missingCount = customItemNeedingPhotos ? customItemNeedingPhotos.quantity - (customItemNeedingPhotos.photos?.length ?? 0) : 0;
+              return customItemNeedingPhotos && missingCount > 0 ? (
                 <motion.button
-                  onClick={() => customItem && navigate(`/products/${customItem.product.id}`)}
+                  onClick={() => navigate(`/products/${customItemNeedingPhotos.product.id}`)}
                   className="w-full py-3 rounded-xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm flex items-center justify-center gap-2 mt-2"
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.97 }}
                 >
-                  <Upload className="w-4 h-4" /> Upload {customItem!.quantity - photos.length} Missing Photo{customItem!.quantity - photos.length !== 1 ? "s" : ""}
+                  <Upload className="w-4 h-4" /> Upload {missingCount} Missing Photo{missingCount !== 1 ? "s" : ""}
                 </motion.button>
               ) : (
                 <Link to="/address">

@@ -40,7 +40,7 @@ const Address = () => {
   const { items, total, clearCart, socialMediaConsent, setSocialMediaConsent } = useCartStore();
   const { user } = useAuthStore();
   const { addOrder } = useProductStore();
-  const { photos, clearPhotos } = usePhotoStore();
+  const { clearPhotos } = usePhotoStore();
   const { toast } = useToast();
   const [placing, setPlacing] = useState(false);
 
@@ -62,12 +62,15 @@ const Address = () => {
     setPlacing(true);
 
     let customerPhotos: string[] = [];
-    if (photos.length > 0) {
-      try {
-        customerPhotos = await Promise.all(photos.map((p) => photoToDataUrl(p)));
-      } catch {
-        // continue without photos if conversion fails
+    try {
+      for (const item of items) {
+        if (item.photos?.length) {
+          const urls = await Promise.all(item.photos.map((p) => photoToDataUrl(p)));
+          customerPhotos.push(...urls);
+        }
       }
+    } catch {
+      // continue without photos if conversion fails
     }
 
     const ok = await addOrder({

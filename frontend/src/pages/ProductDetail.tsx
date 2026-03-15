@@ -192,12 +192,14 @@ const ProductDetail = () => {
       toast({ title: "Upload all images", description: `Please upload ${qty} image${qty !== 1 ? "s" : ""} before adding to cart.`, variant: "destructive" });
       return;
     }
+    const photosToStore = [...photos];
     const existingCartItem = useCartStore.getState().items.find((i) => i.product.id === product.id);
     if (existingCartItem) {
-      useCartStore.getState().updateQuantity(product.id, qty);
+      addToCart(product, qty, photosToStore);
     } else {
-      addToCart(product, qty);
+      addToCart(product, qty, photosToStore);
     }
+    clearPhotos();
     setShowUploadSection(false);
     toast({ title: existingCartItem ? "Cart updated!" : "Added to cart!", description: `${qty}× ${product.name} with your photos` });
     navigate("/cart");
