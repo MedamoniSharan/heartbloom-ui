@@ -8,6 +8,7 @@ import JourneyVideo from "./models/JourneyVideo.js";
 import Review from "./models/Review.js";
 import GalleryItem from "./models/GalleryItem.js";
 import EventPack from "./models/EventPack.js";
+import RawMaterial from "./models/RawMaterial.js";
 import { connectDB } from "./config/db.js";
 
 // ─── Products: Order Magnet (2.5 x 2.5) ───
@@ -379,6 +380,103 @@ const REVIEW_TEMPLATES = [
   { userName: "Anil S.", rating: 4, comment: "Compact, colorful and well-made. The packaging was neat. A perfect little gift for loved ones." },
 ];
 
+// ─── Products: Raw Materials ───
+const PRODUCTS_RAW_MATERIALS = [
+  {
+    name: "Magnetic Sheet 2.5\" x 2.5\" (Pack of 100)",
+    description: "Pre-cut magnetic sheets, 2.5 x 2.5 inches. Strong adhesive backing, ideal for photo magnets.",
+    longDescription: "Premium pre-cut magnetic sheets sized perfectly for 2.5\" x 2.5\" photo magnets. Each sheet has a strong adhesive back for easy application. Flexible and durable. Pack of 100 sheets.",
+    price: 899,
+    originalPrice: 1199,
+    image: "https://images.unsplash.com/photo-1586953208270-767889db7f14?w=600&h=600&fit=crop",
+    images: [],
+    category: "Raw Materials",
+    rating: 4.7,
+    reviews: 34,
+    inStock: true,
+    customizable: false,
+    whatsappMessage: "Hi! I'm interested in the Magnetic Sheet 2.5 x 2.5 (Pack of 100).",
+  },
+  {
+    name: "Magnetic Sheet 2\" x 2\" (Pack of 100)",
+    description: "Pre-cut magnetic sheets, 2 x 2 inches. Strong adhesive, perfect for small magnets.",
+    longDescription: "Pre-cut 2\" x 2\" magnetic sheets with premium adhesive backing. Perfect for creating compact photo magnets. Flexible, strong hold. Pack of 100.",
+    price: 749,
+    originalPrice: 999,
+    image: "https://images.unsplash.com/photo-1586953208270-767889db7f14?w=600&h=600&fit=crop",
+    images: [],
+    category: "Raw Materials",
+    rating: 4.6,
+    reviews: 22,
+    inStock: true,
+    customizable: false,
+    whatsappMessage: "Hi! I'd like the Magnetic Sheet 2 x 2 (Pack of 100).",
+  },
+  {
+    name: "Glossy Photo Paper A4 (50 Sheets)",
+    description: "Premium glossy photo paper, A4 size. 230 GSM, vibrant colors, waterproof.",
+    longDescription: "High-quality 230 GSM glossy photo paper for printing photo magnets. Produces vibrant, sharp images with rich colors. Waterproof and smudge-resistant. Pack of 50 sheets.",
+    price: 599,
+    originalPrice: 799,
+    image: "https://images.unsplash.com/photo-1586953208270-767889db7f14?w=600&h=600&fit=crop",
+    images: [],
+    category: "Raw Materials",
+    rating: 4.8,
+    reviews: 45,
+    inStock: true,
+    customizable: false,
+    whatsappMessage: "Hi! I need the Glossy Photo Paper A4 (50 Sheets).",
+  },
+  {
+    name: "Lamination Film Roll (Cold Laminate)",
+    description: "Cold lamination film, matte/glossy finish. Protects magnets from scratches and moisture.",
+    longDescription: "Self-adhesive cold lamination film roll for protecting printed photos before cutting. Available in matte or glossy finish. Prevents scratches, fingerprints, and moisture damage. Width: 13 inches, Length: 100 feet.",
+    price: 1299,
+    originalPrice: 1699,
+    image: "https://images.unsplash.com/photo-1586953208270-767889db7f14?w=600&h=600&fit=crop",
+    images: [],
+    category: "Raw Materials",
+    rating: 4.9,
+    reviews: 28,
+    inStock: true,
+    customizable: false,
+    whatsappMessage: "Hi! I want the Lamination Film Roll (Cold Laminate).",
+  },
+  {
+    name: "Corner Rounder Cutter",
+    description: "Precision corner rounder for clean rounded edges on magnets. R5 and R10 dies included.",
+    longDescription: "Professional corner rounder punch with two interchangeable dies (R5 and R10). Creates clean, consistent rounded corners on photo magnets. Heavy-duty metal construction.",
+    price: 1499,
+    originalPrice: 1999,
+    image: "https://images.unsplash.com/photo-1586953208270-767889db7f14?w=600&h=600&fit=crop",
+    images: [],
+    category: "Raw Materials",
+    rating: 4.5,
+    reviews: 18,
+    inStock: true,
+    customizable: false,
+    whatsappMessage: "Hi! I'm interested in the Corner Rounder Cutter.",
+  },
+  {
+    name: "Precision Paper Cutter A4",
+    description: "Heavy-duty paper cutter for A4 sheets. Guillotine style, sharp blade, safety guard.",
+    longDescription: "Professional A4 paper cutter for accurately cutting printed photo sheets. Guillotine-style blade with safety guard. Cuts up to 12 sheets at once. Grid markings for precise alignment.",
+    price: 2499,
+    originalPrice: 3299,
+    image: "https://images.unsplash.com/photo-1586953208270-767889db7f14?w=600&h=600&fit=crop",
+    images: [],
+    category: "Raw Materials",
+    rating: 4.7,
+    reviews: 15,
+    inStock: true,
+    customizable: false,
+    whatsappMessage: "Hi! I need the Precision Paper Cutter A4.",
+  },
+];
+
+// ─── Raw Materials (linked to Equipment) — seeded after products ───
+// These are created dynamically in the seed function using equipment product IDs.
+
 // ─── Admin User ───
 const ADMIN_USER = {
   name: "Admin",
@@ -399,6 +497,7 @@ async function seed() {
     Review.deleteMany({}),
     GalleryItem.deleteMany({}),
     EventPack.deleteMany({}),
+    RawMaterial.deleteMany({}),
     User.deleteMany({}),
   ]);
   console.log("   All collections cleared.\n");
@@ -407,8 +506,8 @@ async function seed() {
   await User.create(ADMIN_USER);
   console.log("✅ Admin user created:", ADMIN_USER.email, "(password: admin123)");
 
-  // Products — all categories
-  const allProducts = [...PRODUCTS_2_5, ...PRODUCTS_2, ...PRODUCTS_UPLOAD, ...PRODUCTS_EQUIPMENT];
+  // Products — all categories (including raw materials)
+  const allProducts = [...PRODUCTS_2_5, ...PRODUCTS_2, ...PRODUCTS_UPLOAD, ...PRODUCTS_EQUIPMENT, ...PRODUCTS_RAW_MATERIALS];
   const insertedProducts = await Product.insertMany(allProducts);
   console.log(`✅ Inserted ${insertedProducts.length} products`);
 
@@ -457,6 +556,132 @@ async function seed() {
   await EventPack.insertMany(EVENT_PACKS);
   console.log(`✅ Inserted ${EVENT_PACKS.length} event packs`);
 
+  // Raw Materials (linked to equipment products)
+  const equipmentProducts = insertedProducts.filter((p) => p.category === "Equipment");
+  const rawMaterialsDocs = [];
+
+  if (equipmentProducts.length >= 1) {
+    const press = equipmentProducts[0]; // Mpro Magnet Press
+    rawMaterialsDocs.push(
+      {
+        equipmentId: press._id,
+        name: "Magnetic Sheet 2.5×2.5",
+        group: "Magnetic Sheets",
+        variants: [
+          { label: "Pack of 100", quantity: 100, price: 899 },
+          { label: "Pack of 250", quantity: 250, price: 1999 },
+          { label: "Pack of 500", quantity: 500, price: 3499 },
+        ],
+        active: true,
+        order: 0,
+      },
+      {
+        equipmentId: press._id,
+        name: "Magnetic Sheet 2×2",
+        group: "Magnetic Sheets",
+        variants: [
+          { label: "Pack of 100", quantity: 100, price: 749 },
+          { label: "Pack of 250", quantity: 250, price: 1699 },
+          { label: "Pack of 500", quantity: 500, price: 2999 },
+        ],
+        active: true,
+        order: 1,
+      },
+      {
+        equipmentId: press._id,
+        name: "Glossy Photo Paper A4",
+        group: "Paper & Printing",
+        variants: [
+          { label: "50 Sheets", quantity: 50, price: 599 },
+          { label: "100 Sheets", quantity: 100, price: 1049 },
+          { label: "250 Sheets", quantity: 250, price: 2299 },
+        ],
+        active: true,
+        order: 2,
+      },
+      {
+        equipmentId: press._id,
+        name: "Cold Lamination Film",
+        group: "Lamination",
+        variants: [
+          { label: "Glossy – 100 ft", quantity: 1, price: 1299 },
+          { label: "Matte – 100 ft", quantity: 1, price: 1399 },
+        ],
+        active: true,
+        order: 3,
+      },
+      {
+        equipmentId: press._id,
+        name: "Corner Rounder Punch",
+        group: "Cutting Tools",
+        variants: [
+          { label: "R5 Die", quantity: 1, price: 799 },
+          { label: "R10 Die", quantity: 1, price: 799 },
+          { label: "R5 + R10 Combo", quantity: 1, price: 1499 },
+        ],
+        active: true,
+        order: 4,
+      }
+    );
+  }
+
+  if (equipmentProducts.length >= 2) {
+    const laminator = equipmentProducts[1]; // Titan Pro Laminator
+    rawMaterialsDocs.push(
+      {
+        equipmentId: laminator._id,
+        name: "Lamination Pouch A4 (125 mic)",
+        group: "Lamination Supplies",
+        variants: [
+          { label: "Pack of 100", quantity: 100, price: 499 },
+          { label: "Pack of 250", quantity: 250, price: 1099 },
+          { label: "Pack of 500", quantity: 500, price: 1899 },
+        ],
+        active: true,
+        order: 0,
+      },
+      {
+        equipmentId: laminator._id,
+        name: "Lamination Pouch A4 (250 mic)",
+        group: "Lamination Supplies",
+        variants: [
+          { label: "Pack of 100", quantity: 100, price: 699 },
+          { label: "Pack of 250", quantity: 250, price: 1549 },
+          { label: "Pack of 500", quantity: 500, price: 2799 },
+        ],
+        active: true,
+        order: 1,
+      },
+      {
+        equipmentId: laminator._id,
+        name: "Carrier Sheet",
+        group: "Accessories",
+        variants: [
+          { label: "A4 (Pack of 5)", quantity: 5, price: 349 },
+          { label: "A3 (Pack of 5)", quantity: 5, price: 549 },
+        ],
+        active: true,
+        order: 2,
+      },
+      {
+        equipmentId: laminator._id,
+        name: "Cleaning Sheet",
+        group: "Maintenance",
+        variants: [
+          { label: "Pack of 10", quantity: 10, price: 299 },
+          { label: "Pack of 25", quantity: 25, price: 649 },
+        ],
+        active: true,
+        order: 3,
+      }
+    );
+  }
+
+  if (rawMaterialsDocs.length > 0) {
+    await RawMaterial.insertMany(rawMaterialsDocs);
+    console.log(`✅ Inserted ${rawMaterialsDocs.length} raw materials linked to ${equipmentProducts.length} equipment products`);
+  }
+
   console.log("\n🎉 Seed completed! All sections have real data:");
   console.log("   Home          → Products + Journey Videos + Stats (from DB)");
   console.log("   Order Magnet  → 9 products (3 sizes)");
@@ -465,6 +690,7 @@ async function seed() {
   console.log("   Reviews       → 15 reviews across products (from DB)");
   console.log("   Testimonials  → Pulls from reviews (from DB)");
   console.log("   Machines      → 2 equipment products");
+  console.log("   Raw Materials → 6 raw material products + 9 equipment-linked materials");
   console.log("   Contact       → Contact form (no seed data needed)\n");
 
   process.exit(0);

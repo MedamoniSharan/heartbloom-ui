@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Package, Upload as UploadIcon } from "lucide-react";
+import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Reveal } from "@/components/Reveal";
 import { useToast } from "@/hooks/use-toast";
 import { contactApi } from "@/lib/api";
 import { useSiteContentStore } from "@/stores/siteContentStore";
+import { siteConfig } from "@/lib/siteConfig";
 
 const BulkOrders = () => {
   const { bulkOrder } = useSiteContentStore();
@@ -194,6 +196,24 @@ const BulkOrders = () => {
             >
               {sending ? "Sending..." : "Submit"}
             </motion.button>
+
+            <div className="flex items-center gap-3 pt-1">
+              <div className="flex-1 h-px bg-border" />
+              <span className="text-xs text-muted-foreground font-medium">or</span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+
+            <motion.a
+              href={`https://wa.me/${siteConfig.whatsappDigits}?text=${encodeURIComponent(`Hi! I'm interested in a bulk order of ${form.quantity} magnets. Can you share more details?`)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full py-3.5 rounded-xl bg-[hsl(142,70%,45%)] text-white font-medium text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.97 }}
+            >
+              <WhatsAppIcon className="w-5 h-5" />
+              Chat on WhatsApp
+            </motion.a>
           </form>
         </Reveal>
       </main>

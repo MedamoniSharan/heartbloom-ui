@@ -16,6 +16,7 @@ interface AuthState {
   hydrated: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   signup: (name: string, email: string, password: string) => Promise<boolean>;
+  googleLogin: (credential: string) => Promise<boolean>;
   logout: () => void;
   fetchMe: () => Promise<void>;
   setUser: (user: User | null) => void;
@@ -53,6 +54,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true });
     try {
       const { user, token } = await authApi.signup(name, email, password);
+      setToken(token);
+      set({ user: mapUser(user), isAuthenticated: true, isLoading: false });
+      return true;
+    } catch {
+      set({ isLoading: false });
+      return false;
+    }
+  },
+
+  googleLogin: async (credential) => {
+    set({ isLoading: true });
+    try {
+      const { user, token } = await authApi.googleLogin(credential);
       setToken(token);
       set({ user: mapUser(user), isAuthenticated: true, isLoading: false });
       return true;

@@ -1,10 +1,12 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { ShoppingCart, Eye } from "lucide-react";
+import { ShoppingCart, Eye, Layers } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Reveal } from "@/components/Reveal";
-import { useProductStore } from "@/stores/productStore";
+import { RawMaterialSidebar } from "@/components/RawMaterialSidebar";
+import { useProductStore, type Product } from "@/stores/productStore";
 import { useCartStore } from "@/stores/cartStore";
 import { useToast } from "@/hooks/use-toast";
 
@@ -29,12 +31,19 @@ const Equipment = () => {
   const { products } = useProductStore();
   const { addToCart } = useCartStore();
   const { toast } = useToast();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [selectedEquipment, setSelectedEquipment] = useState<Product | null>(null);
 
   const equipmentProducts = products.filter((p) => p.category === "Equipment");
 
   const handleAdd = (product: typeof equipmentProducts[0]) => {
     addToCart(product);
     toast({ title: "Added to cart!", description: `${product.name} added.` });
+  };
+
+  const openRawMaterials = (item: Product) => {
+    setSelectedEquipment(item);
+    setSidebarOpen(true);
   };
 
   return (
@@ -110,6 +119,13 @@ const Equipment = () => {
                         <ShoppingCart className="w-4 h-4" /> Add to Cart
                       </motion.button>
                     </div>
+                    <motion.button
+                      onClick={() => openRawMaterials(item)}
+                      className="w-full mt-3 py-2.5 rounded-xl border border-primary/30 text-primary font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary/5 transition-colors"
+                      whileTap={{ scale: 0.97 }}
+                    >
+                      <Layers className="w-4 h-4" /> View Raw Materials
+                    </motion.button>
                   </div>
                 </motion.div>
               </Reveal>
@@ -118,6 +134,11 @@ const Equipment = () => {
         </div>
       </main>
       <Footer />
+      <RawMaterialSidebar
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        equipment={selectedEquipment}
+      />
     </div>
   );
 };

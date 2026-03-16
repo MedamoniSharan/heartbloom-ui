@@ -14,9 +14,13 @@ export interface CoursesConfig {
   description: string;
   youtubeUrl: string;
   book1to1Label: string;
+  book1to1Description: string;
   book1to1Url: string;
+  book1to1Points: string[];
   bookGroupLabel: string;
+  bookGroupDescription: string;
   bookGroupUrl: string;
+  bookGroupPoints: string[];
 }
 
 export interface OrderQuantityConfig {
@@ -43,9 +47,13 @@ const defaultCourses: CoursesConfig = {
   description: "Learn to create beautiful photo magnets. Watch our intro video and book a 1:1 or group session with our team.",
   youtubeUrl: "",
   book1to1Label: "Book 1:1 Session",
+  book1to1Description: "One-on-one with our expert",
   book1to1Url: "https://calendly.com",
+  book1to1Points: ["Personalized guidance", "Business setup help", "Live Q&A"],
   bookGroupLabel: "Book Group Session",
+  bookGroupDescription: "Join a group workshop",
   bookGroupUrl: "https://calendly.com",
+  bookGroupPoints: ["Meet other makers", "Group discounts", "Hands-on practice"],
 };
 
 const defaultOrderQuantity: OrderQuantityConfig = {

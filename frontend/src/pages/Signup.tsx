@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Heart, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { GoogleLogin, type CredentialResponse } from "@react-oauth/google";
 import { useAuthStore } from "@/stores/authStore";
 import { useNavigate, Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { LottieFromPath } from "@/components/LottieFromPath";
 import { siteConfig } from "@/lib/siteConfig";
+
+const GOOGLE_ENABLED = !!import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 const Signup = () => {
   const [name, setName] = useState("");
@@ -71,6 +74,37 @@ const Signup = () => {
           <p className="text-center text-sm text-muted-foreground">
             Already have an account? <Link to="/login" className="text-primary hover:underline font-medium">Sign In</Link>
           </p>
+
+          {GOOGLE_ENABLED && (
+            <>
+              <div className="flex items-center gap-3">
+                <div className="flex-1 h-px bg-border" />
+                <span className="text-xs text-muted-foreground font-medium">or continue with</span>
+                <div className="flex-1 h-px bg-border" />
+              </div>
+              <div className="flex justify-center">
+                <GoogleLogin
+                  onSuccess={async (response: CredentialResponse) => {
+                    if (!response.credential) return;
+                    const ok = await useAuthStore.getState().googleLogin(response.credential);
+                    if (ok) {
+                      toast({ title: "Welcome!", description: "Signed in with Google." });
+                      navigate("/products");
+                    } else {
+                      toast({ title: "Google sign-in failed", description: "Please try again.", variant: "destructive" });
+                    }
+                  }}
+                  onError={() => {
+                    toast({ title: "Google sign-in failed", description: "Please try again.", variant: "destructive" });
+                  }}
+                  shape="pill"
+                  size="large"
+                  width="100%"
+                  text="signup_with"
+                />
+              </div>
+            </>
+          )}
         </form>
       </motion.div>
     </div>

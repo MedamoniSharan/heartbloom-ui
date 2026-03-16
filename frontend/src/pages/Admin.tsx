@@ -8,7 +8,7 @@ import {
 import { useProductStore, Product, Order, PromoCode } from "@/stores/productStore";
 import { useSiteContentStore } from "@/stores/siteContentStore";
 import { useAuthStore } from "@/stores/authStore";
-import { journeyVideosApi, type ApiJourneyVideo, eventPacksApi, type ApiEventPack } from "@/lib/api";
+import { journeyVideosApi, type ApiJourneyVideo, eventPacksApi, type ApiEventPack, rawMaterialsApi, type ApiRawMaterial, type ApiRawMaterialInput } from "@/lib/api";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
@@ -192,7 +192,7 @@ const Admin = () => {
   const { user } = useAuthStore();
   const { products, orders, promoCodes, fetchOrders, fetchPromos, addProduct, removeProduct, updateOrderStatus, addPromoCode, removePromoCode, togglePromoCode, updatePromoCode } = useProductStore();
   const { toast } = useToast();
-  const [tab, setTab] = useState<"dashboard" | "analytics" | "orders" | "products" | "add" | "promos" | "bulk" | "courses" | "events" | "journey" | "settings">("dashboard");
+  const [tab, setTab] = useState<"dashboard" | "analytics" | "orders" | "products" | "add" | "promos" | "bulk" | "courses" | "events" | "journey" | "rawmaterials" | "settings">("dashboard");
   const [newPromo, setNewPromo] = useState({ code: "", discount: "", description: "", expiresAt: "" });
   const [editingPromoId, setEditingPromoId] = useState<string | null>(null);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
@@ -357,8 +357,8 @@ const Admin = () => {
 
         {/* Tabs */}
         <div className="flex gap-2 mb-6 border-b border-border pb-3 overflow-x-auto scrollbar-hide">
-          {(["dashboard", "analytics", "orders", "products", "add", "promos", "bulk", "courses", "events", "journey", "settings"] as const).map((t) => {
-            const labels: Record<string, string> = { dashboard: "Dashboard", analytics: "Analytics", orders: "Orders", products: "Products", add: "Add Product", promos: "Promo Codes", bulk: "Bulk Orders", courses: "Courses", events: "Event Packs", journey: "Follow My Journey", settings: "Settings" };
+          {(["dashboard", "analytics", "orders", "products", "add", "promos", "bulk", "courses", "events", "journey", "rawmaterials", "settings"] as const).map((t) => {
+            const labels: Record<string, string> = { dashboard: "Dashboard", analytics: "Analytics", orders: "Orders", products: "Products", add: "Add Product", promos: "Promo Codes", bulk: "Bulk Orders", courses: "Courses", events: "Event Packs", journey: "Follow My Journey", rawmaterials: "Raw Materials", settings: "Settings" };
             return (
               <button
                 key={t}
@@ -954,6 +954,10 @@ const Admin = () => {
           <JourneyAdminTab toast={toast} />
         )}
 
+        {tab === "rawmaterials" && (
+          <RawMaterialsAdminTab equipmentProducts={products.filter((p) => p.category === "Equipment")} />
+        )}
+
         {tab === "settings" && (
           <div className="space-y-8">
             <HeroStatsAdminTab />
@@ -1040,9 +1044,13 @@ function CoursesAdminTab() {
     description: courses.description,
     youtubeUrl: courses.youtubeUrl,
     book1to1Label: courses.book1to1Label,
+    book1to1Description: courses.book1to1Description,
     book1to1Url: courses.book1to1Url,
+    book1to1Points: courses.book1to1Points ?? [],
     bookGroupLabel: courses.bookGroupLabel,
+    bookGroupDescription: courses.bookGroupDescription,
     bookGroupUrl: courses.bookGroupUrl,
+    bookGroupPoints: courses.bookGroupPoints ?? [],
   }));
   useEffect(() => {
     setForm({
@@ -1050,11 +1058,15 @@ function CoursesAdminTab() {
       description: courses.description,
       youtubeUrl: courses.youtubeUrl,
       book1to1Label: courses.book1to1Label,
+      book1to1Description: courses.book1to1Description,
       book1to1Url: courses.book1to1Url,
+      book1to1Points: courses.book1to1Points ?? [],
       bookGroupLabel: courses.bookGroupLabel,
+      bookGroupDescription: courses.bookGroupDescription,
       bookGroupUrl: courses.bookGroupUrl,
+      bookGroupPoints: courses.bookGroupPoints ?? [],
     });
-  }, [courses.title, courses.description, courses.youtubeUrl, courses.book1to1Label, courses.book1to1Url, courses.bookGroupLabel, courses.bookGroupUrl]);
+  }, [courses.title, courses.description, courses.youtubeUrl, courses.book1to1Label, courses.book1to1Description, courses.book1to1Url, courses.book1to1Points, courses.bookGroupLabel, courses.bookGroupDescription, courses.bookGroupUrl, courses.bookGroupPoints]);
 
   const save = () => {
     setCourses({
@@ -1062,11 +1074,31 @@ function CoursesAdminTab() {
       description: form.description,
       youtubeUrl: form.youtubeUrl,
       book1to1Label: form.book1to1Label,
+      book1to1Description: form.book1to1Description,
       book1to1Url: form.book1to1Url,
+      book1to1Points: form.book1to1Points.filter(Boolean),
       bookGroupLabel: form.bookGroupLabel,
+      bookGroupDescription: form.bookGroupDescription,
       bookGroupUrl: form.bookGroupUrl,
+      bookGroupPoints: form.bookGroupPoints.filter(Boolean),
     });
     toast({ title: "Courses content saved!" });
+  };
+
+  const updatePoint = (key: "book1to1Points" | "bookGroupPoints", index: number, value: string) => {
+    setForm((f) => {
+      const arr = [...f[key]];
+      arr[index] = value;
+      return { ...f, [key]: arr };
+    });
+  };
+
+  const addPoint = (key: "book1to1Points" | "bookGroupPoints") => {
+    setForm((f) => ({ ...f, [key]: [...f[key], ""] }));
+  };
+
+  const removePoint = (key: "book1to1Points" | "bookGroupPoints", index: number) => {
+    setForm((f) => ({ ...f, [key]: f[key].filter((_, i) => i !== index) }));
   };
 
   return (
@@ -1086,22 +1118,71 @@ function CoursesAdminTab() {
           <input type="url" placeholder=" " value={form.youtubeUrl} onChange={(e) => setForm((f) => ({ ...f, youtubeUrl: e.target.value }))} />
           <label>YouTube video URL</label>
         </div>
+
+        <div className="pt-2 border-t border-border">
+          <p className="text-xs font-semibold text-foreground mb-2">Book 1:1 Session</p>
+        </div>
         <div className="floating-label-group">
           <input type="text" placeholder=" " value={form.book1to1Label} onChange={(e) => setForm((f) => ({ ...f, book1to1Label: e.target.value }))} />
-          <label>Book 1:1 session – button label</label>
+          <label>Button label</label>
+        </div>
+        <div className="floating-label-group">
+          <input type="text" placeholder=" " value={form.book1to1Description} onChange={(e) => setForm((f) => ({ ...f, book1to1Description: e.target.value }))} />
+          <label>Description</label>
         </div>
         <div className="floating-label-group">
           <input type="url" placeholder=" " value={form.book1to1Url} onChange={(e) => setForm((f) => ({ ...f, book1to1Url: e.target.value }))} />
-          <label>Book 1:1 session – URL</label>
+          <label>URL</label>
+        </div>
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground">Bullet points (features)</p>
+          {form.book1to1Points.map((point, i) => (
+            <div key={i} className="flex gap-2">
+              <input
+                type="text"
+                value={point}
+                onChange={(e) => updatePoint("book1to1Points", i, e.target.value)}
+                placeholder={`Point ${i + 1}`}
+                className="flex-1 px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm focus:border-primary focus:ring-1 focus:ring-primary/30 outline-none"
+              />
+              <button type="button" onClick={() => removePoint("book1to1Points", i)} className="px-2 text-destructive hover:bg-destructive/10 rounded-lg text-sm">✕</button>
+            </div>
+          ))}
+          <button type="button" onClick={() => addPoint("book1to1Points")} className="text-xs text-primary hover:underline">+ Add point</button>
+        </div>
+
+        <div className="pt-2 border-t border-border">
+          <p className="text-xs font-semibold text-foreground mb-2">Book Group Session</p>
         </div>
         <div className="floating-label-group">
           <input type="text" placeholder=" " value={form.bookGroupLabel} onChange={(e) => setForm((f) => ({ ...f, bookGroupLabel: e.target.value }))} />
-          <label>Book group session – button label</label>
+          <label>Button label</label>
+        </div>
+        <div className="floating-label-group">
+          <input type="text" placeholder=" " value={form.bookGroupDescription} onChange={(e) => setForm((f) => ({ ...f, bookGroupDescription: e.target.value }))} />
+          <label>Description</label>
         </div>
         <div className="floating-label-group">
           <input type="url" placeholder=" " value={form.bookGroupUrl} onChange={(e) => setForm((f) => ({ ...f, bookGroupUrl: e.target.value }))} />
-          <label>Book group session – URL</label>
+          <label>URL</label>
         </div>
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground">Bullet points (features)</p>
+          {form.bookGroupPoints.map((point, i) => (
+            <div key={i} className="flex gap-2">
+              <input
+                type="text"
+                value={point}
+                onChange={(e) => updatePoint("bookGroupPoints", i, e.target.value)}
+                placeholder={`Point ${i + 1}`}
+                className="flex-1 px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm focus:border-primary focus:ring-1 focus:ring-primary/30 outline-none"
+              />
+              <button type="button" onClick={() => removePoint("bookGroupPoints", i)} className="px-2 text-destructive hover:bg-destructive/10 rounded-lg text-sm">✕</button>
+            </div>
+          ))}
+          <button type="button" onClick={() => addPoint("bookGroupPoints")} className="text-xs text-primary hover:underline">+ Add point</button>
+        </div>
+
         <motion.button type="button" onClick={save} className="w-full py-3 rounded-xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.97 }}>
           Save Courses content
         </motion.button>
@@ -1607,6 +1688,276 @@ function EventPacksAdminTab() {
                       ))}
                     </div>
                   )}
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RawMaterialsAdminTab({ equipmentProducts }: { equipmentProducts: Product[] }) {
+  const { toast } = useToast();
+  const [materials, setMaterials] = useState<ApiRawMaterial[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const emptyForm = {
+    equipmentId: "",
+    name: "",
+    group: "",
+    variants: [{ label: "", quantity: "", price: "" }] as { label: string; quantity: string; price: string }[],
+    active: true,
+  };
+  const [form, setForm] = useState(emptyForm);
+
+  const fetchAll = useCallback(async () => {
+    setLoading(true);
+    try {
+      const list = await rawMaterialsApi.getAll();
+      setMaterials(list);
+    } catch {
+      setMaterials([]);
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  const addVariantRow = () => {
+    setForm((f) => ({
+      ...f,
+      variants: [...f.variants, { label: "", quantity: "", price: "" }],
+    }));
+  };
+
+  const removeVariantRow = (idx: number) => {
+    setForm((f) => ({
+      ...f,
+      variants: f.variants.filter((_, i) => i !== idx),
+    }));
+  };
+
+  const updateVariant = (idx: number, key: string, val: string) => {
+    setForm((f) => ({
+      ...f,
+      variants: f.variants.map((v, i) => (i === idx ? { ...v, [key]: val } : v)),
+    }));
+  };
+
+  const openAdd = () => {
+    setEditingId(null);
+    setForm(emptyForm);
+    setShowForm(true);
+  };
+
+  const openEdit = (m: ApiRawMaterial) => {
+    setEditingId(m.id);
+    setForm({
+      equipmentId: m.equipmentId,
+      name: m.name,
+      group: m.group,
+      variants: m.variants.map((v) => ({
+        label: v.label,
+        quantity: v.quantity.toString(),
+        price: v.price.toString(),
+      })),
+      active: m.active,
+    });
+    setShowForm(true);
+  };
+
+  const handleSave = async () => {
+    if (!form.equipmentId || !form.name) {
+      toast({ title: "Equipment and name are required", variant: "destructive" });
+      return;
+    }
+    const body: Partial<ApiRawMaterialInput> & { equipmentId: string; name: string } = {
+      equipmentId: form.equipmentId,
+      name: form.name,
+      group: form.group,
+      variants: form.variants
+        .filter((v) => v.label && v.quantity && v.price)
+        .map((v) => ({
+          label: v.label,
+          quantity: parseInt(v.quantity, 10) || 0,
+          price: parseFloat(v.price) || 0,
+        })),
+      active: form.active,
+    };
+    try {
+      if (editingId) {
+        await rawMaterialsApi.update(editingId, body);
+        toast({ title: "Raw material updated!" });
+      } else {
+        await rawMaterialsApi.create(body);
+        toast({ title: "Raw material added!" });
+      }
+      setShowForm(false);
+      setEditingId(null);
+      setForm(emptyForm);
+      fetchAll();
+    } catch (err: any) {
+      toast({ title: "Failed", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await rawMaterialsApi.delete(id);
+      setMaterials((prev) => prev.filter((m) => m.id !== id));
+      toast({ title: "Raw material deleted!" });
+    } catch (err: any) {
+      toast({ title: "Failed", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const getEquipmentName = (eqId: string) =>
+    equipmentProducts.find((p) => p.id === eqId)?.name || eqId;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="font-display font-semibold text-foreground text-lg">Raw Materials</h3>
+          <p className="text-xs text-muted-foreground">Manage raw materials linked to equipment. Users see these in the sidebar when clicking an equipment item.</p>
+        </div>
+        <motion.button onClick={openAdd} className="px-4 py-2 rounded-xl bg-gradient-pink text-primary-foreground text-sm font-medium flex items-center gap-2" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
+          <Plus className="w-4 h-4" /> Add Material
+        </motion.button>
+      </div>
+
+      {showForm && (
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="bg-card border border-border rounded-2xl p-6 shadow-card space-y-4">
+          <h4 className="font-medium text-foreground">{editingId ? "Edit Raw Material" : "New Raw Material"}</h4>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">Equipment *</label>
+            <select
+              value={form.equipmentId}
+              onChange={(e) => setForm((f) => ({ ...f, equipmentId: e.target.value }))}
+              className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+            >
+              <option value="">Select equipment...</option>
+              {equipmentProducts.map((eq) => (
+                <option key={eq.id} value={eq.id}>{eq.name}</option>
+              ))}
+            </select>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="floating-label-group">
+              <input placeholder=" " value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
+              <label>Material Name *</label>
+            </div>
+            <div className="floating-label-group">
+              <input placeholder=" " value={form.group} onChange={(e) => setForm((f) => ({ ...f, group: e.target.value }))} />
+              <label>Group (e.g. Cutters, Sheets)</label>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-medium text-muted-foreground">Variants</label>
+              <button type="button" onClick={addVariantRow} className="text-xs text-primary hover:underline flex items-center gap-1">
+                <Plus className="w-3 h-3" /> Add variant
+              </button>
+            </div>
+            {form.variants.map((v, idx) => (
+              <div key={idx} className="grid grid-cols-[1fr_80px_80px_32px] gap-2 items-center">
+                <input
+                  placeholder="Label (e.g. 250 items)"
+                  value={v.label}
+                  onChange={(e) => updateVariant(idx, "label", e.target.value)}
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+                />
+                <input
+                  type="number"
+                  placeholder="Qty"
+                  value={v.quantity}
+                  onChange={(e) => updateVariant(idx, "quantity", e.target.value)}
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+                />
+                <input
+                  type="number"
+                  placeholder="Price"
+                  value={v.price}
+                  onChange={(e) => updateVariant(idx, "price", e.target.value)}
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeVariantRow(idx)}
+                  className="w-8 h-8 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive flex items-center justify-center transition-colors"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={form.active}
+              onChange={(e) => setForm((f) => ({ ...f, active: e.target.checked }))}
+              className="rounded border-border"
+            />
+            <span className="text-sm text-foreground">Active (visible to customers)</span>
+          </label>
+
+          <div className="flex gap-3">
+            <motion.button type="button" onClick={handleSave} className="flex-1 py-3 rounded-xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.97 }}>
+              {editingId ? "Update Material" : "Add Material"}
+            </motion.button>
+            <motion.button type="button" onClick={() => { setShowForm(false); setEditingId(null); }} className="px-6 py-3 rounded-xl border border-border text-muted-foreground text-sm font-medium hover:bg-muted transition-colors" whileTap={{ scale: 0.97 }}>
+              Cancel
+            </motion.button>
+          </div>
+        </motion.div>
+      )}
+
+      {loading ? (
+        <div className="space-y-3">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="bg-card border border-border rounded-2xl p-5 animate-pulse">
+              <div className="h-4 bg-muted rounded w-1/3 mb-2" />
+              <div className="h-3 bg-muted rounded w-2/3" />
+            </div>
+          ))}
+        </div>
+      ) : materials.length === 0 ? (
+        <div className="text-center py-12 bg-card border border-border rounded-2xl">
+          <Package className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
+          <p className="text-muted-foreground">No raw materials yet. Add your first one!</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {materials.map((m) => (
+            <motion.div key={m.id} className="bg-card border border-border rounded-2xl p-5 shadow-card" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h4 className="font-semibold text-foreground">{m.name}</h4>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${m.active ? "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))]" : "bg-muted text-muted-foreground"}`}>
+                      {m.active ? "Active" : "Inactive"}
+                    </span>
+                    {m.group && <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{m.group}</span>}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">Equipment: {getEquipmentName(m.equipmentId)}</p>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {m.variants.map((v) => (
+                      <span key={v.id} className="text-xs bg-muted/60 px-2 py-1 rounded-lg text-foreground">
+                        {v.label} · Qty {v.quantity} · Rs{v.price}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <button onClick={() => openEdit(m)} className="text-xs font-medium text-primary hover:underline px-2">Edit</button>
+                  <button onClick={() => { if (confirm(`Delete "${m.name}"?`)) handleDelete(m.id); }} className="p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             </motion.div>

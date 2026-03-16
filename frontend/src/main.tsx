@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createRoot } from "react-dom/client";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import { LottieFromPath } from "@/components/LottieFromPath";
 import App from "./App.tsx";
 import "./index.css";
+
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 
 const LOTTIE_LOADER_PATH = "/tri-cube-loader-2.json";
 
@@ -52,11 +55,21 @@ const MagnetLoader = () => {
   );
 };
 
-const Root = () => (
-  <>
-    <MagnetLoader />
-    <App />
-  </>
-);
+const Root = () => {
+  const inner = (
+    <>
+      <MagnetLoader />
+      <App />
+    </>
+  );
+  if (GOOGLE_CLIENT_ID) {
+    return (
+      <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+        {inner}
+      </GoogleOAuthProvider>
+    );
+  }
+  return inner;
+};
 
 createRoot(document.getElementById("root")!).render(<Root />);

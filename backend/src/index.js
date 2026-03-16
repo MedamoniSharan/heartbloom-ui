@@ -11,6 +11,7 @@ import journeyVideosRoutes from "./routes/journeyVideos.js";
 import reviewRoutes from "./routes/reviews.js";
 import galleryRoutes from "./routes/gallery.js";
 import eventPackRoutes from "./routes/eventPacks.js";
+import rawMaterialRoutes from "./routes/rawMaterials.js";
 import statsRoutes from "./routes/stats.js";
 
 const app = express();
@@ -42,6 +43,7 @@ app.use("/api/journey-videos", journeyVideosRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/gallery", galleryRoutes);
 app.use("/api/event-packs", eventPackRoutes);
+app.use("/api/raw-materials", rawMaterialRoutes);
 app.use("/api/stats", statsRoutes);
 
 app.get("/api/health", (req, res) => res.json({ ok: true }));

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ShoppingCart, Star, Search, Heart } from "lucide-react";
+import { ShoppingCart, Star, Search, Heart, Layers } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { useProductStore, Product } from "@/stores/productStore";
 import { useCartStore } from "@/stores/cartStore";
@@ -13,6 +13,8 @@ import { Reveal } from "@/components/Reveal";
 import { Footer } from "@/components/Footer";
 import { LottieFromPath } from "@/components/LottieFromPath";
 import { siteConfig } from "@/lib/siteConfig";
+
+const RAW_MATERIALS_CATEGORY = "Raw Materials";
 
 const getWhatsAppLink = (product: Product) => {
   const message = encodeURIComponent(`Hi! I'm interested in "${product.name}" (Rs${product.price}). Can you tell me more?`);
@@ -97,6 +99,80 @@ const Products = () => {
               </div>
             )}
           </div>
+
+          {/* Raw Materials Section */}
+          {(() => {
+            const rawMaterials = products.filter((p) => p.category === RAW_MATERIALS_CATEGORY);
+            const showRawSection = rawMaterials.length > 0 && (activeFilter === "All" || activeFilter === RAW_MATERIALS_CATEGORY) && (!search || rawMaterials.some((p) => p.name.toLowerCase().includes(search.toLowerCase())));
+            if (!showRawSection) return null;
+            const visibleRaw = search ? rawMaterials.filter((p) => p.name.toLowerCase().includes(search.toLowerCase())) : rawMaterials;
+            return (
+              <Reveal>
+                <div className="mb-10">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Layers className="w-5 h-5 text-primary" />
+                    <h2 className="font-display font-bold text-foreground text-lg">Raw Materials</h2>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {visibleRaw.map((product, i) => (
+                      <motion.div
+                        key={product.id}
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                        className="bg-card border border-border rounded-2xl overflow-hidden shadow-card group hover:shadow-elevated transition-shadow duration-300"
+                      >
+                        <Link to={`/products/${product.id}`} className="block">
+                          <div className="relative aspect-square overflow-hidden">
+                            <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                            <span className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-md bg-primary/90 text-primary-foreground text-[10px] font-semibold">
+                              Raw Material
+                            </span>
+                          </div>
+                          <div className="p-3 space-y-1.5">
+                            <h3 className="font-display font-semibold text-foreground text-sm line-clamp-1">{product.name}</h3>
+                            <p className="text-xs text-muted-foreground line-clamp-1">{product.description}</p>
+                            <p className="text-base font-bold text-foreground font-display">Rs{product.price}</p>
+                          </div>
+                        </Link>
+                        <div className="px-3 pb-3 flex gap-1.5 justify-end -mt-1">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <a
+                                href={getWhatsAppLink(product)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-8 h-8 rounded-lg bg-[hsl(142,70%,45%)] text-primary-foreground flex items-center justify-center hover:opacity-90 transition-opacity"
+                                aria-label="Chat on WhatsApp"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <WhatsAppIcon className="w-3.5 h-3.5" />
+                              </a>
+                            </TooltipTrigger>
+                            <TooltipContent><p className="text-xs">Chat on WhatsApp</p></TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <motion.button
+                                onClick={(e) => { e.preventDefault(); handleAdd(product); }}
+                                disabled={!product.inStock}
+                                className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-50"
+                                whileTap={{ scale: 0.9 }}
+                                aria-label="Add to cart"
+                              >
+                                <ShoppingCart className="w-3.5 h-3.5" />
+                              </motion.button>
+                            </TooltipTrigger>
+                            <TooltipContent><p className="text-xs">Add to Cart</p></TooltipContent>
+                          </Tooltip>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              </Reveal>
+            );
+          })()}
 
           {/* Product Grid */}
           {filtered.length === 0 ? (

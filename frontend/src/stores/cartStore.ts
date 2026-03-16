@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
 import { Product } from "./productStore";
 import type { PhotoItem } from "./photoStore";
 
@@ -28,7 +29,7 @@ interface CartState {
   itemCount: () => number;
 }
 
-export const useCartStore = create<CartState>((set, get) => ({
+export const useCartStore = create<CartState>()(persist((set, get) => ({
   items: [],
   appliedPromo: null,
   socialMediaConsent: false,
@@ -82,4 +83,11 @@ export const useCartStore = create<CartState>((set, get) => ({
   },
   total: () => get().subtotal() - get().discountAmount(),
   itemCount: () => get().items.reduce((sum, i) => sum + i.quantity, 0),
+}), {
+  name: "magnetic-bliss-cart",
+  storage: createJSONStorage(() => sessionStorage),
+  partialize: (state) => ({
+    items: state.items.map((i) => ({ product: i.product, quantity: i.quantity })),
+    appliedPromo: state.appliedPromo,
+  }),
 }));

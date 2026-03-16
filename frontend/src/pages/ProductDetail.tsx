@@ -18,7 +18,7 @@ import { Reveal } from "@/components/Reveal";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { MagnetMockup3D } from "@/components/MagnetMockup3D";
 import { Switch } from "@/components/ui/switch";
-import { reviewsApi, type ApiReview } from "@/lib/api";
+import { reviewsApi, type ApiReview, rawMaterialsApi, type ApiRawMaterial } from "@/lib/api";
 
 const StarPicker = ({ value, onChange }: { value: number; onChange: (v: number) => void }) => {
   const [hover, setHover] = useState(0);
@@ -66,6 +66,9 @@ const ProductDetail = () => {
   const [newComment, setNewComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  const [rawMaterials, setRawMaterials] = useState<ApiRawMaterial[]>([]);
+  const [selectedVariants, setSelectedVariants] = useState<Set<string>>(new Set());
+
   const product = products.find((p) => p.id === id);
   const isEquipment = product?.category === "Equipment";
   const minQty = isEquipment ? 1 : (product?.minQuantity ?? orderQuantity.min ?? 4);
@@ -90,6 +93,14 @@ const ProductDetail = () => {
       .catch(() => setReviews([]))
       .finally(() => setReviewsLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    if (!id || !isEquipment) return;
+    rawMaterialsApi
+      .getByEquipment(id)
+      .then(setRawMaterials)
+      .catch(() => setRawMaterials([]));
+  }, [id, isEquipment]);
 
   const handleSubmitReview = async () => {
     if (!user) {
@@ -172,13 +183,76 @@ const ProductDetail = () => {
 
   const related = products.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4);
 
+  const toggleVariant = (variantKey: string) => {
+    setSelectedVariants((prev) => {
+      const next = new Set(prev);
+      if (next.has(variantKey)) next.delete(variantKey);
+      else next.add(variantKey);
+      return next;
+    });
+  };
+
+  const rawMaterialsTotal = rawMaterials.reduce((sum, rm) => {
+    return sum + rm.variants.reduce((vs, v) => {
+      return vs + (selectedVariants.has(`${rm.id}-${v.id}`) ? v.price : 0);
+    }, 0);
+  }, 0);
+
+  const rawMaterialGroups = rawMaterials.reduce<Record<string, ApiRawMaterial[]>>((acc, rm) => {
+    const g = rm.group || "Other";
+    if (!acc[g]) acc[g] = [];
+    acc[g].push(rm);
+    return acc;
+  }, {});
+
   const handleAdd = () => {
     addToCart(product, qty);
-    toast({ title: "Added to cart!", description: `${qty}× ${product.name}` });
+    if (isEquipment && selectedVariants.size > 0) {
+      rawMaterials.forEach((rm) => {
+        rm.variants.forEach((v) => {
+          if (selectedVariants.has(`${rm.id}-${v.id}`)) {
+            const rmProduct: Product = {
+              id: `rm-${rm.id}-${v.id}`,
+              name: `${rm.name} – ${v.label}`,
+              description: `Raw material for ${product.name}`,
+              price: v.price,
+              image: product.image,
+              category: "Raw Materials",
+              rating: 0,
+              reviews: 0,
+              inStock: true,
+            };
+            addToCart(rmProduct, 1);
+          }
+        });
+      });
+    }
+    const extras = selectedVariants.size > 0 ? ` + ${selectedVariants.size} raw material(s)` : "";
+    toast({ title: "Added to cart!", description: `${qty}× ${product.name}${extras}` });
   };
 
   const handleBuyNow = () => {
     addToCart(product, qty);
+    if (isEquipment && selectedVariants.size > 0) {
+      rawMaterials.forEach((rm) => {
+        rm.variants.forEach((v) => {
+          if (selectedVariants.has(`${rm.id}-${v.id}`)) {
+            const rmProduct: Product = {
+              id: `rm-${rm.id}-${v.id}`,
+              name: `${rm.name} – ${v.label}`,
+              description: `Raw material for ${product.name}`,
+              price: v.price,
+              image: product.image,
+              category: "Raw Materials",
+              rating: 0,
+              reviews: 0,
+              inStock: true,
+            };
+            addToCart(rmProduct, 1);
+          }
+        });
+      });
+    }
     navigate("/cart");
   };
 
@@ -332,24 +406,81 @@ const ProductDetail = () => {
                 </Reveal>
               )}
 
-              {/* Quantity */}
-              <Reveal delay={200}>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-medium text-foreground">Quantity:</span>
-                  <div className="flex items-center gap-1 bg-muted rounded-lg">
-                    <button onClick={() => setQty(Math.max(minQty, qty - 1))} className="w-9 h-9 flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-50" disabled={qty <= minQty}>
-                      <Minus className="w-4 h-4" />
-                    </button>
-                    <span className="w-10 text-center text-sm font-medium text-foreground">{qty}</span>
-                    <button onClick={() => setQty(Math.min(maxQty, qty + 1))} className="w-9 h-9 flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-50" disabled={qty >= maxQty}>
-                      <Plus className="w-4 h-4" />
-                    </button>
-                  </div>
-                  {!isEquipment && (
+              {/* Quantity — hidden for equipment */}
+              {!isEquipment && (
+                <Reveal delay={200}>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-medium text-foreground">Quantity:</span>
+                    <div className="flex items-center gap-1 bg-muted rounded-lg">
+                      <button onClick={() => setQty(Math.max(minQty, qty - 1))} className="w-9 h-9 flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-50" disabled={qty <= minQty}>
+                        <Minus className="w-4 h-4" />
+                      </button>
+                      <span className="w-10 text-center text-sm font-medium text-foreground">{qty}</span>
+                      <button onClick={() => setQty(Math.min(maxQty, qty + 1))} className="w-9 h-9 flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-50" disabled={qty >= maxQty}>
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
                     <span className="text-xs text-muted-foreground">(min {minQty}, max {maxQty})</span>
-                  )}
-                </div>
-              </Reveal>
+                  </div>
+                </Reveal>
+              )}
+
+              {/* Raw material checkboxes for equipment */}
+              {isEquipment && rawMaterials.length > 0 && (
+                <Reveal delay={200}>
+                  <div className="space-y-4">
+                    <p className="text-sm font-semibold text-foreground">Add Raw Materials</p>
+                    {Object.entries(rawMaterialGroups).map(([group, items]) => (
+                      <div key={group} className="space-y-2">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{group}</p>
+                        {items.map((rm) => (
+                          <div key={rm.id} className="bg-muted/30 rounded-xl p-3 space-y-2">
+                            <p className="text-sm font-medium text-foreground">{rm.name}</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              {rm.variants.map((v) => {
+                                const key = `${rm.id}-${v.id}`;
+                                const checked = selectedVariants.has(key);
+                                return (
+                                  <label
+                                    key={v.id}
+                                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border cursor-pointer transition-all ${
+                                      checked
+                                        ? "border-primary bg-primary/5 ring-1 ring-primary/30"
+                                        : "border-border bg-card hover:border-primary/30"
+                                    }`}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={checked}
+                                      onChange={() => toggleVariant(key)}
+                                      className="sr-only"
+                                    />
+                                    <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                                      checked ? "bg-primary border-primary" : "border-muted-foreground/30"
+                                    }`}>
+                                      {checked && <Check className="w-3 h-3 text-primary-foreground" />}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <span className="text-sm text-foreground">{v.label}</span>
+                                    </div>
+                                    <span className="text-sm font-semibold text-foreground whitespace-nowrap">Rs{v.price}</span>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                    {selectedVariants.size > 0 && (
+                      <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-primary/10 border border-primary/20">
+                        <span className="text-sm text-foreground">{selectedVariants.size} item{selectedVariants.size !== 1 ? "s" : ""} selected</span>
+                        <span className="text-sm font-bold text-foreground">+ Rs{rawMaterialsTotal}</span>
+                      </div>
+                    )}
+                  </div>
+                </Reveal>
+              )}
 
               {/* Social media consent — not shown for Equipment / machine products */}
               {product.category !== "Equipment" && (

@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Video, Calendar, Users, Play, GraduationCap } from "lucide-react";
+import { Video, Calendar, Users, Play, GraduationCap, Check } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Reveal } from "@/components/Reveal";
@@ -90,16 +90,28 @@ const Courses = () => {
                   href={courses.book1to1Url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-4 p-5 rounded-2xl border border-border bg-card shadow-card hover:border-primary/50 hover:shadow-elevated transition-all group"
+                  className="flex flex-col gap-3 p-5 rounded-2xl border border-border bg-card shadow-card hover:border-primary/50 hover:shadow-elevated transition-all group"
                   whileHover={{ y: -3 }}
                 >
-                  <div className="w-12 h-12 rounded-xl bg-gradient-pink flex items-center justify-center flex-shrink-0">
-                    <Calendar className="w-6 h-6 text-primary-foreground" />
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-pink flex items-center justify-center flex-shrink-0">
+                      <Calendar className="w-6 h-6 text-primary-foreground" />
+                    </div>
+                    <div>
+                      <h3 className="font-display font-semibold text-foreground">{courses.book1to1Label || "Book 1:1 Session"}</h3>
+                      <p className="text-xs text-muted-foreground">{courses.book1to1Description || "One-on-one with our expert"}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-display font-semibold text-foreground">{courses.book1to1Label || "Book 1:1 Session"}</h3>
-                    <p className="text-xs text-muted-foreground">One-on-one with our expert</p>
-                  </div>
+                  {courses.book1to1Points?.length > 0 && (
+                    <ul className="space-y-1.5 pt-1 border-t border-border">
+                      {courses.book1to1Points.map((point) => (
+                        <li key={point} className="flex items-center gap-2 text-sm text-foreground/80">
+                          <Check className="w-3.5 h-3.5 text-[hsl(var(--success))] flex-shrink-0" />
+                          {point}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </motion.a>
               </Reveal>
             )}
@@ -109,16 +121,28 @@ const Courses = () => {
                   href={courses.bookGroupUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-4 p-5 rounded-2xl border border-border bg-card shadow-card hover:border-primary/50 hover:shadow-elevated transition-all group"
+                  className="flex flex-col gap-3 p-5 rounded-2xl border border-border bg-card shadow-card hover:border-primary/50 hover:shadow-elevated transition-all group"
                   whileHover={{ y: -3 }}
                 >
-                  <div className="w-12 h-12 rounded-xl bg-gradient-pink flex items-center justify-center flex-shrink-0">
-                    <Users className="w-6 h-6 text-primary-foreground" />
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-pink flex items-center justify-center flex-shrink-0">
+                      <Users className="w-6 h-6 text-primary-foreground" />
+                    </div>
+                    <div>
+                      <h3 className="font-display font-semibold text-foreground">{courses.bookGroupLabel || "Book Group Session"}</h3>
+                      <p className="text-xs text-muted-foreground">{courses.bookGroupDescription || "Join a group workshop"}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-display font-semibold text-foreground">{courses.bookGroupLabel || "Book Group Session"}</h3>
-                    <p className="text-xs text-muted-foreground">Join a group workshop</p>
-                  </div>
+                  {courses.bookGroupPoints?.length > 0 && (
+                    <ul className="space-y-1.5 pt-1 border-t border-border">
+                      {courses.bookGroupPoints.map((point) => (
+                        <li key={point} className="flex items-center gap-2 text-sm text-foreground/80">
+                          <Check className="w-3.5 h-3.5 text-[hsl(var(--success))] flex-shrink-0" />
+                          {point}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </motion.a>
               </Reveal>
             )}

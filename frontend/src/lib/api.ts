@@ -48,6 +48,11 @@ export const authApi = {
       method: "POST",
       body: JSON.stringify({ name, email, password }),
     }),
+  googleLogin: (credential: string) =>
+    request<{ user: ApiUser; token: string }>("/api/auth/google", {
+      method: "POST",
+      body: JSON.stringify({ credential }),
+    }),
   me: () => request<{ user: ApiUser }>("/api/auth/me"),
   logout: () => request<{ message: string }>("/api/auth/logout", { method: "POST" }),
 };
@@ -284,6 +289,41 @@ export const eventPacksApi = {
     request<ApiEventPack>(`/api/event-packs/${id}`, { method: "PUT", body: JSON.stringify(body) }),
   delete: (id: string) =>
     request<{ message: string }>(`/api/event-packs/${id}`, { method: "DELETE" }),
+};
+
+// Raw Materials
+export interface ApiRawMaterialVariant {
+  id: string;
+  label: string;
+  quantity: number;
+  price: number;
+}
+
+export interface ApiRawMaterial {
+  id: string;
+  equipmentId: string;
+  name: string;
+  group: string;
+  variants: ApiRawMaterialVariant[];
+  active: boolean;
+  order: number;
+}
+
+export type ApiRawMaterialInput = Omit<ApiRawMaterial, "id" | "variants"> & {
+  variants: Omit<ApiRawMaterialVariant, "id">[];
+};
+
+export const rawMaterialsApi = {
+  getByEquipment: (equipmentId: string) =>
+    request<ApiRawMaterial[]>("/api/raw-materials", { params: { equipmentId } }),
+  getAll: () =>
+    request<ApiRawMaterial[]>("/api/raw-materials/all"),
+  create: (body: Partial<ApiRawMaterialInput> & { equipmentId: string; name: string }) =>
+    request<ApiRawMaterial>("/api/raw-materials", { method: "POST", body: JSON.stringify(body) }),
+  update: (id: string, body: Partial<ApiRawMaterialInput>) =>
+    request<ApiRawMaterial>(`/api/raw-materials/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+  delete: (id: string) =>
+    request<{ message: string }>(`/api/raw-materials/${id}`, { method: "DELETE" }),
 };
 
 // Stats (public)
