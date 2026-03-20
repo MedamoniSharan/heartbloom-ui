@@ -1,5 +1,5 @@
 /**
- * Magnetic Bliss India – business info (single source of truth).
+ * Magnetic Bliss in – business info (single source of truth).
  * Update logoUrl when the logo asset is available.
  */
 export const siteConfig = {

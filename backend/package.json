@@ -1,7 +1,7 @@
 {
   "name": "magnetic-bliss-backend",
   "version": "1.0.0",
-  "description": "Express + MongoDB API for Magnetic Bliss India",
+  "description": "Express + MongoDB API for Magnetic Bliss in",
   "main": "src/index.js",
   "type": "module",
   "scripts": {
@@ -16,7 +16,8 @@
     "express": "^4.21.0",
     "google-auth-library": "^10.6.1",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.3.0"
+    "mongoose": "^8.3.0",
+    "razorpay": "^2.9.6"
   },
   "devDependencies": {
     "nodemon": "^3.1.0"

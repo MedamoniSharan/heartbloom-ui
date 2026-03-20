@@ -13,6 +13,7 @@ import galleryRoutes from "./routes/gallery.js";
 import eventPackRoutes from "./routes/eventPacks.js";
 import rawMaterialRoutes from "./routes/rawMaterials.js";
 import statsRoutes from "./routes/stats.js";
+import paymentRoutes from "./routes/payments.js";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -45,6 +46,7 @@ app.use("/api/gallery", galleryRoutes);
 app.use("/api/event-packs", eventPackRoutes);
 app.use("/api/raw-materials", rawMaterialRoutes);
 app.use("/api/stats", statsRoutes);
+app.use("/api/payments", paymentRoutes);
 
 app.get("/api/health", (req, res) => res.json({ ok: true }));
 

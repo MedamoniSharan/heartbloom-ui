@@ -40,6 +40,9 @@ cp .env.example .env   # configure MONGODB_URI, JWT_SECRET, etc.
 npm start
 ```
 
+**Razorpay (online checkout)**  
+Add `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` to `backend/.env` (see `backend/.env.example`). When both are set, checkout opens Razorpay before the order is saved; the server verifies the payment signature and amount. If they are unset, the app keeps the previous “place order → WhatsApp” flow. **Never commit keys or paste live secrets in chat** — rotate any key that was exposed.
+
 **Seed mock data (products, promos, admin user)**
 
 With the backend `.env` configured and MongoDB running:

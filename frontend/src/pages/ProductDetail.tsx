@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { useDropzone } from "react-dropzone";
-import { MAX_PHOTOS, MAX_FILE_SIZE, type PhotoItem } from "@/stores/photoStore";
+import { MAX_FILE_SIZE, type PhotoItem } from "@/stores/photoStore";
 import { ImageEditor } from "@/components/ImageEditor";
 import { Reveal } from "@/components/Reveal";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";

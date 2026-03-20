@@ -9,6 +9,7 @@ import { Footer } from "@/components/Footer";
 import { ScrollProgress } from "@/components/ScrollProgress";
 import { PageTransition } from "@/components/PageTransition";
 import { UploadModal } from "@/components/UploadModal";
+import { HOME_PREVIEW_MAX_PHOTOS } from "@/stores/photoStore";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { SkipToContent, SRAnnouncer } from "@/components/Accessibility";
 
@@ -31,7 +32,7 @@ const Index = () => {
         </main>
         <Footer />
         <MobileBottomNav onUploadClick={() => setUploadOpen(true)} />
-        <UploadModal open={uploadOpen} onClose={() => setUploadOpen(false)} />
+        <UploadModal open={uploadOpen} onClose={() => setUploadOpen(false)} homeSlotLimit={HOME_PREVIEW_MAX_PHOTOS} />
       </div>
     </PageTransition>
   );

@@ -32,6 +32,8 @@ export interface HeroStatsConfig {
   happyCustomers: number;
   magnetsPrinted: number;
   avgRating: number;
+  /** Right-column hero image. Full URL or site path (e.g. /hero.jpg). Empty = built-in default. */
+  heroImageUrl: string;
 }
 
 const defaultBulk: BulkOrderConfig = {
@@ -65,6 +67,7 @@ const defaultHeroStats: HeroStatsConfig = {
   happyCustomers: 70000,
   magnetsPrinted: 800000,
   avgRating: 4.9,
+  heroImageUrl: "",
 };
 
 interface SiteContentState {
@@ -77,6 +80,10 @@ interface SiteContentState {
   setOrderQuantity: (config: Partial<OrderQuantityConfig>) => void;
   setHeroStats: (config: Partial<HeroStatsConfig>) => void;
 }
+
+type PersistedSlice = Partial<
+  Pick<SiteContentState, "bulkOrder" | "courses" | "orderQuantity" | "heroStats">
+>;
 
 export const useSiteContentStore = create<SiteContentState>()(
   persist(
@@ -94,6 +101,24 @@ export const useSiteContentStore = create<SiteContentState>()(
       setHeroStats: (config) =>
         set((s) => ({ heroStats: { ...s.heroStats, ...config } })),
     }),
-    { name: "magnetic-bliss-site-content" }
+    {
+      name: "magnetic-bliss-site-content",
+      merge: (persisted, current) => {
+        const c = current as SiteContentState;
+        const p = persisted as PersistedSlice | undefined;
+        if (!p) return c;
+        return {
+          ...c,
+          bulkOrder: { ...defaultBulk, ...p.bulkOrder },
+          courses: { ...defaultCourses, ...p.courses },
+          orderQuantity: { ...defaultOrderQuantity, ...p.orderQuantity },
+          heroStats: {
+            ...defaultHeroStats,
+            ...p.heroStats,
+            heroImageUrl: p.heroStats?.heroImageUrl ?? "",
+          },
+        };
+      },
+    }
   )
 );

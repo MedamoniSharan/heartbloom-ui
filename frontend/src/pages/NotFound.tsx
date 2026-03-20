@@ -14,7 +14,7 @@ const NotFound = () => {
       <div className="text-center">
         {siteConfig.logoUrl && (
           <Link to="/" className="inline-block mb-6">
-            <img src={siteConfig.logoUrl} alt="Magnetic Bliss India" className="h-16 w-auto object-contain mx-auto" />
+            <img src={siteConfig.logoUrl} alt="Magnetic Bliss in" className="h-16 w-auto object-contain mx-auto" />
           </Link>
         )}
         <h1 className="mb-4 text-4xl font-bold">404</h1>

@@ -83,7 +83,7 @@ const FAQ = () => (
         </Reveal>
         <Reveal delay={100}>
           <p className="text-muted-foreground max-w-md mx-auto">
-            Everything you need to know about Magnetic Bliss India. Can't find what you're looking for? Contact us!
+            Everything you need to know about Magnetic Bliss in. Can't find what you're looking for? Contact us!
           </p>
         </Reveal>
       </div>

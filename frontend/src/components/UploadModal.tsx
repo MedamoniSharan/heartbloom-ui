@@ -11,6 +11,8 @@ interface UploadModalProps {
   open: boolean;
   onClose: () => void;
   requiredCount?: number;
+  /** When set (e.g. home page), caps uploads and shows a fixed slot grid. */
+  homeSlotLimit?: number;
   onAddToCart?: (socialMediaConsent: boolean) => void;
 }
 
@@ -38,16 +40,23 @@ function validateFile(file: File): string | null {
   return null;
 }
 
-export const UploadModal = ({ open, onClose, requiredCount, onAddToCart }: UploadModalProps) => {
+export const UploadModal = ({ open, onClose, requiredCount, homeSlotLimit, onAddToCart }: UploadModalProps) => {
   const { photos, addPhotos } = usePhotoStore();
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
   const [urlInput, setUrlInput] = useState("");
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [socialMediaConsent, setSocialMediaConsent] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const remaining = requiredCount != null
-    ? Math.max(0, requiredCount - photos.length)
-    : MAX_PHOTOS - photos.length;
+  const remaining =
+    homeSlotLimit != null
+      ? photos.length >= homeSlotLimit
+        ? 0
+        : homeSlotLimit - photos.length
+      : requiredCount != null
+        ? Math.max(0, requiredCount - photos.length)
+        : MAX_PHOTOS - photos.length;
+
+  const slotGridCount = requiredCount ?? homeSlotLimit;
   const canAddToCart = requiredCount != null && onAddToCart != null && photos.length >= requiredCount;
 
   const [showCamera, setShowCamera] = useState(false);
@@ -179,7 +188,7 @@ export const UploadModal = ({ open, onClose, requiredCount, onAddToCart }: Uploa
 
   const clearUploads = () => setUploadingFiles([]);
 
-  const totalSlots = requiredCount ?? MAX_PHOTOS;
+  const totalSlots = homeSlotLimit ?? requiredCount ?? MAX_PHOTOS;
 
   return (
     <AnimatePresence>
@@ -334,9 +343,19 @@ export const UploadModal = ({ open, onClose, requiredCount, onAddToCart }: Uploa
 
               {/* Preview grid */}
               <div className="p-6">
-                {requiredCount != null && requiredCount > 0 ? (
-                  <div className={`grid gap-4 ${requiredCount <= 2 ? "grid-cols-2" : requiredCount <= 4 ? "grid-cols-2 sm:grid-cols-4" : requiredCount <= 6 ? "grid-cols-3 sm:grid-cols-3" : "grid-cols-3 sm:grid-cols-4"}`}>
-                    {Array.from({ length: requiredCount }).map((_, idx) => {
+                {slotGridCount != null && slotGridCount > 0 ? (
+                  <div
+                    className={`grid gap-4 ${
+                      slotGridCount <= 2
+                        ? "grid-cols-2"
+                        : slotGridCount <= 4
+                          ? "grid-cols-2 sm:grid-cols-4"
+                          : slotGridCount <= 6
+                            ? "grid-cols-3 sm:grid-cols-3"
+                            : "grid-cols-3 sm:grid-cols-4"
+                    }`}
+                  >
+                    {Array.from({ length: slotGridCount }).map((_, idx) => {
                       const photo = photos[idx];
                       return (
                         <motion.div
@@ -379,7 +398,7 @@ export const UploadModal = ({ open, onClose, requiredCount, onAddToCart }: Uploa
                               </div>
 
                               {/* Copy button */}
-                              {photos.length < requiredCount && (
+                              {photos.length < slotGridCount && (
                                 <button
                                   onClick={() => { usePhotoStore.getState().addPhotos([photo.file]); }}
                                   className="absolute bottom-2.5 right-2.5 flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-black/50 hover:bg-primary text-white text-[11px] font-medium backdrop-blur-sm transition-colors"
@@ -451,7 +470,7 @@ export const UploadModal = ({ open, onClose, requiredCount, onAddToCart }: Uploa
               </div>
 
               {/* Bottom action bar */}
-              {(canAddToCart || (photos.length > 0 && !requiredCount)) && (
+              {(canAddToCart || (photos.length > 0 && requiredCount == null)) && (
                 <div className="sticky bottom-0 px-6 py-4 bg-card/95 backdrop-blur-sm border-t border-border">
                   {canAddToCart && (
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
@@ -469,7 +488,7 @@ export const UploadModal = ({ open, onClose, requiredCount, onAddToCart }: Uploa
                       </motion.button>
                     </div>
                   )}
-                  {!canAddToCart && photos.length > 0 && !requiredCount && (
+                  {!canAddToCart && photos.length > 0 && requiredCount == null && (
                     <motion.button
                       onClick={onClose}
                       className="w-full py-3 rounded-xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm"

@@ -6,7 +6,7 @@ import { siteConfig } from "@/lib/siteConfig";
 const SECTIONS = [
   {
     title: "Acceptance of Terms",
-    content: `By accessing or using the Magnetic Bliss India website and services, you agree to be bound by these Terms of Service. If you do not agree, please do not use our site or place orders. We reserve the right to update these terms; the "Last updated" date below indicates the latest version.`,
+    content: `By accessing or using the Magnetic Bliss in website and services, you agree to be bound by these Terms of Service. If you do not agree, please do not use our site or place orders. We reserve the right to update these terms; the "Last updated" date below indicates the latest version.`,
   },
   {
     title: "Use of Our Services",
@@ -18,7 +18,7 @@ const SECTIONS = [
   },
   {
     title: "Intellectual Property & Your Content",
-    content: `You retain ownership of the photos and content you upload. By uploading, you grant us a licence to use that content only to create and fulfil your order and to provide our services. Our brand name, logo, website design, and other materials are owned by Magnetic Bliss India and may not be copied or used without permission.`,
+    content: `You retain ownership of the photos and content you upload. By uploading, you grant us a licence to use that content only to create and fulfil your order and to provide our services. Our brand name, logo, website design, and other materials are owned by Magnetic Bliss in and may not be copied or used without permission.`,
   },
   {
     title: "Shipping & Delivery",
@@ -30,7 +30,7 @@ const SECTIONS = [
   },
   {
     title: "Limitation of Liability",
-    content: `To the fullest extent permitted by law, Magnetic Bliss India and its team shall not be liable for any indirect, incidental, or consequential damages arising from your use of our site or products. Our total liability for any claim related to an order shall not exceed the amount you paid for that order.`,
+    content: `To the fullest extent permitted by law, Magnetic Bliss in and its team shall not be liable for any indirect, incidental, or consequential damages arising from your use of our site or products. Our total liability for any claim related to an order shall not exceed the amount you paid for that order.`,
   },
   {
     title: "Governing Law & Disputes",
@@ -57,7 +57,7 @@ const Terms = () => (
 
       <Reveal delay={150}>
         <p className="text-muted-foreground mb-10 leading-relaxed">
-          Please read these Terms of Service carefully before using Magnetic Bliss India. By using our website and services, you agree to these terms.
+          Please read these Terms of Service carefully before using Magnetic Bliss in. By using our website and services, you agree to these terms.
         </p>
       </Reveal>
 

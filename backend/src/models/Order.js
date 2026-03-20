@@ -40,6 +40,14 @@ const orderSchema = new mongoose.Schema(
     address: { type: addressSchema, required: true },
     allowSocialMediaFeature: { type: Boolean, default: false },
     customerPhotos: [{ type: String }],
+    razorpayOrderId: { type: String },
+    razorpayPaymentId: { type: String },
+    /** cod = pay on delivery; prepaid = paid online (Razorpay). */
+    paymentType: {
+      type: String,
+      enum: ["cod", "prepaid"],
+      default: "cod",
+    },
   },
   { timestamps: true }
 );

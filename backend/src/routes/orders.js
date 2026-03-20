@@ -1,7 +1,10 @@
+import crypto from "crypto";
 import express from "express";
 import Order from "../models/Order.js";
 import Product from "../models/Product.js";
 import { authenticate, requireAdmin } from "../middleware/auth.js";
+import { computeOrderTotalRupees, rupeesToPaise } from "../lib/orderPricing.js";
+import { getRazorpay, isRazorpayEnabled } from "../lib/razorpayClient.js";
 
 const router = express.Router();
 
@@ -26,8 +29,21 @@ function toOrderResponse(doc) {
     address: o.address,
     allowSocialMediaFeature: o.allowSocialMediaFeature === true,
     customerPhotos: o.customerPhotos || [],
+    razorpayPaymentId: o.razorpayPaymentId,
+    paymentType: o.paymentType === "prepaid" ? "prepaid" : "cod",
     createdAt: o.createdAt,
   };
+}
+
+function verifyRazorpaySignature(orderId, paymentId, signature) {
+  const secret = process.env.RAZORPAY_KEY_SECRET;
+  if (!secret || !signature || !orderId || !paymentId) return false;
+  const expected = crypto.createHmac("sha256", secret).update(`${orderId}|${paymentId}`).digest("hex");
+  try {
+    return crypto.timingSafeEqual(Buffer.from(expected, "utf8"), Buffer.from(String(signature), "utf8"));
+  } catch {
+    return false;
+  }
 }
 
 router.get("/", authenticate, async (req, res, next) => {
@@ -56,10 +72,68 @@ router.get("/all", authenticate, requireAdmin, async (req, res, next) => {
 
 router.post("/", async (req, res, next) => {
   try {
-    const { items, total, address, allowSocialMediaFeature, customerPhotos, guestName } = req.body;
-    if (!items?.length || total == null || !address) {
-      return res.status(400).json({ message: "items, total and address required" });
+    const {
+      items,
+      total,
+      address,
+      allowSocialMediaFeature,
+      customerPhotos,
+      guestName,
+      promoCode,
+      razorpayOrderId,
+      razorpayPaymentId,
+      razorpaySignature,
+      paymentMethod,
+    } = req.body;
+
+    const rawMethod = String(paymentMethod || "cod").toLowerCase();
+    const wantsPrepaid = rawMethod === "online" || rawMethod === "prepaid";
+    if (!items?.length || !address) {
+      return res.status(400).json({ message: "items and address required" });
     }
+
+    const normalizedItems = items.map((it) => ({
+      productId: it.productId,
+      quantity: it.quantity,
+    }));
+    const promoUpper = promoCode ? String(promoCode).toUpperCase().trim() || null : null;
+    let serverTotal;
+    try {
+      ({ total: serverTotal } = await computeOrderTotalRupees(normalizedItems, promoUpper));
+    } catch (e) {
+      if (e.status) return res.status(e.status).json({ message: e.message });
+      throw e;
+    }
+
+    const expectedPaise = rupeesToPaise(serverTotal);
+
+    if (wantsPrepaid) {
+      if (!isRazorpayEnabled()) {
+        return res.status(400).json({ message: "Online payment is not available" });
+      }
+      if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
+        return res.status(400).json({ message: "Payment verification required" });
+      }
+      if (!verifyRazorpaySignature(razorpayOrderId, razorpayPaymentId, razorpaySignature)) {
+        return res.status(400).json({ message: "Invalid payment signature" });
+      }
+      const rz = getRazorpay();
+      const payment = await rz.payments.fetch(razorpayPaymentId);
+      if (payment.order_id !== razorpayOrderId) {
+        return res.status(400).json({ message: "Payment does not match order" });
+      }
+      const paidPaise = Number(payment.amount);
+      if (paidPaise !== expectedPaise) {
+        return res.status(400).json({ message: "Paid amount does not match order total" });
+      }
+      const okStatus = ["captured", "authorized"].includes(payment.status);
+      if (!okStatus) {
+        return res.status(400).json({ message: `Payment not complete (status: ${payment.status})` });
+      }
+    } else if (total != null && Math.abs(Number(total) - serverTotal) > 0.02) {
+      return res.status(400).json({ message: "Order total mismatch — refresh and try again" });
+    }
+
     const orderItems = [];
     for (const it of items) {
       const product = await Product.findById(it.productId);
@@ -92,14 +166,21 @@ router.post("/", async (req, res, next) => {
       }
     }
 
+    const paymentType = wantsPrepaid ? "prepaid" : "cod";
+
     const order = await Order.create({
       userId,
       userName,
       items: orderItems,
-      total,
+      total: serverTotal,
       address,
       allowSocialMediaFeature: allowSocialMediaFeature === true,
       customerPhotos: Array.isArray(customerPhotos) ? customerPhotos.slice(0, 20) : [],
+      paymentType,
+      ...(wantsPrepaid && {
+        razorpayOrderId,
+        razorpayPaymentId,
+      }),
     });
     const populated = await Order.findById(order._id).populate("items.product").lean();
     res.status(201).json(toOrderResponse(populated));

@@ -49,11 +49,11 @@ export const Navbar = () => {
       <nav className="w-full flex items-center justify-between gap-2 sm:gap-4">
         <Link to="/" className="flex items-center gap-2 group flex-shrink-0 min-w-0">
           {siteConfig.logoUrl ? (
-            <img src={siteConfig.logoUrl} alt="Magnetic Bliss India" className="h-7 w-auto sm:h-8 object-contain group-hover:scale-110 transition-transform flex-shrink-0" />
+            <img src={siteConfig.logoUrl} alt="Magnetic Bliss in" className="h-7 w-auto sm:h-8 object-contain group-hover:scale-110 transition-transform flex-shrink-0" />
           ) : (
             <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-primary fill-primary group-hover:scale-110 transition-transform flex-shrink-0" />
           )}
-          <span className="font-display text-base sm:text-xl font-bold text-foreground truncate max-w-[140px] sm:max-w-none">Magnetic Bliss India</span>
+          <span className="font-display text-base sm:text-xl font-bold text-foreground truncate max-w-[140px] sm:max-w-none">Magnetic Bliss in</span>
         </Link>
 
         <div className="hidden md:flex items-center gap-6 text-sm text-muted-foreground flex-1 justify-center min-w-0">

@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import {
   Package, DollarSign, Users, TrendingUp, Plus,
@@ -21,6 +21,64 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, AreaChart, Area, Legend,
 } from "recharts";
+import { cn } from "@/lib/utils";
+
+const HERO_IMAGE_MAX_FILE_BYTES = 15 * 1024 * 1024;
+const HERO_IMAGE_MAX_DATA_URL_CHARS = 3.5 * 1024 * 1024;
+
+async function fileToHeroDataUrl(file: File): Promise<string> {
+  const lower = file.name.toLowerCase();
+  const isHeic =
+    lower.endsWith(".heic") ||
+    lower.endsWith(".heif") ||
+    file.type === "image/heic" ||
+    file.type === "image/heif";
+  let imageFile = file;
+  if (isHeic) {
+    const heic2any = (await import("heic2any")).default;
+    const converted = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.9 });
+    const blob = Array.isArray(converted) ? converted[0] : converted;
+    imageFile = new File([blob], file.name.replace(/\.heic$/i, ".jpg"), { type: "image/jpeg" });
+  } else if (!file.type.startsWith("image/")) {
+    throw new Error("Please use an image file (JPG, PNG, WebP, etc.).");
+  }
+  if (imageFile.size > HERO_IMAGE_MAX_FILE_BYTES) {
+    throw new Error("Image must be under 15MB.");
+  }
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const blobUrl = URL.createObjectURL(imageFile);
+    img.onload = () => {
+      URL.revokeObjectURL(blobUrl);
+      let { width, height } = img;
+      const maxW = 1920;
+      if (width > maxW) {
+        height = (height * maxW) / width;
+        width = maxW;
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(width);
+      canvas.height = Math.round(height);
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        reject(new Error("Could not process image."));
+        return;
+      }
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.88);
+      if (dataUrl.length > HERO_IMAGE_MAX_DATA_URL_CHARS) {
+        reject(new Error("Image is too large after processing. Try a smaller or simpler image."));
+        return;
+      }
+      resolve(dataUrl);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(blobUrl);
+      reject(new Error("Could not read that image."));
+    };
+    img.src = blobUrl;
+  });
+}
 
 const statCards = (orders: Order[], products: Product[]) => [
   { label: "Total Orders", value: orders.length, icon: Package, change: "" },
@@ -108,7 +166,11 @@ const DashboardTab = ({ orders, products, setTab }: { orders: Order[]; products:
           {orders.slice(0, 5).length === 0 ? <p className="text-sm text-muted-foreground">No orders yet.</p> : (
             <div className="space-y-2">{orders.slice(0, 5).map(order => (
               <div key={order.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                <div><p className="text-sm font-medium text-foreground">{order.id}</p><p className="text-xs text-muted-foreground">{order.userName}</p></div>
+                <div>
+                  <p className="text-sm font-medium text-foreground">{order.id}</p>
+                  <p className="text-xs text-muted-foreground">{order.userName}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{order.paymentType === "prepaid" ? "Paid online" : "COD"}</p>
+                </div>
                 <div className="text-right"><p className="text-sm font-bold text-foreground">Rs{order.total.toFixed(2)}</p>
                   <span className={`text-xs px-2 py-0.5 rounded-full ${order.status === "delivered" ? "bg-[hsl(var(--success))]/20 text-[hsl(var(--success))]" : order.status === "pending" ? "bg-amber-500/20 text-amber-500" : "bg-primary/20 text-primary"}`}>{order.status}</span>
                 </div>
@@ -434,6 +496,15 @@ const Admin = () => {
                         {order.allowSocialMediaFeature && (
                           <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-primary/10 text-primary">Social Media OK</span>
                         )}
+                        <span
+                          className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${
+                            order.paymentType === "prepaid"
+                              ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
+                              : "bg-amber-500/15 text-amber-800 dark:text-amber-400"
+                          }`}
+                        >
+                          {order.paymentType === "prepaid" ? "Paid online" : "COD"}
+                        </span>
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">{order.userName} · {new Date(order.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })} · {order.items.length} item{order.items.length !== 1 ? "s" : ""}</p>
                     </div>
@@ -497,6 +568,18 @@ const Admin = () => {
                               <div className="flex justify-between"><span className="text-muted-foreground">Date</span><span className="text-foreground">{new Date(order.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</span></div>
                               <div className="flex justify-between"><span className="text-muted-foreground">Customer</span><span className="text-foreground">{order.userName}</span></div>
                               <div className="flex justify-between border-t border-border pt-1.5 mt-1.5"><span className="font-medium text-foreground">Total</span><span className="font-bold text-foreground font-display">Rs{order.total.toFixed(2)}</span></div>
+                              <div className="flex justify-between items-center pt-1.5">
+                                <span className="text-muted-foreground">Payment</span>
+                                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${order.paymentType === "prepaid" ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400" : "bg-amber-500/15 text-amber-800 dark:text-amber-400"}`}>
+                                  {order.paymentType === "prepaid" ? "Paid online (Razorpay)" : "Cash on delivery"}
+                                </span>
+                              </div>
+                              {order.paymentType === "prepaid" && order.razorpayPaymentId && (
+                                <div className="flex justify-between gap-2 text-[11px] pt-1">
+                                  <span className="text-muted-foreground shrink-0">Razorpay payment</span>
+                                  <span className="font-mono text-foreground break-all text-right">{order.razorpayPaymentId}</span>
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -1974,6 +2057,34 @@ function HeroStatsAdminTab() {
   const [customers, setCustomers] = useState(() => heroStats.happyCustomers.toString());
   const [magnets, setMagnets] = useState(() => heroStats.magnetsPrinted.toString());
   const [rating, setRating] = useState(() => heroStats.avgRating.toString());
+  const [heroImageUrl, setHeroImageUrl] = useState(() => heroStats.heroImageUrl ?? "");
+  const [heroDragOver, setHeroDragOver] = useState(false);
+  const [heroImageLoading, setHeroImageLoading] = useState(false);
+  const heroFileInputRef = useRef<HTMLInputElement>(null);
+
+  const applyHeroImageFile = useCallback(
+    async (file: File | undefined | null) => {
+      if (!file) return;
+      setHeroImageLoading(true);
+      try {
+        const dataUrl = await fileToHeroDataUrl(file);
+        setHeroImageUrl(dataUrl);
+        toast({
+          title: "Image ready",
+          description: "Click “Save hero section” so it appears on the home page.",
+        });
+      } catch (e) {
+        toast({
+          title: "Could not use image",
+          description: e instanceof Error ? e.message : "Unknown error",
+          variant: "destructive",
+        });
+      } finally {
+        setHeroImageLoading(false);
+      }
+    },
+    [toast]
+  );
 
   const save = () => {
     const c = parseInt(customers, 10);
@@ -1983,15 +2094,108 @@ function HeroStatsAdminTab() {
       toast({ title: "Invalid values", description: "Please enter valid numbers. Rating must be 0–5.", variant: "destructive" });
       return;
     }
-    setHeroStats({ happyCustomers: c, magnetsPrinted: m, avgRating: Math.round(r * 10) / 10 });
-    toast({ title: "Hero stats saved!" });
+    setHeroStats({
+      happyCustomers: c,
+      magnetsPrinted: m,
+      avgRating: Math.round(r * 10) / 10,
+      heroImageUrl: heroImageUrl.trim(),
+    });
+    toast({ title: "Hero section saved!" });
   };
 
   return (
     <div className="max-w-xl space-y-4">
-      <h3 className="font-display font-semibold text-foreground">Hero Section Stats</h3>
-      <p className="text-xs text-muted-foreground">These numbers are displayed on the home page hero section. Update them anytime.</p>
+      <h3 className="font-display font-semibold text-foreground">Hero Section</h3>
+      <p className="text-xs text-muted-foreground">
+        Stats and the large image on the right of the home hero. Drag and drop an image, browse for a file, or paste a URL. Leave empty for the built-in default.
+      </p>
       <div className="bg-card border border-border rounded-2xl p-6 shadow-card space-y-4">
+        <div>
+          <label className="text-xs font-medium text-muted-foreground block mb-2">Hero image</label>
+          <input
+            ref={heroFileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif"
+            className="sr-only"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              void applyHeroImageFile(f);
+              e.target.value = "";
+            }}
+          />
+          <div
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                heroFileInputRef.current?.click();
+              }
+            }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setHeroDragOver(true);
+            }}
+            onDragLeave={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setHeroDragOver(false);
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setHeroDragOver(false);
+              const f = e.dataTransfer.files?.[0];
+              void applyHeroImageFile(f);
+            }}
+            className={cn(
+              "rounded-xl border-2 border-dashed px-4 py-8 text-center transition-colors cursor-pointer select-none",
+              heroDragOver ? "border-primary bg-primary/10" : "border-border bg-muted/20 hover:border-primary/40 hover:bg-muted/30",
+              heroImageLoading && "pointer-events-none opacity-60"
+            )}
+            onClick={() => !heroImageLoading && heroFileInputRef.current?.click()}
+          >
+            <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+            <p className="text-sm font-medium text-foreground">
+              {heroImageLoading ? "Processing…" : "Drag and drop an image here"}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">or click to browse — JPG, PNG, WebP (max 15MB)</p>
+          </div>
+          <p className="text-xs font-medium text-muted-foreground mt-4 mb-2">Or image URL</p>
+          <input
+            type="text"
+            inputMode="url"
+            placeholder="https://… or /your-image.jpg"
+            value={heroImageUrl.startsWith("data:") ? "" : heroImageUrl}
+            onChange={(e) => setHeroImageUrl(e.target.value)}
+            className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground text-sm"
+          />
+          {heroImageUrl.startsWith("data:") ? (
+            <p className="text-[11px] text-muted-foreground mt-1">Using an uploaded image (saved as data when you save below). Clear to switch to URL or default.</p>
+          ) : null}
+          <div className="flex flex-wrap gap-2 mt-2">
+            <button
+              type="button"
+              onClick={() => setHeroImageUrl("")}
+              className="text-xs text-primary hover:underline"
+            >
+              Clear — use default image
+            </button>
+          </div>
+          {heroImageUrl.trim() ? (
+            <div className="mt-3 rounded-xl overflow-hidden border border-border bg-muted/30 max-h-48">
+              <img
+                src={heroImageUrl.trim()}
+                alt="Preview"
+                className="w-full h-full max-h-48 object-contain"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = "none";
+                }}
+              />
+            </div>
+          ) : null}
+        </div>
         <div className="grid grid-cols-3 gap-4">
           <div className="floating-label-group">
             <input type="number" min={0} placeholder=" " value={customers} onChange={(e) => setCustomers(e.target.value)} />
@@ -2007,7 +2211,7 @@ function HeroStatsAdminTab() {
           </div>
         </div>
         <motion.button type="button" onClick={save} className="w-full py-3 rounded-xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.97 }}>
-          Save hero stats
+          Save hero section
         </motion.button>
       </div>
     </div>

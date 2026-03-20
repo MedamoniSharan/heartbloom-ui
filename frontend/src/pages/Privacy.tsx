@@ -6,7 +6,7 @@ import { siteConfig } from "@/lib/siteConfig";
 const SECTIONS = [
   {
     title: "Information We Collect",
-    content: `When you use Magnetic Bliss India, we collect information you provide directly, including your name, email address, shipping address, and payment information. We also collect photos you upload for printing. We use cookies and similar technologies to improve your experience and analyze site traffic.`,
+    content: `When you use Magnetic Bliss in, we collect information you provide directly, including your name, email address, shipping address, and payment information. We also collect photos you upload for printing. We use cookies and similar technologies to improve your experience and analyze site traffic.`,
   },
   {
     title: "How We Use Your Information",
@@ -34,7 +34,7 @@ const SECTIONS = [
   },
   {
     title: "Changes to This Policy",
-    content: `We may update this privacy policy from time to time. We'll notify you of significant changes via email or a notice on our website. Your continued use of Magnetic Bliss India after changes constitutes acceptance of the updated policy.`,
+    content: `We may update this privacy policy from time to time. We'll notify you of significant changes via email or a notice on our website. Your continued use of Magnetic Bliss in after changes constitutes acceptance of the updated policy.`,
   },
 ];
 
@@ -53,7 +53,7 @@ const Privacy = () => (
 
       <Reveal delay={150}>
         <p className="text-muted-foreground mb-10 leading-relaxed">
-          At Magnetic Bliss India, we take your privacy seriously. This policy explains how we collect, use, and protect your personal information when you use our website and services.
+          At Magnetic Bliss in, we take your privacy seriously. This policy explains how we collect, use, and protect your personal information when you use our website and services.
         </p>
       </Reveal>
 

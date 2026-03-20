@@ -47,7 +47,11 @@ export const DEFAULT_ADJUSTMENTS: Adjustments = {
   enhance: 0,
 };
 
+/** Global max photos in the editor store (e.g. product pages). */
 export const MAX_PHOTOS = 15;
+
+/** Home page “Your Magnet Collection” grid only. */
+export const HOME_PREVIEW_MAX_PHOTOS = 4;
 
 export const ACCEPTED_TYPES = [
   "image/jpeg",

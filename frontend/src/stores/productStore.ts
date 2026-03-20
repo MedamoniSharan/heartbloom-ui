@@ -31,6 +31,8 @@ export interface Order {
   address: Address;
   allowSocialMediaFeature?: boolean;
   customerPhotos?: string[];
+  razorpayPaymentId?: string;
+  paymentType: "cod" | "prepaid";
   createdAt: string;
 }
 
@@ -98,6 +100,8 @@ const mapOrder = (o: ApiOrder): Order => ({
   address: o.address,
   allowSocialMediaFeature: o.allowSocialMediaFeature,
   customerPhotos: o.customerPhotos,
+  razorpayPaymentId: o.razorpayPaymentId,
+  paymentType: o.paymentType === "prepaid" ? "prepaid" : "cod",
   createdAt: o.createdAt,
 });
 
@@ -124,7 +128,15 @@ interface ProductState {
   addProduct: (product: Omit<Product, "id">) => Promise<boolean>;
   updateProduct: (id: string, product: Partial<Product>) => Promise<boolean>;
   removeProduct: (id: string) => Promise<boolean>;
-  addOrder: (order: Omit<Order, "id" | "createdAt">) => Promise<boolean>;
+  addOrder: (
+    order: Omit<Order, "id" | "createdAt"> & {
+      promoCode?: string;
+      razorpayOrderId?: string;
+      razorpayPaymentId?: string;
+      razorpaySignature?: string;
+      paymentMethod?: "cod" | "online";
+    }
+  ) => Promise<boolean>;
   updateOrderStatus: (id: string, status: Order["status"]) => Promise<boolean>;
   addPromoCode: (promo: Omit<PromoCode, "id">) => Promise<boolean>;
   updatePromoCode: (id: string, promo: Omit<PromoCode, "id">) => Promise<boolean>;
@@ -233,6 +245,11 @@ export const useProductStore = create<ProductState>((set, get) => ({
         allowSocialMediaFeature: order.allowSocialMediaFeature,
         customerPhotos: order.customerPhotos,
         guestName: order.userName,
+        promoCode: order.promoCode,
+        razorpayOrderId: order.razorpayOrderId,
+        razorpayPaymentId: order.razorpayPaymentId,
+        razorpaySignature: order.razorpaySignature,
+        paymentMethod: order.paymentMethod || "cod",
       });
       set((s) => ({ orders: [mapOrder(created), ...s.orders] }));
       return true;

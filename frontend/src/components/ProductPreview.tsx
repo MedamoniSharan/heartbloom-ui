@@ -4,7 +4,7 @@ import {
   Plus, Trash2, Settings, ImageIcon,
   Shield, Truck, Heart, Lock, Check,
 } from "lucide-react";
-import { usePhotoStore, MAX_PHOTOS, buildFilterString } from "@/stores/photoStore";
+import { usePhotoStore, HOME_PREVIEW_MAX_PHOTOS, buildFilterString } from "@/stores/photoStore";
 import { ImageEditor } from "./ImageEditor";
 import { UploadModal } from "./UploadModal";
 import { Reveal } from "./Reveal";
@@ -23,12 +23,12 @@ export const ProductPreview = () => {
   const [uploadOpen, setUploadOpen] = useState(false);
 
   const editingPhoto = photos.find((p) => p.id === editingId);
-  const filled = photos.length;
-  const progress = (filled / MAX_PHOTOS) * 100;
-  const remaining = MAX_PHOTOS - filled;
+  const shownFilled = Math.min(photos.length, HOME_PREVIEW_MAX_PHOTOS);
+  const progress = (shownFilled / HOME_PREVIEW_MAX_PHOTOS) * 100;
+  const remaining =
+    photos.length >= HOME_PREVIEW_MAX_PHOTOS ? 0 : HOME_PREVIEW_MAX_PHOTOS - photos.length;
 
-  // Generate 9 slots — filled from photos, rest empty
-  const slots = Array.from({ length: MAX_PHOTOS }, (_, i) => photos[i] || null);
+  const slots = Array.from({ length: HOME_PREVIEW_MAX_PHOTOS }, (_, i) => photos[i] || null);
 
   return (
     <section className="py-16 px-4 sm:py-24 sm:px-6 bg-background" id="preview">
@@ -38,14 +38,14 @@ export const ProductPreview = () => {
         </Reveal>
         <Reveal delay={100}>
           <p className="text-center text-muted-foreground max-w-lg mx-auto mb-12">
-            Upload {MAX_PHOTOS} photos and we'll print them as premium fridge magnets.
+            Upload {HOME_PREVIEW_MAX_PHOTOS} photos and we&apos;ll print them as premium fridge magnets.
           </p>
         </Reveal>
 
         <div className="grid lg:grid-cols-[1fr,320px] gap-8">
           {/* Left — Magnet grid */}
           <div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3 max-w-md mx-auto lg:max-w-none">
               {slots.map((photo, i) => (
                 <motion.div
                   key={photo?.id || `empty-${i}`}
@@ -135,7 +135,9 @@ export const ProductPreview = () => {
             <div className="p-5 rounded-2xl bg-card shadow-card border border-border">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-medium text-foreground">Selected</span>
-                <span className="text-sm font-bold text-primary">{filled}/{MAX_PHOTOS}</span>
+                <span className="text-sm font-bold text-primary">
+                  {shownFilled}/{HOME_PREVIEW_MAX_PHOTOS}
+                </span>
               </div>
 
               {/* Progress bar */}
@@ -153,12 +155,12 @@ export const ProductPreview = () => {
                   className="w-full py-2.5 rounded-xl border border-primary text-primary text-sm font-medium hover:bg-primary/5 transition-colors"
                   whileTap={{ scale: 0.97 }}
                 >
-                  Add {remaining} More Photo{remaining !== 1 ? "s" : ""}
+                  Add {remaining} more photo{remaining !== 1 ? "s" : ""}
                 </motion.button>
               ) : (
                 <div className="flex items-center gap-2 text-sm text-primary font-medium">
                   <Check className="w-4 h-4" />
-                  All {MAX_PHOTOS} slots filled!
+                  All {HOME_PREVIEW_MAX_PHOTOS} slots filled!
                 </div>
               )}
             </div>
@@ -190,7 +192,7 @@ export const ProductPreview = () => {
       </AnimatePresence>
 
       {/* Upload modal */}
-      <UploadModal open={uploadOpen} onClose={() => setUploadOpen(false)} />
+      <UploadModal open={uploadOpen} onClose={() => setUploadOpen(false)} homeSlotLimit={HOME_PREVIEW_MAX_PHOTOS} />
     </section>
   );
 };

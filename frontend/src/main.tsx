@@ -43,7 +43,7 @@ const MagnetLoader = () => {
             transition={{ delay: 0.2, duration: 0.5 }}
           >
             <h1 className="font-display text-2xl font-bold text-[hsl(var(--foreground))]">
-              Magnetic Bliss India
+              Magnetic Bliss in
             </h1>
             <p className="text-sm text-[hsl(var(--muted-foreground))] mt-1">
               Turning memories into magnets ✨

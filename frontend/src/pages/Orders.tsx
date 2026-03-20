@@ -110,6 +110,9 @@ const Orders = () => {
                     <div>
                       <span className="text-sm font-bold text-foreground font-display">{order.id}</span>
                       <p className="text-xs text-muted-foreground mt-0.5">{new Date(order.createdAt).toLocaleDateString("en-US", { dateStyle: "medium" })}</p>
+                      <p className="text-[11px] text-muted-foreground mt-1">
+                        {order.paymentType === "prepaid" ? "Paid online" : "Cash on delivery (COD)"}
+                      </p>
                     </div>
                     <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium ${cfg.color} ${cfg.bg}`}>
                       <Icon className="w-3.5 h-3.5" /> {cfg.label}

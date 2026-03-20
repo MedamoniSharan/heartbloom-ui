@@ -117,13 +117,29 @@ export interface ApiOrder {
   address: ApiAddress;
   allowSocialMediaFeature?: boolean;
   customerPhotos?: string[];
+  razorpayPaymentId?: string;
+  /** cod = cash on delivery; prepaid = paid online */
+  paymentType: "cod" | "prepaid";
   createdAt: string;
 }
 
 export const ordersApi = {
   getMine: () => request<ApiOrder[]>("/api/orders"),
   getAll: () => request<ApiOrder[]>("/api/orders/all"),
-  create: (body: { items: { product: ApiProduct; quantity: number }[]; total: number; address: ApiAddress; allowSocialMediaFeature?: boolean; customerPhotos?: string[]; guestName?: string }) =>
+  create: (body: {
+    items: { product: ApiProduct; quantity: number }[];
+    total: number;
+    address: ApiAddress;
+    allowSocialMediaFeature?: boolean;
+    customerPhotos?: string[];
+    guestName?: string;
+    promoCode?: string;
+    razorpayOrderId?: string;
+    razorpayPaymentId?: string;
+    razorpaySignature?: string;
+    /** cod = WhatsApp / pay on delivery; online = Razorpay prepaid */
+    paymentMethod?: "cod" | "online";
+  }) =>
     request<ApiOrder>("/api/orders", {
       method: "POST",
       body: JSON.stringify({
@@ -137,12 +153,27 @@ export const ordersApi = {
         allowSocialMediaFeature: body.allowSocialMediaFeature === true,
         customerPhotos: body.customerPhotos || [],
         guestName: body.guestName || "",
+        promoCode: body.promoCode || "",
+        razorpayOrderId: body.razorpayOrderId,
+        razorpayPaymentId: body.razorpayPaymentId,
+        razorpaySignature: body.razorpaySignature,
+        paymentMethod: body.paymentMethod || "cod",
       }),
     }),
   updateStatus: (orderId: string, status: ApiOrder["status"]) =>
     request<ApiOrder>(`/api/orders/${orderId}/status`, {
       method: "PATCH",
       body: JSON.stringify({ status }),
+    }),
+};
+
+// Payments (Razorpay)
+export const paymentsApi = {
+  getConfig: () => request<{ enabled: boolean; keyId: string | null }>("/api/payments/config"),
+  createRazorpayOrder: (body: { items: { productId: string; quantity: number }[]; promoCode?: string }) =>
+    request<{ orderId: string; amount: number; currency: string; keyId: string }>("/api/payments/razorpay-order", {
+      method: "POST",
+      body: JSON.stringify(body),
     }),
 };
 

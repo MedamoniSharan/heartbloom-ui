@@ -22,11 +22,11 @@ export const Footer = () => (
         <div className="sm:col-span-2 lg:col-span-1">
           <Link to="/" className="inline-flex items-center gap-2 mb-4">
             {siteConfig.logoUrl ? (
-              <img src={siteConfig.logoUrl} alt="Magnetic Bliss India" className="h-9 w-auto object-contain" />
+              <img src={siteConfig.logoUrl} alt="Magnetic Bliss in" className="h-9 w-auto object-contain" />
             ) : (
               <Heart className="w-7 h-7 text-primary fill-primary" />
             )}
-            <span className="font-display text-xl font-bold text-foreground">Magnetic Bliss India</span>
+            <span className="font-display text-xl font-bold text-foreground">Magnetic Bliss in</span>
           </Link>
           <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">
             Custom photo magnets & gifts. Bringing your moments to life, one magnet at a time.
@@ -120,7 +120,7 @@ export const Footer = () => (
       {/* Bottom bar */}
       <div className="pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3">
         <p className="text-xs text-muted-foreground order-2 sm:order-1">
-          © {new Date().getFullYear()} Magnetic Bliss India. All rights reserved.
+          © {new Date().getFullYear()} Magnetic Bliss in. All rights reserved.
         </p>
         <p className="text-xs text-muted-foreground order-1 sm:order-2 flex items-center gap-1">
           Developed by <span className="font-medium text-foreground">Optiwebrix Team</span>

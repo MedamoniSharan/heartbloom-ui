@@ -3,7 +3,7 @@ import { Heart, ArrowRight } from "lucide-react";
 import { StatCounter } from "./StatCounter";
 import { Reveal } from "./Reveal";
 import { useSiteContentStore } from "@/stores/siteContentStore";
-import heroImage from "@/assets/hero-magnets.jpg";
+import defaultHeroImage from "@/assets/hero-magnets.jpg";
 
 const stagger = {
   hidden: {},
@@ -30,6 +30,8 @@ export const HeroSection = ({ onUploadClick }: HeroSectionProps) => {
   const heroY = useTransform(scrollY, [0, 600], [0, -60]);
   const imageY = useTransform(scrollY, [0, 600], [0, -36]);
   const { heroStats } = useSiteContentStore();
+  const customHeroSrc = (heroStats.heroImageUrl ?? "").trim();
+  const heroSrc = customHeroSrc || defaultHeroImage;
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden">
@@ -123,9 +125,9 @@ export const HeroSection = ({ onUploadClick }: HeroSectionProps) => {
             <div className="relative">
               <div className="rounded-3xl overflow-hidden shadow-elevated">
                 <img
-                  src={heroImage}
-                  alt="Custom photo magnets arranged beautifully on a marble surface"
-                  className="w-full h-auto object-cover"
+                  src={heroSrc}
+                  alt="Custom photo magnets — hero showcase"
+                  className="w-full h-auto object-cover min-h-[200px] bg-muted"
                 />
               </div>
               {/* Floating badge */}

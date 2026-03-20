@@ -6,7 +6,7 @@ import { siteConfig } from "@/lib/siteConfig";
 const SECTIONS = [
   {
     title: "Overview",
-    content: `At Magnetic Bliss India, we want you to be completely satisfied with your custom photo magnets and gifts. This Refund & Cancellation Policy explains how we handle refunds, replacements, and cancellations. All payments are processed securely through Razorpay.`,
+    content: `At Magnetic Bliss in, we want you to be completely satisfied with your custom photo magnets and gifts. This Refund & Cancellation Policy explains how we handle refunds, replacements, and cancellations. All payments are processed securely through Razorpay.`,
   },
   {
     title: "Custom Products – No Returns",

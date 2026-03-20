@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { MapPin, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -11,6 +11,10 @@ import { Footer } from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
 import { siteConfig } from "@/lib/siteConfig";
 import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { paymentsApi } from "@/lib/api";
+import { loadRazorpayScript } from "@/lib/loadRazorpay";
 
 function photoToDataUrl(photo: { file: File; adjustments: any; filter: string }): Promise<string> {
   return new Promise((resolve) => {
@@ -37,12 +41,22 @@ function photoToDataUrl(photo: { file: File; adjustments: any; filter: string })
 
 const Address = () => {
   const navigate = useNavigate();
-  const { items, total, clearCart, socialMediaConsent, setSocialMediaConsent } = useCartStore();
+  const { items, total, clearCart, socialMediaConsent, setSocialMediaConsent, appliedPromo } = useCartStore();
   const { user } = useAuthStore();
   const { addOrder } = useProductStore();
   const { clearPhotos } = usePhotoStore();
   const { toast } = useToast();
   const [placing, setPlacing] = useState(false);
+  const [paymentsEnabled, setPaymentsEnabled] = useState(false);
+  /** When Razorpay is configured: COD (WhatsApp) vs pay online first. */
+  const [paymentChoice, setPaymentChoice] = useState<"cod" | "online">("cod");
+
+  useEffect(() => {
+    paymentsApi
+      .getConfig()
+      .then((c) => setPaymentsEnabled(!!c.enabled))
+      .catch(() => setPaymentsEnabled(false));
+  }, []);
 
   const [form, setForm] = useState<AddressType>({
     fullName: user?.name || "",
@@ -56,9 +70,71 @@ const Address = () => {
 
   const update = (key: keyof AddressType, val: string) => setForm((f) => ({ ...f, [key]: val }));
 
+  const openWhatsAppCodAndClear = () => {
+    const itemsList = items.map((item) => `${item.quantity}x ${item.product.name}`).join("\n");
+    const addressStr = `${form.fullName}\n${form.street}, ${form.city}, ${form.state} ${form.zipCode}\n${form.country}\nPhone: ${form.phone}`;
+    const message = `*New Order Placed!*\n\n*Payment:* Cash on Delivery (COD)\n\n*Items:*\n${itemsList}\n\n*Total:* Rs${total().toFixed(2)}\n\n*Shipping Address:*\n${addressStr}`;
+    const whatsappUrl = `https://wa.me/${siteConfig.whatsappDigits}?text=${encodeURIComponent(message)}`;
+    clearCart();
+    clearPhotos();
+    toast({ title: "Order placed!", description: "Opening WhatsApp to confirm with us..." });
+    window.open(whatsappUrl, "_blank");
+    navigate(user ? "/orders" : "/");
+  };
+
+  const finishAfterPrepaid = () => {
+    clearCart();
+    clearPhotos();
+    toast({
+      title: "Payment successful",
+      description: "Your order is confirmed. You can track it under My Orders.",
+    });
+    navigate(user ? "/orders" : "/");
+  };
+
+  const placeOrderAfterPayment = async (
+    customerPhotos: string[],
+    opts: {
+      paymentMethod: "cod" | "online";
+      razorpay?: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string };
+    }
+  ) => {
+    const ok = await addOrder({
+      userId: user?.id || "guest",
+      userName: user?.name || form.fullName || "Guest",
+      items,
+      total: total(),
+      status: "pending",
+      address: form,
+      allowSocialMediaFeature: socialMediaConsent,
+      customerPhotos,
+      promoCode: appliedPromo?.code,
+      paymentMethod: opts.paymentMethod,
+      razorpayOrderId: opts.razorpay?.razorpay_order_id,
+      razorpayPaymentId: opts.razorpay?.razorpay_payment_id,
+      razorpaySignature: opts.razorpay?.razorpay_signature,
+    });
+    if (!ok) {
+      toast({
+        title: "Order failed",
+        description: opts.razorpay
+          ? "Payment succeeded but we could not save your order. Contact us with your payment ID from Razorpay."
+          : "Could not place order. Please try again.",
+        variant: "destructive",
+      });
+      return false;
+    }
+    if (opts.paymentMethod === "online") finishAfterPrepaid();
+    else openWhatsAppCodAndClear();
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (items.length === 0) { toast({ title: "Cart is empty", variant: "destructive" }); return; }
+    if (items.length === 0) {
+      toast({ title: "Cart is empty", variant: "destructive" });
+      return;
+    }
     setPlacing(true);
 
     let customerPhotos: string[] = [];
@@ -73,32 +149,55 @@ const Address = () => {
       // continue without photos if conversion fails
     }
 
-    const ok = await addOrder({
-      userId: user?.id || "guest",
-      userName: user?.name || form.fullName || "Guest",
-      items,
-      total: total(),
-      status: "pending",
-      address: form,
-      allowSocialMediaFeature: socialMediaConsent,
-      customerPhotos,
-    });
-    setPlacing(false);
-    if (!ok) {
-      toast({ title: "Order failed", description: "Could not place order. Please try again.", variant: "destructive" });
+    const lineItems = items.map((i) => ({ productId: i.product.id, quantity: i.quantity }));
+
+    if (paymentsEnabled && paymentChoice === "online") {
+      try {
+        const rzOrder = await paymentsApi.createRazorpayOrder({
+          items: lineItems,
+          promoCode: appliedPromo?.code,
+        });
+        const scriptOk = await loadRazorpayScript();
+        if (!scriptOk || !window.Razorpay) {
+          toast({ title: "Payment unavailable", description: "Could not load Razorpay. Check your connection.", variant: "destructive" });
+          setPlacing(false);
+          return;
+        }
+        const rzp = new window.Razorpay({
+          key: rzOrder.keyId,
+          amount: rzOrder.amount,
+          currency: rzOrder.currency,
+          order_id: rzOrder.orderId,
+          name: "Magnetic Bliss in",
+          description: "Custom photo magnets",
+          prefill: {
+            name: form.fullName,
+            email: user?.email || "",
+            contact: form.phone.replace(/\D/g, "").slice(-10) || form.phone,
+          },
+          theme: { color: "#db2777" },
+          handler: (response) => {
+            void (async () => {
+              await placeOrderAfterPayment(customerPhotos, { paymentMethod: "online", razorpay: response });
+              setPlacing(false);
+            })();
+          },
+          modal: {
+            ondismiss: () => setPlacing(false),
+          },
+        });
+        rzp.open();
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Could not start payment";
+        toast({ title: "Payment error", description: msg, variant: "destructive" });
+        setPlacing(false);
+      }
       return;
     }
 
-    const itemsList = items.map(item => `${item.quantity}x ${item.product.name}`).join("\n");
-    const addressStr = `${form.fullName}\n${form.street}, ${form.city}, ${form.state} ${form.zipCode}\n${form.country}\nPhone: ${form.phone}`;
-    const message = `*New Order Placed!*\n\n*Items:*\n${itemsList}\n\n*Total:* Rs${total().toFixed(2)}\n\n*Shipping Address:*\n${addressStr}`;
-    const whatsappUrl = `https://wa.me/${siteConfig.whatsappDigits}?text=${encodeURIComponent(message)}`;
-
-    clearCart();
-    clearPhotos();
-    toast({ title: "Order placed!", description: "Taking you to WhatsApp to confirm..." });
-    window.open(whatsappUrl, "_blank");
-    navigate(user ? "/orders" : "/");
+    const ok = await placeOrderAfterPayment(customerPhotos, { paymentMethod: "cod" });
+    setPlacing(false);
+    if (!ok) return;
   };
 
   return (
@@ -143,6 +242,40 @@ const Address = () => {
               </div>
             </div>
 
+            {paymentsEnabled && (
+              <div className="space-y-3 p-4 rounded-xl bg-muted/30 border border-border">
+                <p className="text-sm font-medium text-foreground">How would you like to pay?</p>
+                <RadioGroup
+                  value={paymentChoice}
+                  onValueChange={(v) => setPaymentChoice(v as "cod" | "online")}
+                  className="grid gap-3"
+                >
+                  <label className="flex items-start gap-3 rounded-lg border border-border bg-background/80 p-3 cursor-pointer has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring">
+                    <RadioGroupItem value="cod" id="pay-cod" className="mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <Label htmlFor="pay-cod" className="text-sm font-semibold text-foreground cursor-pointer">
+                        Cash on Delivery (COD)
+                      </Label>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Place the order now and pay when your package arrives. We&apos;ll open WhatsApp so you can confirm with us.
+                      </p>
+                    </div>
+                  </label>
+                  <label className="flex items-start gap-3 rounded-lg border border-border bg-background/80 p-3 cursor-pointer has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring">
+                    <RadioGroupItem value="online" id="pay-online" className="mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <Label htmlFor="pay-online" className="text-sm font-semibold text-foreground cursor-pointer">
+                        Pay online now
+                      </Label>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Secure payment with Razorpay. After success, you&apos;ll go to your orders — no WhatsApp step.
+                      </p>
+                    </div>
+                  </label>
+                </RadioGroup>
+              </div>
+            )}
+
             <label className="flex items-center gap-3 p-4 rounded-xl bg-muted/30 border border-border cursor-pointer">
               <Switch checked={socialMediaConsent} onCheckedChange={setSocialMediaConsent} />
               <span className="text-sm text-foreground">I agree to have my order featured in your social media content.</span>
@@ -155,7 +288,19 @@ const Address = () => {
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.97 }}
             >
-              {placing ? "Placing order..." : <>Place Order — Rs{total().toFixed(2)} <ArrowRight className="w-4 h-4" /></>}
+              {placing
+                ? paymentsEnabled && paymentChoice === "online"
+                  ? "Opening payment..."
+                  : "Placing order..."
+                : <>
+                    {paymentsEnabled && paymentChoice === "online"
+                      ? "Pay now"
+                      : paymentsEnabled
+                        ? "Place order (COD)"
+                        : "Place Order"}{" "}
+                    — Rs{total().toFixed(2)}{" "}
+                    <ArrowRight className="w-4 h-4" />
+                  </>}
             </motion.button>
           </form>
 

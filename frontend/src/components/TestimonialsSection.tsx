@@ -56,7 +56,7 @@ export const TestimonialsSection = () => {
             What our customers say
           </h2>
           <p className="text-center mt-5 opacity-75 text-muted-foreground">
-            Real reviews from real customers. See what people love about Magnetic Bliss India.
+            Real reviews from real customers. See what people love about Magnetic Bliss in.
           </p>
         </motion.div>
 

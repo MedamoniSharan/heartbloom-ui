@@ -116,7 +116,7 @@ const Contact = () => {
                 ))}
 
                 <a
-                  href={`https://wa.me/${siteConfig.whatsappDigits}?text=${encodeURIComponent("Hi! I have a question about Magnetic Bliss India products.")}`}
+                  href={`https://wa.me/${siteConfig.whatsappDigits}?text=${encodeURIComponent("Hi! I have a question about Magnetic Bliss in products.")}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-[hsl(142,70%,45%)] text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity mt-2"
@@ -131,7 +131,7 @@ const Contact = () => {
               <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-card">
                 <div className="aspect-video relative">
                   <iframe
-                    title="Magnetic Bliss India Location"
+                    title="Magnetic Bliss in Location"
                     src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${encodeURIComponent(siteConfig.mapQuery)}`}
                     className="absolute inset-0 w-full h-full border-0"
                     allowFullScreen

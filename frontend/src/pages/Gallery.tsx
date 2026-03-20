@@ -48,7 +48,7 @@ const Gallery = () => {
           </Reveal>
           <Reveal delay={140}>
             <p className="text-muted-foreground max-w-xl mx-auto text-lg">
-              Real customers, real magnets, real smiles. See how Magnetic Bliss India brings joy to fridges everywhere.
+              Real customers, real magnets, real smiles. See how Magnetic Bliss in brings joy to fridges everywhere.
             </p>
           </Reveal>
 
@@ -136,7 +136,7 @@ const Gallery = () => {
           <div className="text-center mt-16 bg-card border border-border rounded-2xl p-10 shadow-card">
             <h2 className="text-h2 text-foreground mb-3">Share Your Magnets!</h2>
             <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              Got your Magnetic Bliss India magnets? Share a photo and join our Wall of Love. Tag us on social media!
+              Got your Magnetic Bliss in magnets? Share a photo and join our Wall of Love. Tag us on social media!
             </p>
             <a
               href={siteConfig.instagram}
