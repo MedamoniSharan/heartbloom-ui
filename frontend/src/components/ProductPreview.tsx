@@ -1,13 +1,29 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate, Link } from "react-router-dom";
 import {
   Plus, Trash2, Settings, ImageIcon,
-  Shield, Truck, Heart, Lock, Check,
+  Shield, Truck, Heart, Lock, Check, ShoppingCart,
 } from "lucide-react";
 import { usePhotoStore, HOME_PREVIEW_MAX_PHOTOS, buildFilterString } from "@/stores/photoStore";
+import { useProductStore, type Product } from "@/stores/productStore";
+import { useCartStore } from "@/stores/cartStore";
+import { useToast } from "@/hooks/use-toast";
 import { ImageEditor } from "./ImageEditor";
 import { UploadModal } from "./UploadModal";
 import { Reveal } from "./Reveal";
+import { Switch } from "@/components/ui/switch";
+
+/** First customizable product that supports exactly the home grid count (default 4 magnets). */
+function pickHomeMagnetProduct(products: Product[]): Product | null {
+  const candidates = products.filter((p) => p.customizable && p.inStock !== false);
+  const fits = candidates.filter((p) => {
+    const min = p.minQuantity ?? 4;
+    const max = p.maxQuantity ?? 12;
+    return min <= HOME_PREVIEW_MAX_PHOTOS && max >= HOME_PREVIEW_MAX_PHOTOS;
+  });
+  return fits[0] ?? candidates[0] ?? null;
+}
 
 const trustBadges = [
   { icon: Heart, text: "Loved by Thousands" },
@@ -17,10 +33,38 @@ const trustBadges = [
 ];
 
 export const ProductPreview = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const { photos, removePhoto, updatePhoto } = usePhotoStore();
+  const { products, productsLoading } = useProductStore();
+  const { addToCart, socialMediaConsent, setSocialMediaConsent } = useCartStore();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editorTab, setEditorTab] = useState<"crop" | "filters">("crop");
   const [uploadOpen, setUploadOpen] = useState(false);
+
+  const homeProduct = useMemo(() => pickHomeMagnetProduct(products), [products]);
+
+  const handleAddToCart = () => {
+    if (!homeProduct) {
+      toast({
+        title: "Products unavailable",
+        description: "Open the shop and choose a customizable magnet set.",
+        variant: "destructive",
+      });
+      return;
+    }
+    const slice = photos.slice(0, HOME_PREVIEW_MAX_PHOTOS);
+    if (slice.length < HOME_PREVIEW_MAX_PHOTOS) {
+      toast({ title: "Add all photos first", description: `Upload ${HOME_PREVIEW_MAX_PHOTOS} photos to continue.`, variant: "destructive" });
+      return;
+    }
+    addToCart(homeProduct, HOME_PREVIEW_MAX_PHOTOS, slice);
+    toast({
+      title: "Added to cart",
+      description: `${homeProduct.name} × ${HOME_PREVIEW_MAX_PHOTOS}`,
+    });
+    navigate("/cart");
+  };
 
   const editingPhoto = photos.find((p) => p.id === editingId);
   const shownFilled = Math.min(photos.length, HOME_PREVIEW_MAX_PHOTOS);
@@ -158,9 +202,42 @@ export const ProductPreview = () => {
                   Add {remaining} more photo{remaining !== 1 ? "s" : ""}
                 </motion.button>
               ) : (
-                <div className="flex items-center gap-2 text-sm text-primary font-medium">
-                  <Check className="w-4 h-4" />
-                  All {HOME_PREVIEW_MAX_PHOTOS} slots filled!
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm text-primary font-medium">
+                    <Check className="w-4 h-4" />
+                    All {HOME_PREVIEW_MAX_PHOTOS} slots filled!
+                  </div>
+                  {homeProduct ? (
+                    <>
+                      <label className="flex items-start gap-3 cursor-pointer">
+                        <Switch checked={socialMediaConsent} onCheckedChange={setSocialMediaConsent} className="mt-0.5" />
+                        <span className="text-xs text-muted-foreground leading-snug">
+                          I agree to have my order featured in your social media content.
+                        </span>
+                      </label>
+                      <motion.button
+                        type="button"
+                        onClick={handleAddToCart}
+                        disabled={productsLoading}
+                        className="w-full py-2.5 rounded-xl bg-gradient-pink text-primary-foreground text-sm font-medium glow-pink-sm flex items-center justify-center gap-2 disabled:opacity-60"
+                        whileHover={{ scale: productsLoading ? 1 : 1.01 }}
+                        whileTap={{ scale: productsLoading ? 1 : 0.98 }}
+                      >
+                        <ShoppingCart className="w-4 h-4" />
+                        {productsLoading ? "Loading…" : `Add to cart — Rs${(homeProduct.price * HOME_PREVIEW_MAX_PHOTOS).toFixed(0)}`}
+                      </motion.button>
+                      <p className="text-[10px] text-muted-foreground leading-relaxed">
+                        {homeProduct.name} · {HOME_PREVIEW_MAX_PHOTOS} magnets. Review or edit in your cart before checkout.
+                      </p>
+                    </>
+                  ) : !productsLoading && products.length > 0 ? (
+                    <p className="text-xs text-muted-foreground">
+                      No customizable set found for {HOME_PREVIEW_MAX_PHOTOS} magnets.{" "}
+                      <Link to="/products" className="text-primary font-medium hover:underline">
+                        Browse products
+                      </Link>
+                    </p>
+                  ) : null}
                 </div>
               )}
             </div>

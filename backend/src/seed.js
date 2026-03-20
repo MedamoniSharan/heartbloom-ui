@@ -477,7 +477,7 @@ const PRODUCTS_RAW_MATERIALS = [
 // ─── Raw Materials (linked to Equipment) — seeded after products ───
 // These are created dynamically in the seed function using equipment product IDs.
 
-// ─── Admin User ───
+// ───  User ───
 const ADMIN_USER = {
   name: "Admin",
   email: "admin@magneticbliss.in",
