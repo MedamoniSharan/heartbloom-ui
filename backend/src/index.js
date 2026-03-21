@@ -1,5 +1,16 @@
-import "dotenv/config";
+import dotenv from "dotenv";
+import { existsSync } from "fs";
+import { dirname, resolve } from "path";
+import { fileURLToPath } from "url";
 import express from "express";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const backendRoot = resolve(__dirname, "..");
+dotenv.config({ path: resolve(backendRoot, ".env") });
+const paymentGatewayEnv = resolve(backendRoot, "payment-gateway.env");
+if (existsSync(paymentGatewayEnv)) {
+  dotenv.config({ path: paymentGatewayEnv, override: false });
+}
 import { connectDB } from "./config/db.js";
 import authRoutes from "./routes/auth.js";
 import productRoutes from "./routes/products.js";

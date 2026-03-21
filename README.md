@@ -41,7 +41,7 @@ npm start
 ```
 
 **Razorpay (online checkout)**  
-Add `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` to `backend/.env` (see `backend/.env.example`). When both are set, checkout opens Razorpay before the order is saved; the server verifies the payment signature and amount. If they are unset, the app keeps the previous “place order → WhatsApp” flow. **Never commit keys or paste live secrets in chat** — rotate any key that was exposed.
+The repo includes **`backend/payment-gateway.env`** with Razorpay variables (loaded automatically after `.env`; any `RAZORPAY_*` values in `backend/.env` override it). You can instead set keys only in `backend/.env` (see `backend/.env.example`). When both key id and secret resolve, checkout can use Razorpay; otherwise checkout stays COD / WhatsApp. **If the repo is public or was leaked, rotate Razorpay keys in the dashboard** — committed keys are a convenience trade-off, not a security best practice.
 
 **Seed mock data (products, promos, admin user)**
 
