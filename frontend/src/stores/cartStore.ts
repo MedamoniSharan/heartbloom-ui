@@ -10,6 +10,22 @@ export interface CartItem {
   photos?: PhotoItem[];
 }
 
+const CART_STORAGE_KEY = "magnetic-bliss-cart";
+
+/** Copy cart from sessionStorage (old behavior) if localStorage has none yet */
+function migrateSessionCartToLocal() {
+  if (typeof window === "undefined") return;
+  try {
+    const fromSession = sessionStorage.getItem(CART_STORAGE_KEY);
+    if (!fromSession || localStorage.getItem(CART_STORAGE_KEY)) return;
+    localStorage.setItem(CART_STORAGE_KEY, fromSession);
+    sessionStorage.removeItem(CART_STORAGE_KEY);
+  } catch {
+    /* ignore quota / private mode */
+  }
+}
+migrateSessionCartToLocal();
+
 interface CartState {
   items: CartItem[];
   appliedPromo: { code: string; discount: number } | null;
@@ -84,8 +100,9 @@ export const useCartStore = create<CartState>()(persist((set, get) => ({
   total: () => get().subtotal() - get().discountAmount(),
   itemCount: () => get().items.reduce((sum, i) => sum + i.quantity, 0),
 }), {
-  name: "magnetic-bliss-cart",
-  storage: createJSONStorage(() => sessionStorage),
+  name: CART_STORAGE_KEY,
+  // localStorage survives new tabs and return visits; sessionStorage cleared when the session ends
+  storage: createJSONStorage(() => localStorage),
   partialize: (state) => ({
     items: state.items.map((i) => ({ product: i.product, quantity: i.quantity })),
     appliedPromo: state.appliedPromo,
