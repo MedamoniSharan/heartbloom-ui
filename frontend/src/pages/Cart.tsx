@@ -54,9 +54,9 @@ const Cart = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="pt-24 px-4 sm:pt-32 sm:px-6 pb-12 sm:pb-16 max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-h1 text-foreground">Your Cart</h1>
+      <main className="pt-24 px-3 sm:px-4 sm:pt-32 sm:px-6 pb-12 sm:pb-16 max-w-4xl mx-auto overflow-x-hidden">
+        <div className="flex items-center justify-between gap-3 mb-6 sm:mb-8">
+          <h1 className="text-3xl sm:text-h1 text-foreground">Your Cart</h1>
           <button onClick={clearCart} className="text-sm text-destructive hover:underline">Clear All</button>
         </div>
 
@@ -69,7 +69,7 @@ const Cart = () => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
-                className="flex gap-4 bg-card border border-border rounded-2xl p-4"
+                className="flex flex-col sm:flex-row gap-3 sm:gap-4 bg-card border border-border rounded-2xl p-3 sm:p-4 overflow-hidden"
               >
                 <img src={item.product.image} alt={item.product.name} className="w-20 h-20 rounded-xl object-cover flex-shrink-0" />
                 <div className="flex-1 min-w-0">
@@ -111,7 +111,7 @@ const Cart = () => {
                     </button>
                   </div>
                 </div>
-                <div className="text-right">
+                <div className="text-left sm:text-right">
                   <span className="font-display font-bold text-foreground">Rs{(item.product.price * item.quantity).toFixed(2)}</span>
                 </div>
               </motion.div>
@@ -136,7 +136,7 @@ const Cart = () => {
                       </button>
                     )}
                   </div>
-                  <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
                     {(item.photos ?? []).map((photo, i) => (
                       <motion.div
                         key={photo.id}
@@ -150,6 +150,9 @@ const Cart = () => {
                           alt={photo.name}
                           className="w-full h-full object-cover"
                           style={{ filter: buildFilterString(photo.adjustments, photo.filter) }}
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                          }}
                         />
                         <span className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[8px] font-bold flex items-center justify-center">
                           {i + 1}

@@ -266,7 +266,12 @@ const ProductDetail = () => {
       toast({ title: "Upload all images", description: `Please upload ${qty} image${qty !== 1 ? "s" : ""} before adding to cart.`, variant: "destructive" });
       return;
     }
-    const photosToStore = [...photos];
+    // Clone photos with fresh object URLs so clearing editor state
+    // does not revoke previews used in cart.
+    const photosToStore = photos.map((photo) => ({
+      ...photo,
+      preview: URL.createObjectURL(photo.file),
+    }));
     const existingCartItem = useCartStore.getState().items.find((i) => i.product.id === product.id);
     if (existingCartItem) {
       addToCart(product, qty, photosToStore);

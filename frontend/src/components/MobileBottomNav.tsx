@@ -1,14 +1,12 @@
 import { motion } from "framer-motion";
 import { Home, ShoppingBag, User, Upload } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Link } from "react-router-dom";
+import { useAuthStore } from "@/stores/authStore";
 
 const navItems = [
   { icon: Home, label: "Home", href: "/" },
   { icon: ShoppingBag, label: "Order", href: "#pricing" },
-];
-
-const navItemsRight = [
-  { icon: User, label: "Account", href: "#" },
 ];
 
 interface MobileBottomNavProps {
@@ -17,6 +15,7 @@ interface MobileBottomNavProps {
 
 export const MobileBottomNav = ({ onUploadClick }: MobileBottomNavProps) => {
   const isMobile = useIsMobile();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   if (!isMobile) return null;
 
   return (
@@ -52,16 +51,13 @@ export const MobileBottomNav = ({ onUploadClick }: MobileBottomNavProps) => {
         </div>
 
         {/* Right items */}
-        {navItemsRight.map((item) => (
-          <a
-            key={item.label}
-            href={item.href}
-            className="flex flex-col items-center gap-0.5 py-2 px-3 text-muted-foreground hover:text-foreground transition-colors touch-target"
-          >
-            <item.icon className="w-5 h-5" />
-            <span className="text-[10px] font-medium">{item.label}</span>
-          </a>
-        ))}
+        <Link
+          to={isAuthenticated ? "/orders" : "/login"}
+          className="flex flex-col items-center gap-0.5 py-2 px-3 text-muted-foreground hover:text-foreground transition-colors touch-target"
+        >
+          <User className="w-5 h-5" />
+          <span className="text-[10px] font-medium">Account</span>
+        </Link>
       </div>
     </nav>
   );
