@@ -156,7 +156,8 @@ router.post("/", async (req, res, next) => {
         const jwt = await import("jsonwebtoken");
         const decoded = jwt.default.verify(token, process.env.JWT_SECRET);
         const User = (await import("../models/User.js")).default;
-        const user = await User.findById(decoded.id);
+        const id = decoded.userId ?? decoded.id;
+        const user = id ? await User.findById(id) : null;
         if (user) {
           userId = user._id.toString();
           userName = user.name;
