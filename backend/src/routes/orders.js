@@ -2,7 +2,7 @@ import crypto from "crypto";
 import express from "express";
 import Order from "../models/Order.js";
 import Product from "../models/Product.js";
-import { authenticate, requireAdmin } from "../middleware/auth.js";
+import { authenticate, optionalAuth, requireAdmin } from "../middleware/auth.js";
 import { computeOrderTotalRupees, rupeesToPaise } from "../lib/orderPricing.js";
 import { getRazorpay, isRazorpayEnabled } from "../lib/razorpayClient.js";
 
@@ -70,7 +70,7 @@ router.get("/all", authenticate, requireAdmin, async (req, res, next) => {
   }
 });
 
-router.post("/", async (req, res, next) => {
+router.post("/", optionalAuth, async (req, res, next) => {
   try {
     const {
       items,
@@ -147,24 +147,12 @@ router.post("/", async (req, res, next) => {
       });
     }
 
-    // Support both logged-in and guest users
+    // Logged-in user from JWT (same path as /api/auth/me); guests have no token
     let userId = "guest";
     let userName = guestName || address.fullName || "Guest";
-    const token = req.headers.authorization?.replace("Bearer ", "");
-    if (token) {
-      try {
-        const jwt = await import("jsonwebtoken");
-        const decoded = jwt.default.verify(token, process.env.JWT_SECRET);
-        const User = (await import("../models/User.js")).default;
-        const id = decoded.userId ?? decoded.id;
-        const user = id ? await User.findById(id) : null;
-        if (user) {
-          userId = user._id.toString();
-          userName = user.name;
-        }
-      } catch {
-        // token invalid — proceed as guest
-      }
+    if (req.user) {
+      userId = req.user._id.toString();
+      userName = req.user.name;
     }
 
     const paymentType = wantsPrepaid ? "prepaid" : "cod";
