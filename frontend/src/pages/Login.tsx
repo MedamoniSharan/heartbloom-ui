@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Heart, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { Heart, Eye, EyeOff, ArrowRight, ArrowLeft } from "lucide-react";
 import { GoogleLogin, type CredentialResponse } from "@react-oauth/google";
 import { useAuthStore } from "@/stores/authStore";
 import { useNavigate, Link, useLocation } from "react-router-dom";
@@ -18,6 +18,13 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+
+  useEffect(() => {
+    const authMessage = (location.state as { authMessage?: string } | null)?.authMessage;
+    if (authMessage) {
+      toast({ title: authMessage });
+    }
+  }, [location.state, toast]);
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -58,6 +65,12 @@ const Login = () => {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md"
       >
+        <div className="mb-4">
+          <Link to="/" className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft className="w-4 h-4" />
+            Back to Home
+          </Link>
+        </div>
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 mb-6">
             {siteConfig.logoUrl ? (
@@ -96,7 +109,7 @@ const Login = () => {
 
           <p className="text-center text-sm text-muted-foreground">
             Don't have an account?{" "}
-            <Link to="/signup" className="text-primary hover:underline font-medium">Sign Up</Link>
+            <Link to="/signup" state={location.state} className="text-primary hover:underline font-medium">Sign Up</Link>
           </p>
 
           {GOOGLE_ENABLED && (

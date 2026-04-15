@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Heart, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { Heart, Eye, EyeOff, ArrowRight, ArrowLeft } from "lucide-react";
 import { GoogleLogin, type CredentialResponse } from "@react-oauth/google";
 import { useAuthStore } from "@/stores/authStore";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { LottieFromPath } from "@/components/LottieFromPath";
 import { siteConfig } from "@/lib/siteConfig";
@@ -17,7 +17,15 @@ const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
   const { signup, isLoading } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+
+  useEffect(() => {
+    const authMessage = (location.state as { authMessage?: string } | null)?.authMessage;
+    if (authMessage) {
+      toast({ title: authMessage });
+    }
+  }, [location.state, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,6 +45,12 @@ const Signup = () => {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
+        <div className="mb-4">
+          <Link to="/" className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft className="w-4 h-4" />
+            Back to Home
+          </Link>
+        </div>
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 mb-6">
             {siteConfig.logoUrl ? (
@@ -72,7 +86,7 @@ const Signup = () => {
           </motion.button>
 
           <p className="text-center text-sm text-muted-foreground">
-            Already have an account? <Link to="/login" className="text-primary hover:underline font-medium">Sign In</Link>
+            Already have an account? <Link to="/login" state={location.state} className="text-primary hover:underline font-medium">Sign In</Link>
           </p>
 
           {GOOGLE_ENABLED && (

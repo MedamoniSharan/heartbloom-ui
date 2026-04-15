@@ -1,12 +1,13 @@
 import { motion } from "framer-motion";
 import { Home, ShoppingBag, User, Upload } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/authStore";
+import { useToast } from "@/hooks/use-toast";
 
 const navItems = [
   { icon: Home, label: "Home", href: "/" },
-  { icon: ShoppingBag, label: "Order", href: "#pricing" },
+  { icon: ShoppingBag, label: "Orders", href: "/orders" },
 ];
 
 interface MobileBottomNavProps {
@@ -16,6 +17,22 @@ interface MobileBottomNavProps {
 export const MobileBottomNav = ({ onUploadClick }: MobileBottomNavProps) => {
   const isMobile = useIsMobile();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleOrdersClick = (e: React.MouseEvent) => {
+    if (isAuthenticated) return;
+    e.preventDefault();
+    const authMessage = "SignUp 0r SignIn to view the orders";
+    toast({ title: authMessage });
+    navigate("/login", {
+      state: {
+        from: { pathname: "/orders" },
+        authMessage,
+      },
+    });
+  };
+
   if (!isMobile) return null;
 
   return (
@@ -27,14 +44,15 @@ export const MobileBottomNav = ({ onUploadClick }: MobileBottomNavProps) => {
       <div className="flex items-center justify-around px-2 py-1">
         {/* Left items */}
         {navItems.map((item) => (
-          <a
+          <Link
             key={item.label}
-            href={item.href}
+            to={item.href}
+            onClick={item.href === "/orders" ? handleOrdersClick : undefined}
             className="flex flex-col items-center gap-0.5 py-2 px-3 text-muted-foreground hover:text-foreground transition-colors touch-target"
           >
             <item.icon className="w-5 h-5" />
             <span className="text-[10px] font-medium">{item.label}</span>
-          </a>
+          </Link>
         ))}
 
         {/* Center FAB — Upload */}

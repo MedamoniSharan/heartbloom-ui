@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { Heart, LogOut, Shield, ShoppingCart, RefreshCw, Menu } from "lucide-react";
+import { Heart, LogOut, Shield, ShoppingCart, RefreshCw, Menu, ArrowLeft } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
@@ -47,6 +47,64 @@ export const Navbar = () => {
         style={{ opacity: borderOpacity }}
       />
       <nav className="w-full flex items-center justify-between gap-2 sm:gap-4">
+        {/* Mobile menu (left side) */}
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          <SheetTrigger asChild>
+            <button
+              className="md:hidden w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex-shrink-0"
+              aria-label="Open menu"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-[min(320px,100vw-2rem)] pt-12">
+            <div className="flex flex-col gap-1">
+              <button
+                type="button"
+                onClick={() => setMobileOpen(false)}
+                className="mb-2 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-foreground font-medium hover:bg-muted transition-colors"
+                aria-label="Back"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back
+              </button>
+              <div className="mb-2 px-4 py-2 rounded-xl border border-border bg-card flex items-center justify-between">
+                <span className="text-sm font-medium text-foreground">Theme</span>
+                <ThemeToggle />
+              </div>
+              {navLinks.map(({ to, label }) => (
+                <Link
+                  key={to}
+                  to={to}
+                  onClick={() => setMobileOpen(false)}
+                  className="px-4 py-3 rounded-xl text-foreground font-medium hover:bg-muted transition-colors"
+                >
+                  {label}
+                </Link>
+              ))}
+              {isAuthenticated && (
+                <Link to="/orders" onClick={() => setMobileOpen(false)} className="px-4 py-3 rounded-xl text-foreground font-medium hover:bg-muted transition-colors">
+                  Orders
+                </Link>
+              )}
+              {!isAuthenticated && (
+                <Link
+                  to="/login"
+                  onClick={() => setMobileOpen(false)}
+                  className="mt-1 px-4 py-3 rounded-xl bg-gradient-pink text-primary-foreground font-semibold text-center glow-pink-sm transition-all hover:opacity-95"
+                >
+                  Sign In
+                </Link>
+              )}
+              {user?.role === "admin" && (
+                <Link to="/admin" onClick={() => setMobileOpen(false)} className="px-4 py-3 rounded-xl text-foreground font-medium hover:bg-muted transition-colors flex items-center gap-2">
+                  <Shield className="w-4 h-4" /> Admin
+                </Link>
+              )}
+            </div>
+          </SheetContent>
+        </Sheet>
+
         <Link to="/" className="flex items-center gap-2 group flex-shrink-0 min-w-0">
           {siteConfig.logoUrl ? (
             <img src={siteConfig.logoUrl} alt="Magnetic Bliss in" className="h-7 w-auto sm:h-8 object-contain group-hover:scale-110 transition-transform flex-shrink-0" />
@@ -65,42 +123,6 @@ export const Navbar = () => {
         </div>
 
         <div className="flex items-center gap-1 sm:gap-2">
-          {/* Mobile menu */}
-          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-            <SheetTrigger asChild>
-              <button
-                className="md:hidden w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                aria-label="Open menu"
-              >
-                <Menu className="w-5 h-5" />
-              </button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-[min(320px,100vw-2rem)] pt-12">
-              <div className="flex flex-col gap-1">
-                {navLinks.map(({ to, label }) => (
-                  <Link
-                    key={to}
-                    to={to}
-                    onClick={() => setMobileOpen(false)}
-                    className="px-4 py-3 rounded-xl text-foreground font-medium hover:bg-muted transition-colors"
-                  >
-                    {label}
-                  </Link>
-                ))}
-                {isAuthenticated && (
-                  <Link to="/orders" onClick={() => setMobileOpen(false)} className="px-4 py-3 rounded-xl text-foreground font-medium hover:bg-muted transition-colors">
-                    Orders
-                  </Link>
-                )}
-                {user?.role === "admin" && (
-                  <Link to="/admin" onClick={() => setMobileOpen(false)} className="px-4 py-3 rounded-xl text-foreground font-medium hover:bg-muted transition-colors flex items-center gap-2">
-                    <Shield className="w-4 h-4" /> Admin
-                  </Link>
-                )}
-              </div>
-            </SheetContent>
-          </Sheet>
-
         <TooltipProvider delayDuration={150}>
           <div className="flex items-center gap-2 flex-shrink-0">
             <Tooltip>
@@ -144,7 +166,9 @@ export const Navbar = () => {
               <TooltipContent side="bottom"><p className="text-xs">Cart</p></TooltipContent>
             </Tooltip>
 
-            <ThemeToggle />
+            <div className="hidden md:block">
+              <ThemeToggle />
+            </div>
 
             {isAuthenticated ? (
               <div className="flex items-center pl-3 pr-1 py-1 rounded-xl border border-border bg-card shadow-sm gap-2 ml-1">
@@ -163,7 +187,7 @@ export const Navbar = () => {
                 </Tooltip>
               </div>
             ) : (
-              <Link to="/login">
+              <Link to="/login" className="hidden md:block">
                 <motion.button
                   className="px-3 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-gradient-pink text-primary-foreground text-xs sm:text-sm font-medium glow-pink-sm"
                   whileHover={{ scale: 1.03 }}

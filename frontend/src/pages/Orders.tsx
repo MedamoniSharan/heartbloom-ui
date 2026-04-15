@@ -5,7 +5,7 @@ import { useProductStore } from "@/stores/productStore";
 import { useAuthStore } from "@/stores/authStore";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { LottieFromPath } from "@/components/LottieFromPath";
 
 const statusConfig = {
@@ -66,13 +66,28 @@ const Timeline = ({ currentStatus }: { currentStatus: string }) => {
 
 const Orders = () => {
   const { orders, fetchOrders, ordersLoading } = useProductStore();
-  const { user } = useAuthStore();
+  const { user, isLoading } = useAuthStore();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      navigate("/login", {
+        replace: true,
+        state: {
+          from: { pathname: "/orders" },
+          authMessage: "SignUp 0r SignIn to view the orders",
+        },
+      });
+    }
+  }, [isLoading, user, navigate]);
 
   useEffect(() => {
     if (user) fetchOrders();
   }, [user, fetchOrders]);
 
   const myOrders = user?.role === "admin" ? orders : orders.filter((o) => o.userId === user?.id);
+
+  if (!user) return null;
 
   return (
     <div className="min-h-screen bg-background">
