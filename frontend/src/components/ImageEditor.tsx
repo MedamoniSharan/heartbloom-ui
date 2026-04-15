@@ -245,7 +245,7 @@ export const ImageEditor = ({ photo, onSave, onClose }: ImageEditorProps) => {
   };
 
   // --- Crop drag handlers ---
-  const handleCropMouseDown = (e: React.MouseEvent, handle: string) => {
+  const handleCropPointerDown = (e: React.PointerEvent, handle: string) => {
     e.preventDefault();
     e.stopPropagation();
     setDragging(handle);
@@ -259,7 +259,7 @@ export const ImageEditor = ({ photo, onSave, onClose }: ImageEditorProps) => {
     if (!container) return;
     const rect = container.getBoundingClientRect();
 
-    const handleMove = (e: MouseEvent) => {
+    const handleMove = (e: PointerEvent) => {
       const dx = e.clientX - dragStart.x;
       const dy = e.clientY - dragStart.y;
       let { x, y, w, h } = cropStart;
@@ -313,13 +313,15 @@ export const ImageEditor = ({ photo, onSave, onClose }: ImageEditorProps) => {
       pushHistory();
     };
 
-    window.addEventListener("mousemove", handleMove);
-    window.addEventListener("mouseup", handleUp);
+    window.addEventListener("pointermove", handleMove);
+    window.addEventListener("pointerup", handleUp);
+    window.addEventListener("pointercancel", handleUp);
     return () => {
-      window.removeEventListener("mousemove", handleMove);
-      window.removeEventListener("mouseup", handleUp);
+      window.removeEventListener("pointermove", handleMove);
+      window.removeEventListener("pointerup", handleUp);
+      window.removeEventListener("pointercancel", handleUp);
     };
-  }, [dragging, dragStart, cropStart, aspectRatio]);
+  }, [dragging, dragStart, cropStart, aspectRatio, cropBox, pushHistory]);
 
   const tabs: { id: EditorTab; icon: typeof Crop; label: string }[] = [
     { id: "crop", icon: Crop, label: "Crop" },
@@ -390,7 +392,7 @@ export const ImageEditor = ({ photo, onSave, onClose }: ImageEditorProps) => {
       {/* Image preview area */}
       <div
         ref={imageContainerRef}
-        className="relative flex-1 flex items-center justify-center p-8 overflow-hidden select-none"
+        className="relative flex-1 flex items-center justify-center p-8 overflow-hidden select-none touch-none"
       >
         <motion.img
           ref={imageRef}
@@ -421,9 +423,9 @@ export const ImageEditor = ({ photo, onSave, onClose }: ImageEditorProps) => {
 
             {/* Crop frame */}
             <div
-              className="absolute border-2 border-white cursor-move"
+              className="absolute border-2 border-white cursor-move touch-none"
               style={{ left: cropBox.x, top: cropBox.y, width: cropBox.w, height: cropBox.h }}
-              onMouseDown={(e) => handleCropMouseDown(e, "move")}
+              onPointerDown={(e) => handleCropPointerDown(e, "move")}
             >
               {/* Rule of thirds grid */}
               <div className="absolute inset-0 pointer-events-none">
@@ -442,13 +444,13 @@ export const ImageEditor = ({ photo, onSave, onClose }: ImageEditorProps) => {
               {(["nw", "ne", "sw", "se"] as const).map((corner) => (
                 <div
                   key={corner}
-                  className="absolute w-5 h-5 cursor-nwse-resize z-10"
+                  className="absolute w-5 h-5 cursor-nwse-resize z-10 touch-none"
                   style={{
                     ...(corner.includes("n") ? { top: -3 } : { bottom: -3 }),
                     ...(corner.includes("w") ? { left: -3 } : { right: -3 }),
                     cursor: corner === "nw" || corner === "se" ? "nwse-resize" : "nesw-resize",
                   }}
-                  onMouseDown={(e) => handleCropMouseDown(e, corner)}
+                  onPointerDown={(e) => handleCropPointerDown(e, corner)}
                 >
                   <div
                     className="absolute bg-white rounded-sm"
@@ -473,14 +475,14 @@ export const ImageEditor = ({ photo, onSave, onClose }: ImageEditorProps) => {
               {(["n", "s", "e", "w"] as const).map((edge) => (
                 <div
                   key={edge}
-                  className="absolute z-10"
+                  className="absolute z-10 touch-none"
                   style={{
                     ...(edge === "n" ? { top: -2, left: "33%", width: "34%", height: 6, cursor: "ns-resize" } : {}),
                     ...(edge === "s" ? { bottom: -2, left: "33%", width: "34%", height: 6, cursor: "ns-resize" } : {}),
                     ...(edge === "e" ? { right: -2, top: "33%", height: "34%", width: 6, cursor: "ew-resize" } : {}),
                     ...(edge === "w" ? { left: -2, top: "33%", height: "34%", width: 6, cursor: "ew-resize" } : {}),
                   }}
-                  onMouseDown={(e) => handleCropMouseDown(e, edge)}
+                  onPointerDown={(e) => handleCropPointerDown(e, edge)}
                 />
               ))}
             </div>
