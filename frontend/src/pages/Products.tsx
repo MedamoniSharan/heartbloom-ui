@@ -15,6 +15,7 @@ import { LottieFromPath } from "@/components/LottieFromPath";
 import { siteConfig } from "@/lib/siteConfig";
 
 const RAW_MATERIALS_CATEGORY = "Raw Materials";
+const HIDDEN_FILTER_CATEGORIES = new Set(["Equipment", RAW_MATERIALS_CATEGORY]);
 
 const getWhatsAppLink = (product: Product) => {
   const message = encodeURIComponent(`Hi! I'm interested in "${product.name}" (Rs${product.price}). Can you tell me more?`);
@@ -29,7 +30,8 @@ const Products = () => {
   const [search, setSearch] = useState("");
   const [sizeFilter, setSizeFilter] = useState("All");
 
-  const sizeOptions = ["All", ...new Set(products.map((p) => p.category).filter(Boolean))].filter((s) => s !== "Upload");
+  const sizeOptions = ["All", ...new Set(products.map((p) => p.category).filter(Boolean))]
+    .filter((s) => s !== "Upload" && !HIDDEN_FILTER_CATEGORIES.has(s));
   const activeFilter = sizeFilter === "Upload" ? "All" : sizeFilter;
   const filtered = products.filter((p) => {
     const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());

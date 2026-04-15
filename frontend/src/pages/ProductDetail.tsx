@@ -561,37 +561,41 @@ const ProductDetail = () => {
                 </div>
               </Reveal>
 
-              {/* Trust Badges */}
-              <Reveal delay={260}>
-                <div className="flex items-center justify-between pt-5 mt-2 border-t border-border">
-                  <div className="flex flex-col items-center gap-1 flex-1">
-                    <svg className="w-6 h-[18px]" viewBox="0 0 900 600" aria-label="Indian Flag">
-                      <rect width="900" height="200" fill="#FF9933" />
-                      <rect y="200" width="900" height="200" fill="#FFFFFF" />
-                      <rect y="400" width="900" height="200" fill="#138808" />
-                      <circle cx="450" cy="300" r="60" fill="none" stroke="#000080" strokeWidth="6" />
-                      <circle cx="450" cy="300" r="8" fill="#000080" />
-                      {Array.from({ length: 24 }).map((_, i) => (
-                        <line key={i} x1="450" y1="300" x2={450 + 55 * Math.cos((i * 15 * Math.PI) / 180)} y2={300 + 55 * Math.sin((i * 15 * Math.PI) / 180)} stroke="#000080" strokeWidth="2" />
-                      ))}
-                    </svg>
-                    <p className="text-xs font-semibold text-foreground">Made in India</p>
-                    <p className="text-[10px] text-muted-foreground">Hyderabad</p>
-                  </div>
-                  <div className="w-px h-10 bg-border" />
-                  <div className="flex flex-col items-center gap-1 flex-1">
-                    <ShieldCheck className="w-5 h-5 text-primary" />
-                    <p className="text-xs font-semibold text-foreground">Satisfaction</p>
-                    <p className="text-[10px] text-muted-foreground">100% Guaranteed</p>
-                  </div>
-                  <div className="w-px h-10 bg-border" />
-                  <div className="flex flex-col items-center gap-1 flex-1">
-                    <Truck className="w-5 h-5 text-primary" />
-                    <p className="text-xs font-semibold text-foreground">Fast Production</p>
-                    <p className="text-[10px] text-muted-foreground">Ships in 24–48 hours</p>
-                  </div>
-                </div>
-              </Reveal>
+              {!isEquipment && (
+                <>
+                  {/* Trust Badges */}
+                  <Reveal delay={260}>
+                    <div className="flex items-center justify-between pt-5 mt-2 border-t border-border">
+                      <div className="flex flex-col items-center gap-1 flex-1">
+                        <svg className="w-6 h-[18px]" viewBox="0 0 900 600" aria-label="Indian Flag">
+                          <rect width="900" height="200" fill="#FF9933" />
+                          <rect y="200" width="900" height="200" fill="#FFFFFF" />
+                          <rect y="400" width="900" height="200" fill="#138808" />
+                          <circle cx="450" cy="300" r="60" fill="none" stroke="#000080" strokeWidth="6" />
+                          <circle cx="450" cy="300" r="8" fill="#000080" />
+                          {Array.from({ length: 24 }).map((_, i) => (
+                            <line key={i} x1="450" y1="300" x2={450 + 55 * Math.cos((i * 15 * Math.PI) / 180)} y2={300 + 55 * Math.sin((i * 15 * Math.PI) / 180)} stroke="#000080" strokeWidth="2" />
+                          ))}
+                        </svg>
+                        <p className="text-xs font-semibold text-foreground">Made in India</p>
+                        <p className="text-[10px] text-muted-foreground">Hyderabad</p>
+                      </div>
+                      <div className="w-px h-10 bg-border" />
+                      <div className="flex flex-col items-center gap-1 flex-1">
+                        <ShieldCheck className="w-5 h-5 text-primary" />
+                        <p className="text-xs font-semibold text-foreground">Satisfaction</p>
+                        <p className="text-[10px] text-muted-foreground">100% Guaranteed</p>
+                      </div>
+                      <div className="w-px h-10 bg-border" />
+                      <div className="flex flex-col items-center gap-1 flex-1">
+                        <Truck className="w-5 h-5 text-primary" />
+                        <p className="text-xs font-semibold text-foreground">Fast Production</p>
+                        <p className="text-[10px] text-muted-foreground">Ships in 24–48 hours</p>
+                      </div>
+                    </div>
+                  </Reveal>
+                </>
+              )}
 
               {/* Full-screen Upload Step */}
               <AnimatePresence>
