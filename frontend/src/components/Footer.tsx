@@ -26,7 +26,7 @@ export const Footer = () => (
             ) : (
               <Heart className="w-7 h-7 text-primary fill-primary" />
             )}
-            <span className="font-display text-xl font-bold text-foreground">Magnetic Bliss in</span>
+            <span className="font-display text-xl font-bold text-foreground">Magnetic Bliss IN</span>
           </Link>
           <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">
             Custom photo magnets & gifts. Bringing your moments to life, one magnet at a time.

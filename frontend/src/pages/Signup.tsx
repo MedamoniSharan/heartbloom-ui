@@ -44,7 +44,7 @@ const Signup = () => {
             ) : (
               <Heart className="w-8 h-8 text-primary fill-primary" />
             )}
-            <span className="font-display text-2xl font-bold text-foreground">Magnetic Bliss in</span>
+            <span className="font-display text-2xl font-bold text-foreground">Magnetic Bliss IN</span>
           </Link>
           <h1 className="text-h2 text-foreground">Create Account</h1>
           <p className="text-muted-foreground mt-2 text-sm">Join Magnetic Bliss in and start creating</p>

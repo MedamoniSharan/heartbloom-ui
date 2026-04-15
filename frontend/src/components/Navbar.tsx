@@ -53,7 +53,7 @@ export const Navbar = () => {
           ) : (
             <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-primary fill-primary group-hover:scale-110 transition-transform flex-shrink-0" />
           )}
-          <span className="font-display text-base sm:text-xl font-bold text-foreground truncate max-w-[140px] sm:max-w-none">Magnetic Bliss in</span>
+          <span className="font-display text-base sm:text-xl font-bold text-foreground truncate max-w-[140px] sm:max-w-none">Magnetic Bliss IN</span>
         </Link>
 
         <div className="hidden md:flex items-center gap-6 text-sm text-muted-foreground flex-1 justify-center min-w-0">
