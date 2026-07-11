@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const navItems = [
   { icon: Home, label: "Home", href: "/" },
-  { icon: ShoppingBag, label: "Orders", href: "/orders" },
+  { icon: ShoppingBag, label: "My Orders", href: "/orders" },
 ];
 
 interface MobileBottomNavProps {

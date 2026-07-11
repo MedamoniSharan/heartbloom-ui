@@ -13,6 +13,7 @@ export async function computeOrderTotalRupees(itemsInput, promoCodeUpper) {
     throw err;
   }
   let subtotal = 0;
+  let shipping = 0;
   for (const it of itemsInput) {
     const product = await Product.findById(it.productId);
     if (!product) {
@@ -27,6 +28,7 @@ export async function computeOrderTotalRupees(itemsInput, promoCodeUpper) {
       throw err;
     }
     subtotal += product.price * qty;
+    shipping += (product.shippingCharge ?? 0) * qty;
   }
 
   let discount = 0;
@@ -37,8 +39,8 @@ export async function computeOrderTotalRupees(itemsInput, promoCodeUpper) {
     }
   }
 
-  const total = Math.round((subtotal - discount) * 100) / 100;
-  return { subtotal, discount, total };
+  const total = Math.round((subtotal - discount + shipping) * 100) / 100;
+  return { subtotal, discount, shipping, total };
 }
 
 export function rupeesToPaise(rupees) {

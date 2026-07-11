@@ -13,13 +13,14 @@ import { siteConfig } from "@/lib/siteConfig";
 
 const navLinks = [
   { to: "/", label: "Home" },
-  { to: "/products", label: "Order Magnet" },
+  { to: "/products", label: "Shop Now" },
   { to: "/bulk-orders", label: "Bulk Orders" },
-  { to: "/courses", label: "Courses" },
-  { to: "/events", label: "Events" },
-  { to: "/gallery", label: "Reviews" },
+  { to: "/events", label: "Live Stalls" },
+  { to: "/courses", label: "Workshops" },
   { to: "/equipment", label: "Machines" },
-  { to: "/contact", label: "Contact" },
+  { to: "/orders", label: "My Orders" },
+  { to: "/gallery", label: "Reviews" },
+  { to: "/contact", label: "Contact Us" },
 ];
 
 export const Navbar = () => {
@@ -46,12 +47,12 @@ export const Navbar = () => {
         className="absolute bottom-0 left-0 right-0 h-px bg-border"
         style={{ opacity: borderOpacity }}
       />
-      <nav className="w-full flex items-center justify-between gap-2 sm:gap-4">
-        {/* Mobile menu (left side) */}
+      <nav className="w-full max-w-[1600px] mx-auto flex items-center justify-between gap-3">
+        {/* Mobile / tablet menu */}
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetTrigger asChild>
             <button
-              className="md:hidden w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex-shrink-0"
+              className="xl:hidden w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex-shrink-0"
               aria-label="Open menu"
             >
               <Menu className="w-5 h-5" />
@@ -82,11 +83,6 @@ export const Navbar = () => {
                   {label}
                 </Link>
               ))}
-              {isAuthenticated && (
-                <Link to="/orders" onClick={() => setMobileOpen(false)} className="px-4 py-3 rounded-xl text-foreground font-medium hover:bg-muted transition-colors">
-                  Orders
-                </Link>
-              )}
               {!isAuthenticated && (
                 <Link
                   to="/login"
@@ -105,26 +101,37 @@ export const Navbar = () => {
           </SheetContent>
         </Sheet>
 
-        <Link to="/" className="flex items-center gap-2 group flex-shrink-0 min-w-0">
+        <Link to="/" className="flex items-center gap-2 group flex-shrink-0 min-w-0 relative z-10">
           {siteConfig.logoUrl ? (
             <img src={siteConfig.logoUrl} alt="Magnetic Bliss in" className="h-7 w-auto sm:h-8 object-contain group-hover:scale-110 transition-transform flex-shrink-0" />
           ) : (
             <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-primary fill-primary group-hover:scale-110 transition-transform flex-shrink-0" />
           )}
-          <span className="font-display text-base sm:text-xl font-bold text-foreground truncate max-w-[140px] sm:max-w-none">Magnetic Bliss IN</span>
+          <span className="font-display text-base sm:text-lg xl:text-xl font-bold text-foreground truncate max-w-[120px] sm:max-w-[160px] xl:max-w-none">
+            Magnetic Bliss IN
+          </span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-6 text-sm text-muted-foreground flex-1 justify-center min-w-0">
+        <div className="hidden xl:flex items-center justify-center gap-3 2xl:gap-5 text-sm text-muted-foreground flex-1 min-w-0 px-2">
           {navLinks.map(({ to, label }) => (
-            <Link key={to} to={to} className="hover:text-foreground transition-colors whitespace-nowrap">{label}</Link>
+            <Link
+              key={to}
+              to={to}
+              className="hover:text-foreground transition-colors whitespace-nowrap flex-shrink-0"
+            >
+              {label}
+            </Link>
           ))}
-          {isAuthenticated && <Link to="/orders" className="hover:text-foreground transition-colors">Orders</Link>}
-          {user?.role === "admin" && <Link to="/admin" className="hover:text-foreground transition-colors flex items-center gap-1"><Shield className="w-3.5 h-3.5" /> Admin</Link>}
+          {user?.role === "admin" && (
+            <Link to="/admin" className="hover:text-foreground transition-colors flex items-center gap-1 whitespace-nowrap flex-shrink-0">
+              <Shield className="w-3.5 h-3.5" /> Admin
+            </Link>
+          )}
         </div>
 
-        <div className="flex items-center gap-1 sm:gap-2">
+        <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0 relative z-10">
         <TooltipProvider delayDuration={150}>
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
@@ -166,13 +173,13 @@ export const Navbar = () => {
               <TooltipContent side="bottom"><p className="text-xs">Cart</p></TooltipContent>
             </Tooltip>
 
-            <div className="hidden md:block">
+            <div className="hidden xl:block">
               <ThemeToggle />
             </div>
 
             {isAuthenticated ? (
               <div className="flex items-center pl-3 pr-1 py-1 rounded-xl border border-border bg-card shadow-sm gap-2 ml-1">
-                <span className="hidden md:block text-xs font-semibold text-foreground">{user?.name}</span>
+                <span className="hidden xl:block text-xs font-semibold text-foreground max-w-[100px] truncate">{user?.name}</span>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
@@ -187,9 +194,9 @@ export const Navbar = () => {
                 </Tooltip>
               </div>
             ) : (
-              <Link to="/login" className="hidden md:block">
+              <Link to="/login" className="hidden xl:block">
                 <motion.button
-                  className="px-3 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-gradient-pink text-primary-foreground text-xs sm:text-sm font-medium glow-pink-sm"
+                  className="px-4 py-2 rounded-xl bg-gradient-pink text-primary-foreground text-sm font-medium glow-pink-sm whitespace-nowrap"
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
                 >

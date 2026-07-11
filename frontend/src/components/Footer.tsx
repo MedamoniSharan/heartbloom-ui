@@ -13,7 +13,8 @@ const quickLinks = [
   { to: "/terms", label: "Terms" },
 ] as const;
 
-export const Footer = () => (
+export function Footer() {
+  return (
   <footer className="bg-card border-t border-border">
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
       {/* Main grid */}
@@ -132,4 +133,7 @@ export const Footer = () => (
       </div>
     </div>
   </footer>
-);
+  );
+}
+
+export default Footer;

@@ -148,7 +148,7 @@ const ProductDetail = () => {
       if (ext === "heic" || ext === "heif") {
         try {
           const heic2any = (await import("heic2any")).default;
-          const blob = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.9 }) as Blob;
+          const blob = await heic2any({ blob: file, toType: "image/jpeg", quality: 1 }) as Blob;
           pf = new File([blob], file.name.replace(/\.heic$/i, ".jpg"), { type: "image/jpeg" });
         } catch { continue; }
       }
@@ -393,13 +393,9 @@ const ProductDetail = () => {
                     <p className="text-3xl font-bold text-foreground font-display">Rs{product.price}</p>
                   )}
                 </div>
-              </Reveal>
-
-              <Reveal delay={160}>
-                <p className="text-muted-foreground leading-relaxed">{product.description}</p>
-                {product.longDescription && (
-                  <p className="text-muted-foreground leading-relaxed mt-3">{product.longDescription}</p>
-                )}
+                <p className="text-sm text-muted-foreground mt-1">
+                  Shipping: {(product.shippingCharge ?? 0) > 0 ? `Rs${product.shippingCharge} / unit` : "Free"}
+                </p>
               </Reveal>
 
               {product.customizable && (

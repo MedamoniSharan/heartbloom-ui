@@ -13,7 +13,7 @@ import { LottieFromPath } from "@/components/LottieFromPath";
 import { useToast } from "@/hooks/use-toast";
 
 const Cart = () => {
-  const { items, removeFromCart, updateQuantity, removePhotoFromItem, subtotal, discountAmount, total, clearCart, appliedPromo, applyPromo, removePromo } = useCartStore();
+  const { items, removeFromCart, updateQuantity, removePhotoFromItem, subtotal, discountAmount, shippingTotal, total, clearCart, appliedPromo, applyPromo, removePromo } = useCartStore();
   const { validatePromo } = useProductStore();
   const { orderQuantity } = useSiteContentStore();
   const globalMin = orderQuantity.min ?? 4;
@@ -307,7 +307,8 @@ const Cart = () => {
                 </motion.div>
               )}
               <div className="flex justify-between text-muted-foreground">
-                <span>Shipping</span><span className="text-primary">Free</span>
+                <span>Shipping</span>
+                <span>{shippingTotal() > 0 ? `Rs${shippingTotal().toFixed(2)}` : <span className="text-primary">Free</span>}</span>
               </div>
               <div className="border-t border-border pt-2 flex justify-between font-bold text-foreground">
                 <span>Total</span><span className="font-display">Rs{total().toFixed(2)}</span>

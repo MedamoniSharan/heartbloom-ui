@@ -86,10 +86,13 @@ router.post("/", optionalAuth, async (req, res, next) => {
       paymentMethod,
     } = req.body;
 
-    const rawMethod = String(paymentMethod || "cod").toLowerCase();
+    const rawMethod = String(paymentMethod || "").toLowerCase();
     const wantsPrepaid = rawMethod === "online" || rawMethod === "prepaid";
     if (!items?.length || !address) {
       return res.status(400).json({ message: "items and address required" });
+    }
+    if (!wantsPrepaid) {
+      return res.status(400).json({ message: "Only online payment is accepted" });
     }
 
     const normalizedItems = items.map((it) => ({
@@ -107,31 +110,27 @@ router.post("/", optionalAuth, async (req, res, next) => {
 
     const expectedPaise = rupeesToPaise(serverTotal);
 
-    if (wantsPrepaid) {
-      if (!isRazorpayEnabled()) {
-        return res.status(400).json({ message: "Online payment is not available" });
-      }
-      if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
-        return res.status(400).json({ message: "Payment verification required" });
-      }
-      if (!verifyRazorpaySignature(razorpayOrderId, razorpayPaymentId, razorpaySignature)) {
-        return res.status(400).json({ message: "Invalid payment signature" });
-      }
-      const rz = getRazorpay();
-      const payment = await rz.payments.fetch(razorpayPaymentId);
-      if (payment.order_id !== razorpayOrderId) {
-        return res.status(400).json({ message: "Payment does not match order" });
-      }
-      const paidPaise = Number(payment.amount);
-      if (paidPaise !== expectedPaise) {
-        return res.status(400).json({ message: "Paid amount does not match order total" });
-      }
-      const okStatus = ["captured", "authorized"].includes(payment.status);
-      if (!okStatus) {
-        return res.status(400).json({ message: `Payment not complete (status: ${payment.status})` });
-      }
-    } else if (total != null && Math.abs(Number(total) - serverTotal) > 0.02) {
-      return res.status(400).json({ message: "Order total mismatch — refresh and try again" });
+    if (!isRazorpayEnabled()) {
+      return res.status(400).json({ message: "Online payment is not available" });
+    }
+    if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
+      return res.status(400).json({ message: "Payment verification required" });
+    }
+    if (!verifyRazorpaySignature(razorpayOrderId, razorpayPaymentId, razorpaySignature)) {
+      return res.status(400).json({ message: "Invalid payment signature" });
+    }
+    const rz = getRazorpay();
+    const payment = await rz.payments.fetch(razorpayPaymentId);
+    if (payment.order_id !== razorpayOrderId) {
+      return res.status(400).json({ message: "Payment does not match order" });
+    }
+    const paidPaise = Number(payment.amount);
+    if (paidPaise !== expectedPaise) {
+      return res.status(400).json({ message: "Paid amount does not match order total" });
+    }
+    const okStatus = ["captured", "authorized"].includes(payment.status);
+    if (!okStatus) {
+      return res.status(400).json({ message: `Payment not complete (status: ${payment.status})` });
     }
 
     const orderItems = [];
@@ -155,8 +154,6 @@ router.post("/", optionalAuth, async (req, res, next) => {
       userName = req.user.name;
     }
 
-    const paymentType = wantsPrepaid ? "prepaid" : "cod";
-
     const order = await Order.create({
       userId,
       userName,
@@ -165,11 +162,9 @@ router.post("/", optionalAuth, async (req, res, next) => {
       address,
       allowSocialMediaFeature: allowSocialMediaFeature === true,
       customerPhotos: Array.isArray(customerPhotos) ? customerPhotos.slice(0, 20) : [],
-      paymentType,
-      ...(wantsPrepaid && {
-        razorpayOrderId,
-        razorpayPaymentId,
-      }),
+      paymentType: "prepaid",
+      razorpayOrderId,
+      razorpayPaymentId,
     });
     const populated = await Order.findById(order._id).populate("items.product").lean();
     res.status(201).json(toOrderResponse(populated));

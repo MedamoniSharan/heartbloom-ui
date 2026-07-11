@@ -1,14 +1,14 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import {
-  Package, DollarSign, Users, TrendingUp, Plus,
+  Package, IndianRupee, Users, TrendingUp, Plus,
   Eye, Trash2, ChevronDown, ChevronUp, Tag, ToggleLeft, ToggleRight,
   Upload, ImageIcon, X, BarChart3, ShoppingCart, Calendar, MapPin, Phone, User, Camera, Filter, Copy,
 } from "lucide-react";
 import { useProductStore, Product, Order, PromoCode } from "@/stores/productStore";
 import { useSiteContentStore } from "@/stores/siteContentStore";
 import { useAuthStore } from "@/stores/authStore";
-import { journeyVideosApi, type ApiJourneyVideo, eventPacksApi, type ApiEventPack, rawMaterialsApi, type ApiRawMaterial, type ApiRawMaterialInput } from "@/lib/api";
+import { journeyVideosApi, type ApiJourneyVideo, eventPacksApi, type ApiEventPack, rawMaterialsApi, type ApiRawMaterial, type ApiRawMaterialInput, coursesApi } from "@/lib/api";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
@@ -25,6 +25,51 @@ import { cn } from "@/lib/utils";
 
 const HERO_IMAGE_MAX_FILE_BYTES = 15 * 1024 * 1024;
 const HERO_IMAGE_MAX_DATA_URL_CHARS = 3.5 * 1024 * 1024;
+
+const ORDER_STATUS_WHATSAPP: Record<Order["status"], string> = {
+  pending: "Your order is *pending* and will be confirmed shortly.",
+  processing: "Great news! Your order is now being *processed* / prepared.",
+  shipped: "Your order has been *shipped*! It is on the way to you.",
+  delivered: "Your order has been *delivered*. We hope you love your magnets!",
+  cancelled: "Your order has been *cancelled*. Please contact us if you have questions.",
+};
+
+/** Normalize Indian / international phone to WhatsApp digits (no +). */
+function toWhatsAppDigits(phone: string): string | null {
+  const digits = String(phone || "").replace(/\D/g, "");
+  if (!digits) return null;
+  if (digits.length === 10) return `91${digits}`;
+  if (digits.length === 12 && digits.startsWith("91")) return digits;
+  if (digits.length >= 10) return digits;
+  return null;
+}
+
+function openOrderStatusWhatsApp(order: Order, status: Order["status"]) {
+  const phone = toWhatsAppDigits(order.address?.phone || "");
+  if (!phone) return false;
+
+  const itemsList = order.items
+    .map((i) => `• ${i.quantity}× ${i.product.name}`)
+    .join("\n");
+  const message = [
+    `Hi ${order.address.fullName || order.userName}! 👋`,
+    ``,
+    `*Magnetic Bliss IN* — order update`,
+    `Order: ${order.id}`,
+    ``,
+    ORDER_STATUS_WHATSAPP[status],
+    ``,
+    `*Items:*`,
+    itemsList,
+    ``,
+    `*Total:* Rs${order.total.toFixed(2)}`,
+    ``,
+    `Thank you for shopping with us!`,
+  ].join("\n");
+
+  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank");
+  return true;
+}
 
 async function fileToHeroDataUrl(file: File): Promise<string> {
   const lower = file.name.toLowerCase();
@@ -82,7 +127,7 @@ async function fileToHeroDataUrl(file: File): Promise<string> {
 
 const statCards = (orders: Order[], products: Product[]) => [
   { label: "Total Orders", value: orders.length, icon: Package, change: "" },
-  { label: "Revenue", value: `Rs${orders.reduce((s, o) => s + o.total, 0).toFixed(0)}`, icon: DollarSign, change: "" },
+  { label: "Revenue", value: `Rs${orders.reduce((s, o) => s + o.total, 0).toFixed(0)}`, icon: IndianRupee, change: "" },
   { label: "Products", value: products.length, icon: TrendingUp, change: "" },
   { label: "Customers", value: new Set(orders.map((o) => o.userId)).size, icon: Users, change: "" },
 ];
@@ -270,18 +315,21 @@ const Admin = () => {
   }, [user?.role, fetchOrders, fetchPromos]);
 
   const REFERENCE_IMAGE_COUNT = 4;
+  const emptyProductForm = {
+    name: "",
+    description: "",
+    price: "",
+    originalPrice: "",
+    shippingCharge: "0",
+    image: "",
+    category: "",
+    images: [] as string[],
+    minQuantity: "",
+    maxQuantity: "",
+    specs: [] as { label: string; value: string }[],
+  };
   const existingCategories = useMemo(() => [...new Set(products.map((p) => p.category).filter(Boolean))], [products]);
-  const [newProduct, setNewProduct] = useState<{
-    name: string;
-    description: string;
-    price: string;
-    originalPrice: string;
-    image: string;
-    category: string;
-    images: string[];
-    minQuantity: string;
-    maxQuantity: string;
-  }>({ name: "", description: "", price: "", originalPrice: "", image: "", category: "", images: [], minQuantity: "", maxQuantity: "" });
+  const [newProduct, setNewProduct] = useState(emptyProductForm);
   const [dragOver, setDragOver] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [refImagePreviews, setRefImagePreviews] = useState<(string | null)[]>([null, null, null, null]);
@@ -339,21 +387,30 @@ const Admin = () => {
 
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
+    const specsPayload =
+      newProduct.category === "Equipment"
+        ? newProduct.specs.filter((s) => s.label.trim() || s.value.trim()).map((s) => ({
+            label: s.label.trim(),
+            value: s.value.trim(),
+          }))
+        : [];
     if (editingProductId) {
       const ok = await useProductStore.getState().updateProduct(editingProductId, {
         name: newProduct.name,
         description: newProduct.description,
         price: parseFloat(newProduct.price),
         originalPrice: newProduct.originalPrice ? parseFloat(newProduct.originalPrice) : undefined,
+        shippingCharge: newProduct.shippingCharge ? parseFloat(newProduct.shippingCharge) : 0,
         image: newProduct.image,
         images: newProduct.images?.slice(0, REFERENCE_IMAGE_COUNT).filter(Boolean) || [],
         category: newProduct.category,
         minQuantity: newProduct.minQuantity ? parseInt(newProduct.minQuantity) : null,
         maxQuantity: newProduct.maxQuantity ? parseInt(newProduct.maxQuantity) : null,
+        specs: specsPayload,
       });
       if (ok) {
         toast({ title: "Product updated!" });
-        setNewProduct({ name: "", description: "", price: "", originalPrice: "", image: "", category: "", images: [], minQuantity: "", maxQuantity: "" });
+        setNewProduct(emptyProductForm);
         clearImage();
         setRefImagePreviews([null, null, null, null]);
         setEditingProductId(null);
@@ -367,6 +424,7 @@ const Admin = () => {
         description: newProduct.description,
         price: parseFloat(newProduct.price),
         originalPrice: newProduct.originalPrice ? parseFloat(newProduct.originalPrice) : undefined,
+        shippingCharge: newProduct.shippingCharge ? parseFloat(newProduct.shippingCharge) : 0,
         image: newProduct.image || "https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?w=400&h=400&fit=crop",
         images: newProduct.images?.slice(0, REFERENCE_IMAGE_COUNT).filter(Boolean) || [],
         category: newProduct.category,
@@ -375,10 +433,11 @@ const Admin = () => {
         inStock: true,
         minQuantity: newProduct.minQuantity ? parseInt(newProduct.minQuantity) : null,
         maxQuantity: newProduct.maxQuantity ? parseInt(newProduct.maxQuantity) : null,
+        specs: specsPayload,
       });
       if (ok) {
         toast({ title: "Product added!" });
-        setNewProduct({ name: "", description: "", price: "", originalPrice: "", image: "", category: "", images: [], minQuantity: "", maxQuantity: "" });
+        setNewProduct(emptyProductForm);
         clearImage();
         setRefImagePreviews([null, null, null, null]);
         setTab("products");
@@ -530,8 +589,23 @@ const Admin = () => {
                             <select
                               value={order.status}
                               onChange={async (e) => {
-                                const ok = await updateOrderStatus(order.id, e.target.value as Order["status"]);
-                                if (!ok) toast({ title: "Failed to update status", variant: "destructive" });
+                                const newStatus = e.target.value as Order["status"];
+                                if (newStatus === order.status) return;
+                                const ok = await updateOrderStatus(order.id, newStatus);
+                                if (!ok) {
+                                  toast({ title: "Failed to update status", variant: "destructive" });
+                                  return;
+                                }
+                                const whatsappOpened = openOrderStatusWhatsApp(
+                                  { ...order, status: newStatus },
+                                  newStatus
+                                );
+                                toast({
+                                  title: `Status updated to ${newStatus}`,
+                                  description: whatsappOpened
+                                    ? "Opening WhatsApp to notify the customer..."
+                                    : "Status saved, but customer phone is missing for WhatsApp.",
+                                });
                               }}
                               className="appearance-none bg-muted border border-border rounded-lg px-3 py-1.5 pr-7 text-xs font-medium text-foreground cursor-pointer"
                             >
@@ -634,13 +708,35 @@ const Admin = () => {
                   <img src={p.image} alt={p.name} className="w-full aspect-video object-cover" />
                   <div className="p-4">
                     <h3 className="font-display font-semibold text-foreground text-sm">{p.name}</h3>
-                    <p className="text-xs text-muted-foreground mt-1">Rs{p.price} · {p.category}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Rs{p.price} · Ship Rs{p.shippingCharge ?? 0} · {p.category}</p>
                     <div className="flex gap-2 mt-3">
                       <button
                         onClick={() => {
                           setEditingProductId(p.id);
                           const refImgs = (p.images || []).slice(0, REFERENCE_IMAGE_COUNT);
-                          setNewProduct({ name: p.name, description: p.description, price: p.price.toString(), originalPrice: p.originalPrice != null ? p.originalPrice.toString() : "", image: p.image, category: p.category, images: refImgs, minQuantity: p.minQuantity != null ? p.minQuantity.toString() : "", maxQuantity: p.maxQuantity != null ? p.maxQuantity.toString() : "" });
+                          setNewProduct({
+                            name: p.name,
+                            description: p.description,
+                            price: p.price.toString(),
+                            originalPrice: p.originalPrice != null ? p.originalPrice.toString() : "",
+                            shippingCharge: (p.shippingCharge ?? 0).toString(),
+                            image: p.image,
+                            category: p.category,
+                            images: refImgs,
+                            minQuantity: p.minQuantity != null ? p.minQuantity.toString() : "",
+                            maxQuantity: p.maxQuantity != null ? p.maxQuantity.toString() : "",
+                            specs: (p.specs && p.specs.length > 0)
+                              ? p.specs.map((s) => ({ label: s.label, value: s.value }))
+                              : p.category === "Equipment"
+                                ? [
+                                    { label: "Origin", value: "" },
+                                    { label: "Lead Time", value: "" },
+                                    { label: "Warranty", value: "" },
+                                    { label: "Max Paper Thickness", value: "" },
+                                    { label: "Service", value: "" },
+                                  ]
+                                : [],
+                          });
                           setImagePreview(p.image);
                           setRefImagePreviews([refImgs[0] || null, refImgs[1] || null, refImgs[2] || null, refImgs[3] || null]);
                           setTab("add");
@@ -698,7 +794,7 @@ const Admin = () => {
                 type="button"
                 onClick={() => {
                   setEditingProductId(null);
-                  setNewProduct({ name: "", description: "", price: "", originalPrice: "", image: "", category: "", images: [], minQuantity: "", maxQuantity: "" });
+                  setNewProduct(emptyProductForm);
                   clearImage();
                   setRefImagePreviews([null, null, null, null]);
                   setTab("products");
@@ -726,6 +822,10 @@ const Admin = () => {
             <div className="floating-label-group">
               <input type="number" step="0.01" placeholder=" " value={newProduct.originalPrice} onChange={(e) => setNewProduct((p) => ({ ...p, originalPrice: e.target.value }))} />
               <label>Original price (Rs) — optional, for showing discount</label>
+            </div>
+            <div className="floating-label-group">
+              <input type="number" step="0.01" min="0" placeholder=" " value={newProduct.shippingCharge} onChange={(e) => setNewProduct((p) => ({ ...p, shippingCharge: e.target.value }))} />
+              <label>Shipping charge (Rs) — per unit</label>
             </div>
             {/* Drag & Drop Image Upload */}
             <div
@@ -850,7 +950,25 @@ const Admin = () => {
                 list="category-suggestions"
                 placeholder="Type or select a category"
                 value={newProduct.category}
-                onChange={(e) => setNewProduct((p) => ({ ...p, category: e.target.value }))}
+                onChange={(e) => {
+                  const category = e.target.value;
+                  setNewProduct((p) => ({
+                    ...p,
+                    category,
+                    specs:
+                      category === "Equipment" && p.specs.length === 0
+                        ? [
+                            { label: "Origin", value: "" },
+                            { label: "Lead Time", value: "" },
+                            { label: "Warranty", value: "" },
+                            { label: "Max Paper Thickness", value: "" },
+                            { label: "Service", value: "" },
+                          ]
+                        : category === "Equipment"
+                          ? p.specs
+                          : [],
+                  }));
+                }}
                 required
                 className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none placeholder:text-muted-foreground"
               />
@@ -865,7 +983,24 @@ const Admin = () => {
                     <button
                       key={cat}
                       type="button"
-                      onClick={() => setNewProduct((p) => ({ ...p, category: cat }))}
+                      onClick={() =>
+                        setNewProduct((p) => ({
+                          ...p,
+                          category: cat,
+                          specs:
+                            cat === "Equipment" && p.specs.length === 0
+                              ? [
+                                  { label: "Origin", value: "" },
+                                  { label: "Lead Time", value: "" },
+                                  { label: "Warranty", value: "" },
+                                  { label: "Max Paper Thickness", value: "" },
+                                  { label: "Service", value: "" },
+                                ]
+                              : cat === "Equipment"
+                                ? p.specs
+                                : [],
+                        }))
+                      }
                       className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${newProduct.category === cat ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80"}`}
                     >
                       {cat}
@@ -874,6 +1009,60 @@ const Admin = () => {
                 </div>
               )}
             </div>
+            {newProduct.category === "Equipment" && (
+              <div className="space-y-2 pt-2 border-t border-border">
+                <p className="text-xs font-semibold text-foreground">Machine specs</p>
+                <p className="text-xs text-muted-foreground">Shown on the Machines page (Origin, Warranty, etc.).</p>
+                {newProduct.specs.map((spec, i) => (
+                  <div key={i} className="flex gap-2">
+                    <input
+                      type="text"
+                      value={spec.label}
+                      onChange={(e) =>
+                        setNewProduct((p) => {
+                          const specs = [...p.specs];
+                          specs[i] = { ...specs[i], label: e.target.value };
+                          return { ...p, specs };
+                        })
+                      }
+                      placeholder="Label"
+                      className="w-[40%] px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm outline-none focus:border-primary"
+                    />
+                    <input
+                      type="text"
+                      value={spec.value}
+                      onChange={(e) =>
+                        setNewProduct((p) => {
+                          const specs = [...p.specs];
+                          specs[i] = { ...specs[i], value: e.target.value };
+                          return { ...p, specs };
+                        })
+                      }
+                      placeholder="Value"
+                      className="flex-1 px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm outline-none focus:border-primary"
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setNewProduct((p) => ({ ...p, specs: p.specs.filter((_, idx) => idx !== i) }))
+                      }
+                      className="px-2 text-destructive hover:bg-destructive/10 rounded-lg text-sm"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() =>
+                    setNewProduct((p) => ({ ...p, specs: [...p.specs, { label: "", value: "" }] }))
+                  }
+                  className="text-xs text-primary hover:underline"
+                >
+                  + Add spec row
+                </button>
+              </div>
+            )}
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground">Quantity Limits (optional, per product)</label>
               <p className="text-xs text-muted-foreground">Leave blank to use global defaults from Settings.</p>
@@ -1122,6 +1311,7 @@ function BulkOrdersAdminTab() {
 function CoursesAdminTab() {
   const { courses, setCourses } = useSiteContentStore();
   const { toast } = useToast();
+  const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(() => ({
     title: courses.title,
     description: courses.description,
@@ -1130,42 +1320,73 @@ function CoursesAdminTab() {
     book1to1Description: courses.book1to1Description,
     book1to1Url: courses.book1to1Url,
     book1to1Points: courses.book1to1Points ?? [],
+    book1to1Price: String(courses.book1to1Price ?? 0),
     bookGroupLabel: courses.bookGroupLabel,
     bookGroupDescription: courses.bookGroupDescription,
     bookGroupUrl: courses.bookGroupUrl,
     bookGroupPoints: courses.bookGroupPoints ?? [],
+    bookGroupPrice: String(courses.bookGroupPrice ?? 0),
   }));
-  useEffect(() => {
-    setForm({
-      title: courses.title,
-      description: courses.description,
-      youtubeUrl: courses.youtubeUrl,
-      book1to1Label: courses.book1to1Label,
-      book1to1Description: courses.book1to1Description,
-      book1to1Url: courses.book1to1Url,
-      book1to1Points: courses.book1to1Points ?? [],
-      bookGroupLabel: courses.bookGroupLabel,
-      bookGroupDescription: courses.bookGroupDescription,
-      bookGroupUrl: courses.bookGroupUrl,
-      bookGroupPoints: courses.bookGroupPoints ?? [],
-    });
-  }, [courses.title, courses.description, courses.youtubeUrl, courses.book1to1Label, courses.book1to1Description, courses.book1to1Url, courses.book1to1Points, courses.bookGroupLabel, courses.bookGroupDescription, courses.bookGroupUrl, courses.bookGroupPoints]);
 
-  const save = () => {
-    setCourses({
-      title: form.title,
-      description: form.description,
-      youtubeUrl: form.youtubeUrl,
-      book1to1Label: form.book1to1Label,
-      book1to1Description: form.book1to1Description,
-      book1to1Url: form.book1to1Url,
-      book1to1Points: form.book1to1Points.filter(Boolean),
-      bookGroupLabel: form.bookGroupLabel,
-      bookGroupDescription: form.bookGroupDescription,
-      bookGroupUrl: form.bookGroupUrl,
-      bookGroupPoints: form.bookGroupPoints.filter(Boolean),
-    });
-    toast({ title: "Courses content saved!" });
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await coursesApi.get();
+        if (cancelled) return;
+        setCourses(data);
+        setForm({
+          title: data.title,
+          description: data.description,
+          youtubeUrl: data.youtubeUrl,
+          book1to1Label: data.book1to1Label,
+          book1to1Description: data.book1to1Description,
+          book1to1Url: data.book1to1Url,
+          book1to1Points: data.book1to1Points ?? [],
+          book1to1Price: String(data.book1to1Price ?? 0),
+          bookGroupLabel: data.bookGroupLabel,
+          bookGroupDescription: data.bookGroupDescription,
+          bookGroupUrl: data.bookGroupUrl,
+          bookGroupPoints: data.bookGroupPoints ?? [],
+          bookGroupPrice: String(data.bookGroupPrice ?? 0),
+        });
+      } catch {
+        // keep local defaults
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [setCourses]);
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      const payload = {
+        title: form.title,
+        description: form.description,
+        youtubeUrl: form.youtubeUrl,
+        book1to1Label: form.book1to1Label,
+        book1to1Description: form.book1to1Description,
+        book1to1Url: form.book1to1Url,
+        book1to1Points: form.book1to1Points.filter(Boolean),
+        book1to1Price: Math.max(0, parseFloat(form.book1to1Price) || 0),
+        bookGroupLabel: form.bookGroupLabel,
+        bookGroupDescription: form.bookGroupDescription,
+        bookGroupUrl: form.bookGroupUrl,
+        bookGroupPoints: form.bookGroupPoints.filter(Boolean),
+        bookGroupPrice: Math.max(0, parseFloat(form.bookGroupPrice) || 0),
+      };
+      const saved = await coursesApi.update(payload);
+      setCourses(saved);
+      toast({ title: "Courses content saved!" });
+    } catch (err) {
+      toast({
+        title: "Failed to save",
+        description: err instanceof Error ? err.message : "Could not save courses",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const updatePoint = (key: "book1to1Points" | "bookGroupPoints", index: number, value: string) => {
@@ -1187,7 +1408,7 @@ function CoursesAdminTab() {
   return (
     <div className="max-w-xl space-y-4">
       <h3 className="font-display font-semibold text-foreground">Courses page content</h3>
-      <p className="text-xs text-muted-foreground">YouTube video, 1:1 session link, and group session link. Shown on the Courses page.</p>
+      <p className="text-xs text-muted-foreground">Set pricing so customers can pay online. Schedule URL opens after successful payment.</p>
       <div className="bg-card border border-border rounded-2xl p-6 shadow-card space-y-4">
         <div className="floating-label-group">
           <input type="text" placeholder=" " value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} />
@@ -1214,8 +1435,12 @@ function CoursesAdminTab() {
           <label>Description</label>
         </div>
         <div className="floating-label-group">
+          <input type="number" min="0" step="1" placeholder=" " value={form.book1to1Price} onChange={(e) => setForm((f) => ({ ...f, book1to1Price: e.target.value }))} />
+          <label>Price (Rs)</label>
+        </div>
+        <div className="floating-label-group">
           <input type="url" placeholder=" " value={form.book1to1Url} onChange={(e) => setForm((f) => ({ ...f, book1to1Url: e.target.value }))} />
-          <label>URL</label>
+          <label>Schedule URL (opens after payment)</label>
         </div>
         <div className="space-y-2">
           <p className="text-xs text-muted-foreground">Bullet points (features)</p>
@@ -1246,8 +1471,12 @@ function CoursesAdminTab() {
           <label>Description</label>
         </div>
         <div className="floating-label-group">
+          <input type="number" min="0" step="1" placeholder=" " value={form.bookGroupPrice} onChange={(e) => setForm((f) => ({ ...f, bookGroupPrice: e.target.value }))} />
+          <label>Price (Rs)</label>
+        </div>
+        <div className="floating-label-group">
           <input type="url" placeholder=" " value={form.bookGroupUrl} onChange={(e) => setForm((f) => ({ ...f, bookGroupUrl: e.target.value }))} />
-          <label>URL</label>
+          <label>Schedule URL (opens after payment)</label>
         </div>
         <div className="space-y-2">
           <p className="text-xs text-muted-foreground">Bullet points (features)</p>
@@ -1266,8 +1495,8 @@ function CoursesAdminTab() {
           <button type="button" onClick={() => addPoint("bookGroupPoints")} className="text-xs text-primary hover:underline">+ Add point</button>
         </div>
 
-        <motion.button type="button" onClick={save} className="w-full py-3 rounded-xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.97 }}>
-          Save Courses content
+        <motion.button type="button" disabled={saving} onClick={save} className="w-full py-3 rounded-xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm disabled:opacity-70" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.97 }}>
+          {saving ? "Saving..." : "Save Courses content"}
         </motion.button>
       </div>
     </div>

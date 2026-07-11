@@ -124,7 +124,7 @@ export const UploadModal = ({ open, onClose, requiredCount, homeSlotLimit, onAdd
           if (file.name.toLowerCase().endsWith(".heic") || file.name.toLowerCase().endsWith(".heif")) {
             try {
               const heic2any = (await import("heic2any")).default;
-              const blob = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.9 }) as Blob;
+              const blob = await heic2any({ blob: file, toType: "image/jpeg", quality: 1 }) as Blob;
               processedFile = new File([blob], file.name.replace(/\.heic$/i, ".jpg"), { type: "image/jpeg" });
             } catch {
               newUploading.push({ id, name: file.name, size: formatFileSize(file.size), progress: 0, status: "error", errorMsg: "Failed to convert HEIC" });

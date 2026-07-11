@@ -204,7 +204,7 @@ export const ImageEditor = ({ photo, onSave, onClose }: ImageEditorProps) => {
         onSave({ adjustments: { ...adjustments }, filter: selectedFilter, rotation, flipH, flipV });
       }
       onClose();
-    }, "image/jpeg", 0.92);
+    }, "image/jpeg", 1);
   };
 
   saveRef.current = handleSave;

@@ -65,6 +65,7 @@ export interface ApiProduct {
   longDescription?: string;
   price: number;
   originalPrice?: number;
+  shippingCharge?: number;
   image: string;
   images?: string[];
   category: string;
@@ -76,6 +77,7 @@ export interface ApiProduct {
   whatsappMessage?: string;
   minQuantity?: number | null;
   maxQuantity?: number | null;
+  specs?: { label: string; value: string }[];
 }
 
 export const productsApi = {
@@ -157,7 +159,7 @@ export const ordersApi = {
         razorpayOrderId: body.razorpayOrderId,
         razorpayPaymentId: body.razorpayPaymentId,
         razorpaySignature: body.razorpaySignature,
-        paymentMethod: body.paymentMethod || "cod",
+        paymentMethod: body.paymentMethod || "online",
       }),
     }),
   updateStatus: (orderId: string, status: ApiOrder["status"]) =>
@@ -175,6 +177,74 @@ export const paymentsApi = {
       method: "POST",
       body: JSON.stringify(body),
     }),
+};
+
+// Courses
+export interface ApiCoursesConfig {
+  title: string;
+  description: string;
+  youtubeUrl: string;
+  book1to1Label: string;
+  book1to1Description: string;
+  book1to1Url: string;
+  book1to1Points: string[];
+  book1to1Price: number;
+  bookGroupLabel: string;
+  bookGroupDescription: string;
+  bookGroupUrl: string;
+  bookGroupPoints: string[];
+  bookGroupPrice: number;
+}
+
+export type CourseOfferKey = "book1to1" | "bookGroup";
+
+export interface ApiCoursePurchase {
+  id: string;
+  userId: string;
+  userName: string;
+  email: string;
+  phone: string;
+  offerKey: CourseOfferKey;
+  offerName: string;
+  price: number;
+  status: string;
+  paymentType: string;
+  razorpayPaymentId?: string;
+  scheduleUrl?: string | null;
+  createdAt: string;
+}
+
+export const coursesApi = {
+  get: () => request<ApiCoursesConfig>("/api/courses"),
+  update: (body: Partial<ApiCoursesConfig>) =>
+    request<ApiCoursesConfig>("/api/courses", { method: "PUT", body: JSON.stringify(body) }),
+  createRazorpayOrder: (offerKey: CourseOfferKey) =>
+    request<{
+      orderId: string;
+      amount: number;
+      currency: string;
+      keyId: string;
+      offerKey: CourseOfferKey;
+      offerName: string;
+      price: number;
+    }>("/api/courses/razorpay-order", {
+      method: "POST",
+      body: JSON.stringify({ offerKey }),
+    }),
+  purchase: (body: {
+    offerKey: CourseOfferKey;
+    fullName: string;
+    phone: string;
+    email?: string;
+    razorpayOrderId: string;
+    razorpayPaymentId: string;
+    razorpaySignature: string;
+  }) =>
+    request<ApiCoursePurchase>("/api/courses/purchase", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  getPurchases: () => request<ApiCoursePurchase[]>("/api/courses/purchases"),
 };
 
 // Promos

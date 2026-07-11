@@ -7,6 +7,7 @@ const productSchema = new mongoose.Schema(
     longDescription: { type: String, default: "" },
     price: { type: Number, required: true, min: 0 },
     originalPrice: { type: Number, default: null, min: 0 },
+    shippingCharge: { type: Number, default: 0, min: 0 },
     image: { type: String, required: true },
     images: [{ type: String }],
     category: { type: String, required: true, trim: true },
@@ -18,6 +19,12 @@ const productSchema = new mongoose.Schema(
     whatsappMessage: { type: String, default: "" },
     minQuantity: { type: Number, default: null, min: 1 },
     maxQuantity: { type: Number, default: null, min: 1 },
+    specs: [
+      {
+        label: { type: String, trim: true },
+        value: { type: String, trim: true },
+      },
+    ],
   },
   { timestamps: true }
 );

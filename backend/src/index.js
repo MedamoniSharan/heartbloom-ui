@@ -7,6 +7,10 @@ import express from "express";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const backendRoot = resolve(__dirname, "..");
 dotenv.config({ path: resolve(backendRoot, ".env") });
+// Empty RAZORPAY_* in .env would block payment-gateway.env — treat blank as unset
+for (const key of ["RAZORPAY_KEY_ID", "RAZORPAY_KEY_SECRET"]) {
+  if (!String(process.env[key] || "").trim()) delete process.env[key];
+}
 const paymentGatewayEnv = resolve(backendRoot, "payment-gateway.env");
 if (existsSync(paymentGatewayEnv)) {
   dotenv.config({ path: paymentGatewayEnv, override: false });
@@ -25,6 +29,7 @@ import eventPackRoutes from "./routes/eventPacks.js";
 import rawMaterialRoutes from "./routes/rawMaterials.js";
 import statsRoutes from "./routes/stats.js";
 import paymentRoutes from "./routes/payments.js";
+import courseRoutes from "./routes/courses.js";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -58,6 +63,7 @@ app.use("/api/event-packs", eventPackRoutes);
 app.use("/api/raw-materials", rawMaterialRoutes);
 app.use("/api/stats", statsRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/courses", courseRoutes);
 
 app.get("/api/health", (req, res) => res.json({ ok: true }));
 

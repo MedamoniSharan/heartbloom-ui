@@ -8,6 +8,7 @@ export interface Product {
   longDescription?: string;
   price: number;
   originalPrice?: number;
+  shippingCharge?: number;
   image: string;
   images?: string[];
   category: string;
@@ -19,6 +20,7 @@ export interface Product {
   whatsappMessage?: string;
   minQuantity?: number | null;
   maxQuantity?: number | null;
+  specs?: { label: string; value: string }[];
 }
 
 export interface Order {
@@ -64,6 +66,7 @@ const mapProduct = (p: ApiProduct): Product => ({
   longDescription: p.longDescription,
   price: p.price,
   originalPrice: p.originalPrice,
+  shippingCharge: p.shippingCharge ?? 0,
   image: p.image,
   images: p.images,
   category: p.category,
@@ -75,6 +78,7 @@ const mapProduct = (p: ApiProduct): Product => ({
   whatsappMessage: p.whatsappMessage,
   minQuantity: p.minQuantity,
   maxQuantity: p.maxQuantity,
+  specs: p.specs || [],
 });
 
 const mapOrder = (o: ApiOrder): Order => ({
@@ -199,6 +203,8 @@ export const useProductStore = create<ProductState>((set, get) => ({
         description: product.description,
         longDescription: product.longDescription,
         price: product.price,
+        originalPrice: product.originalPrice,
+        shippingCharge: product.shippingCharge ?? 0,
         image: product.image,
         images: product.images?.slice(0, 4),
         category: product.category,
@@ -206,6 +212,9 @@ export const useProductStore = create<ProductState>((set, get) => ({
         reviews: 0,
         inStock: product.inStock !== false,
         customizable: product.customizable,
+        minQuantity: product.minQuantity,
+        maxQuantity: product.maxQuantity,
+        specs: product.specs || [],
       });
       set((s) => ({ products: [mapProduct(created), ...s.products] }));
       return true;
@@ -249,7 +258,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
         razorpayOrderId: order.razorpayOrderId,
         razorpayPaymentId: order.razorpayPaymentId,
         razorpaySignature: order.razorpaySignature,
-        paymentMethod: order.paymentMethod || "cod",
+        paymentMethod: order.paymentMethod || "online",
       });
       set((s) => ({ orders: [mapOrder(created), ...s.orders] }));
       return true;

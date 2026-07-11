@@ -13,6 +13,7 @@ function toProductResponse(doc) {
     longDescription: o.longDescription,
     price: o.price,
     originalPrice: o.originalPrice ?? undefined,
+    shippingCharge: o.shippingCharge ?? 0,
     image: o.image,
     images: o.images,
     category: o.category,
@@ -24,6 +25,9 @@ function toProductResponse(doc) {
     whatsappMessage: o.whatsappMessage,
     minQuantity: o.minQuantity ?? null,
     maxQuantity: o.maxQuantity ?? null,
+    specs: Array.isArray(o.specs)
+      ? o.specs.filter((s) => s?.label || s?.value).map((s) => ({ label: s.label || "", value: s.value || "" }))
+      : [],
   };
 }
 

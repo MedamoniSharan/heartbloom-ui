@@ -208,6 +208,13 @@ const PRODUCTS_EQUIPMENT = [
     inStock: true,
     customizable: false,
     whatsappMessage: "Hi! I'm interested in the Mpro Magnet Press.",
+    specs: [
+      { label: "Origin", value: "USA" },
+      { label: "Lead Time", value: "In Stock" },
+      { label: "Warranty", value: "Lifetime" },
+      { label: "Max Paper Thickness", value: "32 lb" },
+      { label: "Service", value: "Service & Support in the USA" },
+    ],
   },
   {
     name: "Titan Pro Laminator",
@@ -224,6 +231,13 @@ const PRODUCTS_EQUIPMENT = [
     inStock: true,
     customizable: false,
     whatsappMessage: "Hi! I'd like to know more about the Titan Pro Laminator.",
+    specs: [
+      { label: "Origin", value: "China, Designed in USA" },
+      { label: "Lead Time", value: "In Stock" },
+      { label: "Warranty", value: "Lifetime" },
+      { label: "Max Paper Thickness", value: "42 lb" },
+      { label: "Service", value: "Service & Support in the USA" },
+    ],
   },
 ];
 

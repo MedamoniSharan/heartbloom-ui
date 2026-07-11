@@ -10,23 +10,6 @@ import { useProductStore, type Product } from "@/stores/productStore";
 import { useCartStore } from "@/stores/cartStore";
 import { useToast } from "@/hooks/use-toast";
 
-const specData: Record<string, { label: string; value: string }[]> = {
-  eq1: [
-    { label: "Origin", value: "USA" },
-    { label: "Lead Time", value: "In Stock" },
-    { label: "Warranty", value: "Lifetime" },
-    { label: "Max Paper Thickness", value: "32 lb" },
-    { label: "Service", value: "Service & Support in the USA" },
-  ],
-  eq2: [
-    { label: "Origin", value: "China, Designed in USA" },
-    { label: "Lead Time", value: "In Stock" },
-    { label: "Warranty", value: "Lifetime" },
-    { label: "Max Paper Thickness", value: "42 lb" },
-    { label: "Service", value: "Service & Support in the USA" },
-  ],
-};
-
 const Equipment = () => {
   const { products } = useProductStore();
   const { addToCart } = useCartStore();
@@ -57,7 +40,7 @@ const Equipment = () => {
 
         <div className="grid md:grid-cols-2 gap-8">
           {equipmentProducts.map((item, i) => {
-            const eqKey = item.slug || item.id;
+            const specs = (item.specs || []).filter((s) => s.label || s.value);
             return (
               <Reveal key={item.id} delay={i * 120}>
                 <motion.div
@@ -65,7 +48,6 @@ const Equipment = () => {
                   whileHover={{ y: -4 }}
                   transition={{ type: "spring", stiffness: 300, damping: 25 }}
                 >
-                  {/* Product Image — links to detail */}
                   <Link to={`/products/${item.id}`} className="block">
                     <div className="aspect-[5/4] overflow-hidden bg-muted relative">
                       <img
@@ -81,18 +63,16 @@ const Equipment = () => {
                     </div>
                   </Link>
 
-                  {/* Info */}
                   <div className="p-6">
                     <Link to={`/products/${item.id}`}>
                       <h3 className="font-display font-bold text-foreground text-lg mb-1 text-center hover:text-primary transition-colors">{item.name}</h3>
                     </Link>
                     <p className="text-2xl font-bold text-primary text-center mb-4 font-display">Rs{item.price.toLocaleString()}</p>
 
-                    {/* Specs Table */}
-                    {specData[eqKey] && (
+                    {specs.length > 0 && (
                       <div className="space-y-0 mb-6">
-                        {specData[eqKey].map((spec) => (
-                          <div key={spec.label} className="flex items-center justify-between py-2.5 border-b border-border last:border-b-0">
+                        {specs.map((spec, idx) => (
+                          <div key={`${spec.label}-${idx}`} className="flex items-center justify-between py-2.5 border-b border-border last:border-b-0">
                             <span className="text-sm font-semibold text-foreground">{spec.label}</span>
                             <span className="text-sm text-muted-foreground text-right">{spec.value}</span>
                           </div>
@@ -100,7 +80,6 @@ const Equipment = () => {
                       </div>
                     )}
 
-                    {/* CTAs */}
                     <div className="flex gap-3">
                       <Link to={`/products/${item.id}`} className="flex-1">
                         <motion.button
