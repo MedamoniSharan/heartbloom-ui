@@ -247,6 +247,23 @@ export const coursesApi = {
   getPurchases: () => request<ApiCoursePurchase[]>("/api/courses/purchases"),
 };
 
+// Hero section (stats + image)
+export interface ApiHeroSettings {
+  happyCustomers: number;
+  magnetsPrinted: number;
+  avgRating: number;
+  heroImageUrl: string;
+}
+
+export const heroSettingsApi = {
+  get: () => request<ApiHeroSettings>("/api/hero-settings"),
+  update: (body: Partial<ApiHeroSettings>) =>
+    request<ApiHeroSettings>("/api/hero-settings", {
+      method: "PUT",
+      body: JSON.stringify(body),
+    }),
+};
+
 // Promos
 export interface ApiPromo {
   id: string;

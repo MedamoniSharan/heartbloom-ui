@@ -1,8 +1,10 @@
 import { motion, useScroll, useTransform } from "framer-motion";
+import { useEffect } from "react";
 import { Heart, ArrowRight } from "lucide-react";
 import { StatCounter } from "./StatCounter";
 import { Reveal } from "./Reveal";
 import { useSiteContentStore } from "@/stores/siteContentStore";
+import { heroSettingsApi } from "@/lib/api";
 import defaultHeroImage from "@/assets/hero-magnets.jpg";
 
 const stagger = {
@@ -29,9 +31,24 @@ export const HeroSection = ({ onUploadClick }: HeroSectionProps) => {
   const { scrollY } = useScroll();
   const heroY = useTransform(scrollY, [0, 600], [0, -60]);
   const imageY = useTransform(scrollY, [0, 600], [0, -36]);
-  const { heroStats } = useSiteContentStore();
+  const { heroStats, setHeroStats } = useSiteContentStore();
   const customHeroSrc = (heroStats.heroImageUrl ?? "").trim();
   const heroSrc = customHeroSrc || defaultHeroImage;
+
+  useEffect(() => {
+    let cancelled = false;
+    heroSettingsApi
+      .get()
+      .then((data) => {
+        if (!cancelled) setHeroStats(data);
+      })
+      .catch(() => {
+        /* keep defaults / local cache */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [setHeroStats]);
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden">

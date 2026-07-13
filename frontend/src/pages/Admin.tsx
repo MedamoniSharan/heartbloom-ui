@@ -8,7 +8,7 @@ import {
 import { useProductStore, Product, Order, PromoCode } from "@/stores/productStore";
 import { useSiteContentStore } from "@/stores/siteContentStore";
 import { useAuthStore } from "@/stores/authStore";
-import { journeyVideosApi, type ApiJourneyVideo, eventPacksApi, type ApiEventPack, rawMaterialsApi, type ApiRawMaterial, type ApiRawMaterialInput, coursesApi } from "@/lib/api";
+import { journeyVideosApi, type ApiJourneyVideo, eventPacksApi, type ApiEventPack, rawMaterialsApi, type ApiRawMaterial, type ApiRawMaterialInput, coursesApi, heroSettingsApi } from "@/lib/api";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
@@ -2289,7 +2289,31 @@ function HeroStatsAdminTab() {
   const [heroImageUrl, setHeroImageUrl] = useState(() => heroStats.heroImageUrl ?? "");
   const [heroDragOver, setHeroDragOver] = useState(false);
   const [heroImageLoading, setHeroImageLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
   const heroFileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await heroSettingsApi.get();
+        if (cancelled) return;
+        setHeroStats(data);
+        setCustomers(data.happyCustomers.toString());
+        setMagnets(data.magnetsPrinted.toString());
+        setRating(data.avgRating.toString());
+        setHeroImageUrl(data.heroImageUrl ?? "");
+      } catch {
+        // keep local defaults
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [setHeroStats]);
 
   const applyHeroImageFile = useCallback(
     async (file: File | undefined | null) => {
@@ -2315,7 +2339,7 @@ function HeroStatsAdminTab() {
     [toast]
   );
 
-  const save = () => {
+  const save = async () => {
     const c = parseInt(customers, 10);
     const m = parseInt(magnets, 10);
     const r = parseFloat(rating);
@@ -2323,20 +2347,42 @@ function HeroStatsAdminTab() {
       toast({ title: "Invalid values", description: "Please enter valid numbers. Rating must be 0–5.", variant: "destructive" });
       return;
     }
-    setHeroStats({
-      happyCustomers: c,
-      magnetsPrinted: m,
-      avgRating: Math.round(r * 10) / 10,
-      heroImageUrl: heroImageUrl.trim(),
-    });
-    toast({ title: "Hero section saved!" });
+    setSaving(true);
+    try {
+      const saved = await heroSettingsApi.update({
+        happyCustomers: c,
+        magnetsPrinted: m,
+        avgRating: Math.round(r * 10) / 10,
+        heroImageUrl: heroImageUrl.trim(),
+      });
+      setHeroStats(saved);
+      setHeroImageUrl(saved.heroImageUrl ?? "");
+      toast({ title: "Hero section saved!" });
+    } catch (err) {
+      toast({
+        title: "Failed to save",
+        description: err instanceof Error ? err.message : "Could not save hero section",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="max-w-xl space-y-4">
+        <h3 className="font-display font-semibold text-foreground">Hero Section</h3>
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-xl space-y-4">
       <h3 className="font-display font-semibold text-foreground">Hero Section</h3>
       <p className="text-xs text-muted-foreground">
-        Stats and the large image on the right of the home hero. Drag and drop an image, browse for a file, or paste a URL. Leave empty for the built-in default.
+        Stats and the large image on the right of the home hero. Drag and drop an image, browse for a file, or paste a URL. Leave empty for the built-in default. Changes are saved to the server for all visitors.
       </p>
       <div className="bg-card border border-border rounded-2xl p-6 shadow-card space-y-4">
         <div>
@@ -2401,7 +2447,7 @@ function HeroStatsAdminTab() {
             className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground text-sm"
           />
           {heroImageUrl.startsWith("data:") ? (
-            <p className="text-[11px] text-muted-foreground mt-1">Using an uploaded image (saved as data when you save below). Clear to switch to URL or default.</p>
+            <p className="text-[11px] text-muted-foreground mt-1">Using an uploaded image (saved to the server when you save below). Clear to switch to URL or default.</p>
           ) : null}
           <div className="flex flex-wrap gap-2 mt-2">
             <button
@@ -2439,8 +2485,15 @@ function HeroStatsAdminTab() {
             <label>Average Rating</label>
           </div>
         </div>
-        <motion.button type="button" onClick={save} className="w-full py-3 rounded-xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm" whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.97 }}>
-          Save hero section
+        <motion.button
+          type="button"
+          onClick={() => void save()}
+          disabled={saving}
+          className="w-full py-3 rounded-xl bg-gradient-pink text-primary-foreground font-medium text-sm glow-pink-sm disabled:opacity-60"
+          whileHover={{ scale: saving ? 1 : 1.01 }}
+          whileTap={{ scale: saving ? 1 : 0.97 }}
+        >
+          {saving ? "Saving…" : "Save hero section"}
         </motion.button>
       </div>
     </div>

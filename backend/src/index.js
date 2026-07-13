@@ -30,6 +30,7 @@ import rawMaterialRoutes from "./routes/rawMaterials.js";
 import statsRoutes from "./routes/stats.js";
 import paymentRoutes from "./routes/payments.js";
 import courseRoutes from "./routes/courses.js";
+import heroSettingsRoutes from "./routes/heroSettings.js";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -64,6 +65,7 @@ app.use("/api/raw-materials", rawMaterialRoutes);
 app.use("/api/stats", statsRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/courses", courseRoutes);
+app.use("/api/hero-settings", heroSettingsRoutes);
 
 app.get("/api/health", (req, res) => res.json({ ok: true }));
 

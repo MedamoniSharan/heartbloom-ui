@@ -107,6 +107,17 @@ export const useSiteContentStore = create<SiteContentState>()(
     }),
     {
       name: "magnetic-bliss-site-content",
+      // Never persist heroImageUrl — data URLs blow past localStorage quota (~5MB).
+      partialize: (state) => ({
+        bulkOrder: state.bulkOrder,
+        courses: state.courses,
+        orderQuantity: state.orderQuantity,
+        heroStats: {
+          happyCustomers: state.heroStats.happyCustomers,
+          magnetsPrinted: state.heroStats.magnetsPrinted,
+          avgRating: state.heroStats.avgRating,
+        },
+      }),
       merge: (persisted, current) => {
         const c = current as SiteContentState;
         const p = persisted as PersistedSlice | undefined;
@@ -124,7 +135,8 @@ export const useSiteContentStore = create<SiteContentState>()(
           heroStats: {
             ...defaultHeroStats,
             ...p.heroStats,
-            heroImageUrl: p.heroStats?.heroImageUrl ?? "",
+            // Image always comes from API (or empty until loaded).
+            heroImageUrl: "",
           },
         };
       },
