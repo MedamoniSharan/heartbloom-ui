@@ -99,7 +99,7 @@ export const useCartStore = create<CartState>()(persist((set, get) => ({
     return get().subtotal() * (promo.discount / 100);
   },
   shippingTotal: () =>
-    get().items.reduce((sum, i) => sum + (i.product.shippingCharge ?? 0) * i.quantity, 0),
+    get().items.reduce((sum, i) => sum + (i.product.shippingCharge ?? 0), 0),
   total: () => get().subtotal() - get().discountAmount() + get().shippingTotal(),
   itemCount: () => get().items.reduce((sum, i) => sum + i.quantity, 0),
 }), {

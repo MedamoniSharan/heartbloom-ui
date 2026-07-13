@@ -28,7 +28,8 @@ export async function computeOrderTotalRupees(itemsInput, promoCodeUpper) {
       throw err;
     }
     subtotal += product.price * qty;
-    shipping += (product.shippingCharge ?? 0) * qty;
+    // Flat shipping per product (not multiplied by quantity)
+    shipping += product.shippingCharge ?? 0;
   }
 
   let discount = 0;

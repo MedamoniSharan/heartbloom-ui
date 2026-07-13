@@ -394,7 +394,7 @@ const ProductDetail = () => {
                   )}
                 </div>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Shipping: {(product.shippingCharge ?? 0) > 0 ? `Rs${product.shippingCharge} / unit` : "Free"}
+                  Shipping: {(product.shippingCharge ?? 0) > 0 ? `Rs${product.shippingCharge}` : "Free"}
                 </p>
               </Reveal>
 

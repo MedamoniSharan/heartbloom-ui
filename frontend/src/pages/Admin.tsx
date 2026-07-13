@@ -825,7 +825,7 @@ const Admin = () => {
             </div>
             <div className="floating-label-group">
               <input type="number" step="0.01" min="0" placeholder=" " value={newProduct.shippingCharge} onChange={(e) => setNewProduct((p) => ({ ...p, shippingCharge: e.target.value }))} />
-              <label>Shipping charge (Rs) — per unit</label>
+              <label>Shipping charge (Rs) — flat per product</label>
             </div>
             {/* Drag & Drop Image Upload */}
             <div
